@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keonlabs_personal budget-KLPB</title>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --deep-blue: #000b1a;
+            --panel-bg: rgba(0, 242, 255, 0.03);
+            --border-glow: rgba(0, 242, 255, 0.4);
+            --text-main: #e0faff;
+            --danger: #ff4d4d;
+            --warning: #ffaa00;
+            --success: #00ff88;
+        }
+
+        body { 
+            font-family: 'Segoe UI Semibold', 'Courier New', monospace; 
+            background-color: var(--deep-blue); color: var(--neon-blue); 
+            margin: 0; padding: 0; 
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        .container { max-width: 1100px; margin: auto; padding: 20px; }
+        h1 { text-align: center; letter-spacing: 8px; text-transform: uppercase; font-size: 1.2rem; margin-bottom: 30px; }
+
+        .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); }
+        .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 30px; cursor: pointer; opacity: 0.5; transition: 0.4s; letter-spacing: 2px; font-weight: bold; }
+        .tab-btn.active { opacity: 1; color: var(--neon-blue); border-bottom: 3px solid var(--neon-blue); }
+
+        .tab-content { display: none; animation: fadeIn 0.5s ease; }
+        .tab-content.active { display: block; }
+
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 4px; box-shadow: 0 0 20px rgba(0, 242, 255, 0.1); margin-bottom: 20px; }
+
+        .reminder-hud { padding: 15px; margin-bottom: 20px; border: 1px solid; border-radius: 4px; text-align: center; font-weight: bold; display: none; background: rgba(0,0,0,0.3); }
+
+        input, select { background: rgba(0, 20, 40, 0.8); border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 12px; width: 100%; margin: 10px 0; box-sizing: border-box; font-family: inherit; }
+
+        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 25px var(--neon-blue); }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { text-align: left; color: #70a1ff; font-size: 0.75rem; text-transform: uppercase; padding: 10px; border-bottom: 1px solid var(--border-glow); }
+        td { padding: 12px 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); font-size: 0.85rem; }
+
+        /* FIXED: Added height and position relative to prevent scrolling/jumping */
+        .chart-container { 
+            background: rgba(0,0,0,0.3); 
+            border: 1px solid var(--border-glow); 
+            padding: 20px; 
+            border-radius: 10px; 
+            text-align: center; 
+            height: 350px; 
+            position: relative;
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>KEONLABS PERSONAL BUDGET- KLPB</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'personal')">01_PERSONAL</button>
+        <button class="tab-btn" onclick="openTab(event, 'business')">02_BUSINESS</button>
+        <button class="tab-btn" onclick="openTab(event, 'analytics')">03_ANALYTICS</button>
+        <button class="tab-btn" onclick="openTab(event, 'yearly')">04_YEARLY</button>
+    </div>
+
+    <div id="personal" class="tab-content active">
+        <section>
+            <div id="budgetReminder" class="reminder-hud"></div>
+            <h2>// PERSONAL_FINANCE</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <select id="personalMonth" onchange="renderPersonalList()">
+                    <option value="1">JANUARY</option><option value="2">FEBRUARY</option><option value="3">MARCH</option>
+                    <option value="4">APRIL</option><option value="5">MAY</option><option value="6">JUNE</option>
+                    <option value="7">JULY</option><option value="8">AUGUST</option><option value="9">SEPTEMBER</option>
+                    <option value="10">OCTOBER</option><option value="11">NOVEMBER</option><option value="12">DECEMBER</option>
+                </select>
+                <input type="number" id="budgetLimit" placeholder="BUDGET LIMIT (K)" oninput="checkBudget()">
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                <input type="text" id="groceryItem" placeholder="ITEM">
+                <select id="expenseCategory">
+                    <option value="Food">FOOD</option><option value="Housing">HOUSING</option><option value="Transport">TRANSPORT</option><option value="Utilities">UTILITIES</option><option value="Misc">MISC</option>
+                </select>
+                <input type="number" id="groceryAmount" placeholder="K">
+            </div>
+            <button onclick="addGrocery()">LOG_EXPENSE</button>
+            <input type="text" id="expenseSearch" placeholder="SEARCH LOGS..." oninput="renderPersonalList()" style="margin-top:20px;">
+            <table id="personalTable">
+                <thead><tr><th>CAT</th><th>ITEM</th><th>COST</th><th>ACTION</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </section>
+    </div>
+
+    <div id="business" class="tab-content">
+        <section>
+            <h2>// BUSINESS_CORE</h2>
+            <h3>// NEW_STOCK_BATCH</h3>
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap:10px;">
+                <input type="text" id="stockItem" placeholder="ITEM NAME">
+                <input type="number" id="stockQty" placeholder="QTY">
+                <input type="number" id="stockCost" placeholder="BATCH PRICE (K)">
+                <input type="number" id="stockPrice" placeholder="SELL PRICE (K)">
+            </div>
+            <button onclick="addStock()">COMMIT_BATCH</button>
+            <table id="inventoryLog">
+                <thead><tr><th>ITEM</th><th>QTY</th><th>SELL_P</th><th>BATCH_P</th><th>STATUS</th></tr></thead>
+                <tbody></tbody>
+            </table>
+            <div style="margin-top:20px; border: 1px dashed var(--neon-blue); padding:15px;">
+                <h3>// REGISTER_SALE</h3>
+                <select id="saleItem"></select>
+                <input type="number" id="saleQty" placeholder="QTY_SOLD">
+                <button onclick="recordSale()">EXECUTE_SALE</button>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
+                <div class="metric-box">
+                    <small>TOTAL SALES (REVENUE)</small>
+                    <h3 id="businessSalesTotal" style="margin: 5px 0;">K 0.00</h3>
+                </div>
+                <div class="metric-box">
+                    <small>NET PROFIT</small>
+                    <h3 id="businessProfitDisplay" style="margin: 5px 0;">K 0.00</h3>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="analytics" class="tab-content">
+        <section>
+            <h2>// ANALYTICAL_CYCLES</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="chart-container">
+                    <h3>EXPENSE_DISTRIBUTION</h3>
+                    <canvas id="categoryCycle"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>PROFIT_RECOVERY_GRAPH</h3>
+                    <canvas id="businessCycle"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="yearly" class="tab-content">
+        <section>
+            <h2>// YEARLY_FINANCIAL_SUMMARY</h2>
+            <table id="yearlyTable">
+                <thead><tr><th>MONTH</th><th>TOTAL EXPENSES</th><th>STATUS</th></tr></thead>
+                <tbody id="yearlySummaryBody"></tbody>
+            </table>
+        </section>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let groceries=[], stock=[], sales=[];
+let categoryChartObj=null, businessChartObj=null;
+
+function openTab(evt, tabName) {
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+    
+    if(tabName === 'analytics') updateCharts();
+    if(tabName === 'yearly') renderYearlySummary();
+}
+
+// --- CORE DATA FUNCTIONS ---
+function addGrocery() {
+    const month = parseInt(document.getElementById('personalMonth').value);
+    const item = document.getElementById('groceryItem').value;
+    const cat = document.getElementById('expenseCategory').value;
+    const amount = parseFloat(document.getElementById('groceryAmount').value);
+    if(item && amount >= 0) {
+        groceries.push({ month, item, category: cat, amount, id: Date.now() });
+        renderPersonalList(); checkBudget();
+        document.getElementById('groceryItem').value = ''; 
+        document.getElementById('groceryAmount').value = '';
+        syncToServer();
+    }
+}
+
+function renderPersonalList() {
+    const month = parseInt(document.getElementById('personalMonth').value);
+    const query = document.getElementById('expenseSearch').value.toLowerCase();
+    const tbody = document.querySelector('#personalTable tbody'); tbody.innerHTML = '';
+    groceries.filter(g => g.month === month && g.item.toLowerCase().includes(query)).forEach(g => {
+        tbody.innerHTML += `<tr><td>${g.category}</td><td>${g.item}</td><td>K ${g.amount.toFixed(2)}</td>
+        <td><button onclick="deleteExpense(${g.id})" style="padding:2px; color:var(--danger); border-color:var(--danger); width:auto;">DEL</button></td></tr>`;
+    });
+}
+
+function deleteExpense(id) { 
+    groceries = groceries.filter(g => g.id !== id); 
+    renderPersonalList(); syncToServer();
+}
+
+function addStock() {
+    const item = document.getElementById('stockItem').value;
+    const qty = parseInt(document.getElementById('stockQty').value);
+    const cost = parseFloat(document.getElementById('stockCost').value);
+    const price = parseFloat(document.getElementById('stockPrice').value);
+    if(item && qty > 0) {
+        stock.push({ item, qty, totalCost: cost, price, originalQty: qty });
+        renderInventory(); updateSaleOptions(); updateBusinessSummary();
+        syncToServer();
+    }
+}
+
+function recordSale() {
+    const name = document.getElementById('saleItem').value;
+    const qtyS = parseInt(document.getElementById('saleQty').value);
+    const item = stock.find(i => i.item === name);
+    if(item && qtyS <= item.qty) {
+        item.qty -= qtyS;
+        sales.push({ revenue: qtyS * item.price });
+        renderInventory(); updateSaleOptions(); updateBusinessSummary();
+        syncToServer();
+    }
+}
+
+// --- ANALYTICS & SUMMARIES ---
+function updateBusinessSummary() {
+    const totalBatchPrice = stock.reduce((a, b) => a + b.totalCost, 0);
+    const totalRevenue = sales.reduce((a, b) => a + b.revenue, 0);
+    const netProfit = totalRevenue - totalBatchPrice;
+    document.getElementById('businessSalesTotal').innerText = `K ${totalRevenue.toFixed(2)}`;
+    const display = document.getElementById('businessProfitDisplay');
+    display.innerText = `K ${netProfit.toFixed(2)}`;
+    display.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+}
+
+function renderYearlySummary() {
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const tbody = document.getElementById('yearlySummaryBody'); tbody.innerHTML = '';
+    months.forEach((m, index) => {
+        const total = groceries.filter(g => g.month === (index + 1)).reduce((a, b) => a + b.amount, 0);
+        tbody.innerHTML += `<tr><td>${m.toUpperCase()}</td><td>K ${total.toFixed(2)}</td><td>LOGGED</td></tr>`;
+    });
+}
+
+function updateCharts() {
+    const cats = ["Food", "Housing", "Transport", "Utilities", "Misc"];
+    const month = parseInt(document.getElementById('personalMonth').value);
+    const catData = cats.map(c => groceries.filter(g => g.month === month && g.category === c).reduce((a, b) => a + b.amount, 0));
+    renderDoughnut('categoryCycle', cats, catData, categoryChartObj, (o) => categoryChartObj = o, true);
+    
+    const totalBatch = stock.reduce((a, b) => a + b.totalCost, 0);
+    const totalRev = sales.reduce((a, b) => a + b.revenue, 0);
+    renderDoughnut('businessCycle', ['Revenue', 'Capital'], [totalRev, totalBatch], businessChartObj, (o) => businessChartObj = o);
+}
+
+function renderDoughnut(id, labels, data, obj, setter, multi = false) {
+    if(obj) obj.destroy();
+    const ctx = document.getElementById(id).getContext('2d');
+    setter(new Chart(ctx, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: multi ? ['#00f2ff','#70a1ff','#00b8ff','#007acc','#003366'] : ['#00ff88','#ff4d4d'], borderColor: '#000b1a', borderWidth: 2 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#00f2ff' } } } }
+    }));
+}
+
+// --- SERVER SYNC (LAN) ---
+async function syncToServer() {
+    const data = { stock, sales, groceries };
+    try {
+        await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+    } catch (e) { console.warn("Offline: Save failed."); }
+}
+
+async function loadFromServer() {
+    try {
+        const response = await fetch('/api/data');
+        const d = await response.json();
+        if(d) {
+            stock = d.stock || []; sales = d.sales || []; groceries = d.groceries || [];
+            renderInventory(); renderPersonalList(); updateSaleOptions(); updateBusinessSummary();
+        }
+    } catch (e) { console.warn("Offline: Load failed."); }
+}
+
+function renderInventory() {
+    const tbody = document.querySelector('#inventoryLog tbody'); tbody.innerHTML = '';
+    stock.forEach(s => {
+        tbody.innerHTML += `<tr><td>${s.item}</td><td>${s.qty}</td><td>K ${s.price}</td><td>K ${s.totalCost}</td><td>${s.qty < 5 ? 'LOW' : 'OK'}</td></tr>`;
+    });
+}
+
+function updateSaleOptions() {
+    const s = document.getElementById('saleItem'); s.innerHTML = '';
+    stock.forEach(i => { if(i.qty > 0) s.innerHTML += `<option value="${i.item}">${i.item}</option>`; });
+}
+
+function checkBudget() {
+    const month = parseInt(document.getElementById('personalMonth').value);
+    const limit = parseFloat(document.getElementById('budgetLimit').value) || 0;
+    const total = groceries.filter(g => g.month === month).reduce((a, b) => a + b.amount, 0);
+    const hud = document.getElementById('budgetReminder');
+    if (limit > 0 && total >= limit) {
+        hud.style.display = 'block'; hud.style.borderColor = 'var(--danger)'; 
+        hud.innerText = `CRITICAL: K ${total.toFixed(2)} / K ${limit}`;
+    } else { hud.style.display = 'none'; }
+}
+
+window.onload = loadFromServer;
+</script>
+</body>
+</html>

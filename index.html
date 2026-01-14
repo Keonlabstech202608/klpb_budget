@@ -3,143 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KLPB - Business Engine v3.0</title>
+    <title>KLPB - Business Engine v3.1</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
+            --notif-purple: rgba(191, 0, 255, 0.6); /* Translucent Bright Purple */
         }
 
-        /* Video/Image Background Container */
-        #bg-container {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            z-index: -1;
-            overflow: hidden;
-            background-color: var(--deep-blue);
+        /* Notification Bar */
+        #notification-hub {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 10000; width: 90%; max-width: 500px; pointer-events: none;
         }
-        
-        #bg-video, #bg-img {
-            min-width: 100%; min-height: 100%;
-            width: auto; height: auto;
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
-            display: none; /* Hidden until source is set */
+        .notif-toast {
+            background: var(--notif-purple); color: white; padding: 15px 25px;
+            border-radius: 8px; margin-bottom: 10px; text-align: center;
+            backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(191, 0, 255, 0.4);
+            animation: slideDown 0.4s ease forwards, fadeOut 0.4s ease 3s forwards;
+            font-weight: bold; font-size: 0.9rem;
         }
+
+        /* Background Styling */
+        #bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; background-color: var(--deep-blue); }
+        #bg-video, #bg-img { min-width: 100%; min-height: 100%; width: auto; height: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: cover; display: none; }
 
         body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; padding: 0; background: transparent; }
-
-        #authOverlay { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 11, 26, 0.6); 
-            display: flex; align-items: center; justify-content: center; z-index: 9999; 
-            backdrop-filter: blur(10px);
-        }
-        
-        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 40px; border-radius: 10px; width: 320px; text-align: center; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
+        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 11, 26, 0.6); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(10px); }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 40px; border-radius: 10px; width: 320px; text-align: center; }
         .container { max-width: 1200px; margin: auto; padding: 20px; display: none; position: relative; z-index: 1; }
         
         .tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; }
-        .tab-btn { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 12px 20px; cursor: pointer; transition: 0.3s; font-size: 0.8rem; border-radius: 4px; font-weight: bold; }
+        .tab-btn { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 12px 20px; cursor: pointer; transition: 0.3s; border-radius: 4px; font-weight: bold; }
         .tab-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
         
         .tab-content { display: none; animation: fadeIn 0.4s ease; }
         .tab-content.active { display: block; }
         
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 25px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 25px; border-radius: 8px; margin-bottom: 20px; }
         .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 25px; }
         .metric-box { border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.7); }
-        .metric-val { display: block; font-size: 1.4rem; font-weight: bold; color: var(--neon-blue); margin-top: 5px; }
+        .metric-val { display: block; font-size: 1.4rem; font-weight: bold; color: var(--neon-blue); }
 
-        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 4px; font-size: 0.9rem; }
-        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin: 10px 0; font-size: 0.9rem; transition: 0.3s; }
+        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 4px; }
+        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: rgba(0,0,0,0.4); }
-        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; border-bottom: 2px solid var(--border-glow); }
+        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px; text-align: left; }
         td { padding: 12px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         
-        .btn-small { padding: 6px 10px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; }
-        .btn-danger { background: var(--danger); color: white; border: none; }
-        .btn-warning { background: var(--warning); color: black; border: none; }
-
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .month-selector-bar { background: rgba(0, 242, 255, 0.15); padding: 10px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--neon-blue); }
-
+        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
+
+<div id="notification-hub"></div>
 
 <div id="bg-container">
     <video id="bg-video" autoplay muted loop playsinline></video>
     <img id="bg-img" src="" alt="">
 </div>
 
+<input type="file" id="bgUpload" accept="video/*,image/*" style="display:none" onchange="handleFileUpload(this)">
+
 <div id="authOverlay">
     <div class="auth-card">
-        <h2 style="color: var(--neon-blue); letter-spacing: 2px;">KLPB LOGIN</h2>
+        <h2 style="color: var(--neon-blue);">KLPB LOGIN</h2>
         <input type="email" id="authEmail" placeholder="Email Address">
         <input type="password" id="authPass" placeholder="Access Key">
         <button onclick="loginUser()" class="btn-main" style="background: var(--neon-blue);">INITIALIZE SESSION</button>
-        <button onclick="registerUser()" style="background: transparent; color: var(--success); border: 1px solid var(--success); padding: 8px; width: 100%; cursor: pointer;">REGISTER NEW ACCOUNT</button>
-        <button onclick="changeBackground()" style="margin-top:20px; background:none; border:none; color:var(--neon-blue); cursor:pointer; font-size:0.7rem;">CHANGE BACKGROUND</button>
+        <button onclick="document.getElementById('bgUpload').click()" style="margin-top:20px; background:none; border:none; color:var(--neon-blue); cursor:pointer; font-size:0.75rem; text-decoration: underline;">TAP TO CHANGE BACKGROUND</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
-    <div class="top-bar">
-        <span id="userDisplay" style="color: var(--success); font-size: 0.8rem; border: 1px solid var(--success); padding: 4px 10px; border-radius: 20px; background: rgba(0,0,0,0.5);"></span>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span id="userDisplay" style="color: var(--success); font-size: 0.8rem;"></span>
         <div>
-            <button onclick="changeBackground()" class="btn-small" style="background: var(--neon-blue); color: #000; border:none; margin-right:5px;">SET BACKGROUND</button>
-            <button onclick="logoutUser()" class="btn-danger btn-small" style="padding: 5px 15px;">LOGOUT</button>
+            <button onclick="document.getElementById('bgUpload').click()" style="background: var(--notif-purple); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem;">SET BACKGROUND</button>
+            <button onclick="logoutUser()" style="background: var(--danger); border:none; color:white; padding: 5px 15px; border-radius:4px; margin-left:5px;">LOGOUT</button>
         </div>
-    </div>
-
-    <div class="month-selector-bar">
-        <label style="margin-right: 15px; font-weight: bold; color: var(--neon-blue);">WORKING MONTH:</label>
-        <select id="globalMonth" style="width: 200px; margin: 0; border-color: var(--neon-blue);" onchange="renderAll()">
-            <option value="0">JANUARY</option><option value="1">FEBRUARY</option><option value="2">MARCH</option>
-            <option value="3">APRIL</option><option value="4">MAY</option><option value="5">JUNE</option>
-            <option value="6">JULY</option><option value="7">AUGUST</option><option value="8">SEPTEMBER</option>
-            <option value="9">OCTOBER</option><option value="10">NOVEMBER</option><option value="11">DECEMBER</option>
-        </select>
     </div>
 
     <div class="metric-grid">
         <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
-        <div class="metric-box">CASH REVENUE<span id="statRev" class="metric-val">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--warning);">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--success);">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
-        <div class="metric-box">PERSONAL BAL<span id="statPersBal" class="metric-val">K 0</span></div>
+        <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
+        <div class="metric-box">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'business')">INVENTORY</button>
         <button class="tab-btn" onclick="openTab(event, 'debtors')">DEBTORS</button>
-        <button class="tab-btn" onclick="openTab(event, 'withdraw')">WITHDRAW</button>
-        <button class="tab-btn" onclick="openTab(event, 'personal')">PERSONAL BUDGET</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')">REPORTS</button>
-        <button class="tab-btn" onclick="openTab(event, 'vault')" style="border-color: var(--warning);">VAULT (ARCHIVE)</button>
+        <button class="tab-btn" onclick="openTab(event, 'personal')">PERSONAL</button>
     </div>
 
     <div id="business" class="tab-content active">
         <section>
-            <h2 style="margin-top:0;">// NEW STOCK ENTRY</h2>
+            <h2 style="margin-top:0;">// NEW STOCK</h2>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px;">
                 <input type="text" id="bName" placeholder="Item Name">
-                <input type="number" id="bBuy" placeholder="Capital (K)">
-                <input type="number" id="bSell" placeholder="Sell Price (K)">
+                <input type="number" id="bBuy" placeholder="Cost (K)">
+                <input type="number" id="bSell" placeholder="Sell (K)">
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
-            <button onclick="addBusiness()" class="btn-main">ADD TO INVENTORY</button>
+            <button onclick="addBusiness()" class="btn-main">ADD ITEM</button>
             <table id="bTable">
-                <thead><tr><th>PRODUCT</th><th>CAPITAL</th><th>STOCK</th><th>REVENUE</th><th>QTY</th><th>ACTIONS</th></tr></thead>
+                <thead><tr><th>PRODUCT</th><th>COST</th><th>STOCK</th><th>REVENUE</th><th>QTY</th><th>SELL</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -147,262 +122,153 @@
 
     <div id="debtors" class="tab-content">
         <section>
-            <h2>// DEBTOR MANAGEMENT</h2>
+            <h2>// DEBTORS</h2>
             <table id="debtTable">
-                <thead><tr><th>NAME</th><th>PHONE</th><th>PRODUCT</th><th>TOTAL</th><th>BALANCE</th><th>ACTION</th></tr></thead>
+                <thead><tr><th>NAME</th><th>PRODUCT</th><th>BALANCE</th><th>ACTION</th></tr></thead>
                 <tbody></tbody>
             </table>
-        </section>
-    </div>
-
-    <div id="withdraw" class="tab-content">
-        <section style="text-align: center; max-width: 500px; margin: auto;">
-            <h2>// WITHDRAW CASH PROFIT</h2>
-            <div style="background: rgba(0, 255, 136, 0.1); padding: 20px; border-radius: 8px; border: 1px solid var(--success); margin-bottom: 20px;">
-                <p style="margin: 0; font-size: 0.9rem;">AVAILABLE TO WITHDRAW</p>
-                <h1 id="withdrawableLimit" style="color: var(--success); margin: 10px 0;">K 0.00</h1>
-            </div>
-            <input type="number" id="wAmount" placeholder="Enter Amount to Withdraw (K)">
-            <input type="text" id="wNote" placeholder="Withdrawal Reason (Optional)">
-            <button onclick="makeWithdrawal()" class="btn-main" style="background: var(--danger); color: white;">CONFIRM WITHDRAWAL</button>
         </section>
     </div>
 
     <div id="personal" class="tab-content">
         <section>
-            <h2>// PERSONAL BUDGET & GOALS</h2>
-            <div style="background: rgba(0, 242, 255, 0.05); padding: 15px; border-radius: 8px; border: 1px dashed var(--neon-blue); margin-bottom: 20px;">
-                <label>Set Yearly Savings Goal (K):</label>
-                <input type="number" id="pGoal" style="width: 200px; margin-left: 10px;" onchange="syncData()">
-            </div>
+            <h2>// PERSONAL BUDGET</h2>
             <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
                 <input type="text" id="pDesc" placeholder="Description">
                 <input type="number" id="pAmt" placeholder="Amount (K)">
                 <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
             </div>
-            <button onclick="addPersonalRecord()" class="btn-main" style="background: var(--neon-blue); color: black;">LOG TRANSACTION</button>
-            <table id="pTable">
-                <thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMOUNT</th><th>ACTION</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </section>
-    </div>
-
-    <div id="summary" class="tab-content">
-        <section>
-            <h2>// ANNUAL PERFORMANCE REPORT</h2>
-            <table id="ySummaryTable">
-                <thead><tr><th>MONTH</th><th>CAPITAL</th><th>SALES</th><th>PROFIT</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <br>
-            <button onclick="archiveYear()" class="btn-main" style="background: var(--warning); color: black;">ARCHIVE YEAR & RESET SYSTEM</button>
-        </section>
-    </div>
-
-    <div id="vault" class="tab-content">
-        <section>
-            <h2 style="color: var(--warning);">// ARCHIVED RECORDS</h2>
-            <div id="vaultContainer"></div>
+            <button onclick="addPersonalRecord()" class="btn-main" style="background: var(--neon-blue);">LOG</button>
         </section>
     </div>
 </div>
 
 <script>
+// --- Custom Notification System ---
+function showNotif(msg) {
+    const hub = document.getElementById('notification-hub');
+    const toast = document.createElement('div');
+    toast.className = 'notif-toast';
+    toast.innerText = msg;
+    hub.appendChild(toast);
+    setTimeout(() => toast.remove(), 3500);
+}
+
+// --- Background Upload & Management ---
+function handleFileUpload(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    applyBackground(url, file.type.startsWith('video'));
+    // Store in local storage (Note: large local files won't persist after refresh via Blob URL, 
+    // but the system is now set up to allow "Tapping the button" to pick any file).
+    showNotif("Background Updated Successfully!");
+}
+
+function applyBackground(url, isVideo) {
+    const v = document.getElementById('bg-video');
+    const i = document.getElementById('bg-img');
+    if (isVideo) {
+        v.src = url; v.style.display = "block"; i.style.display = "none"; v.play();
+    } else {
+        i.src = url; i.style.display = "block"; v.style.display = "none";
+    }
+}
+
+// --- Supabase & Logic ---
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], archiveVault = [], withdrawals = [], personalLedger = [], debtors = [], savingsGoal = 0;
-const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+let businessData = [], stockHistory = [], personalLedger = [], debtors = [], withdrawals = [];
 
-// Background Function
-function changeBackground() {
-    const url = prompt("Enter URL for background (Video or Image link):");
-    if (!url) return;
-    
-    const video = document.getElementById('bg-video');
-    const img = document.getElementById('bg-img');
-    
-    // Check if it's a common video format
-    if (url.match(/\.(mp4|webm|ogg)$/i)) {
-        video.src = url;
-        video.style.display = "block";
-        img.style.display = "none";
-        video.play();
-    } else {
-        img.src = url;
-        img.style.display = "block";
-        video.style.display = "none";
-    }
-    localStorage.setItem('klpb_bg', url);
+async function loginUser() { 
+    const { error } = await supabaseClient.auth.signInWithPassword({ 
+        email: document.getElementById('authEmail').value, 
+        password: document.getElementById('authPass').value 
+    });
+    if (error) showNotif("ERROR: " + error.message);
 }
-
-// Load saved background on start
-window.onload = () => {
-    const savedBg = localStorage.getItem('klpb_bg');
-    if (savedBg) {
-        const video = document.getElementById('bg-video');
-        const img = document.getElementById('bg-img');
-        if (savedBg.match(/\.(mp4|webm|ogg)$/i)) {
-            video.src = savedBg;
-            video.style.display = "block";
-        } else {
-            img.src = savedBg;
-            img.style.display = "block";
-        }
-    } else {
-        // Default video
-        document.getElementById('bg-video').src = "https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4";
-        document.getElementById('bg-video').style.display = "block";
-    }
-};
-
-// Core logic (Untouched)
-document.getElementById('globalMonth').value = new Date().getMonth();
-async function loginUser() { await supabaseClient.auth.signInWithPassword({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
-async function registerUser() { await supabaseClient.auth.signUp({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
-async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) { 
         document.getElementById('authOverlay').style.display = 'none'; 
         document.getElementById('mainApp').style.display = 'block'; 
-        document.getElementById('userDisplay').innerText = `SESSION: ${session.user.email}`;
+        document.getElementById('userDisplay').innerText = `USER: ${session.user.email}`;
+        showNotif("SESSION INITIALIZED");
         loadData(session.user.id); 
     }
 });
 
 async function syncData() {
-    savingsGoal = parseFloat(document.getElementById('pGoal').value) || 0;
     const { data: { user } } = await supabaseClient.auth.getUser();
     await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, payload: { businessData, stockHistory, archiveVault, withdrawals, personalLedger, debtors, savingsGoal }, updated_at: new Date() 
+        user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors }, updated_at: new Date() 
     });
 }
 
 async function loadData(userId) {
     const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
     if (data?.payload) {
-        businessData = data.payload.businessData || []; stockHistory = data.payload.stockHistory || [];
-        archiveVault = data.payload.archiveVault || []; withdrawals = data.payload.withdrawals || [];
-        personalLedger = data.payload.personalLedger || []; debtors = data.payload.debtors || [];
-        document.getElementById('pGoal').value = data.payload.savingsGoal || 0;
+        businessData = data.payload.businessData || [];
+        stockHistory = data.payload.stockHistory || [];
+        personalLedger = data.payload.personalLedger || [];
+        debtors = data.payload.debtors || [];
         renderAll();
     }
 }
 
 function addBusiness() {
-    const name = document.getElementById('bName').value, spent = parseFloat(document.getElementById('bBuy').value), sell = parseFloat(document.getElementById('bSell').value), qty = parseInt(document.getElementById('bStock').value);
-    const selectedMonth = parseInt(document.getElementById('globalMonth').value);
-    if (name && !isNaN(spent)) {
-        const id = Date.now();
-        businessData.push({ id, name, unitSellPrice: sell, currentStock: qty || 0, totalCapitalInvested: spent, month: selectedMonth, totalSalesRevenue: 0 });
-        stockHistory.push({ id, name, qty: qty || 0, cost: spent, month: selectedMonth });
-        renderAll(); syncData();
-        ["bName", "bBuy", "bSell", "bStock"].forEach(i => document.getElementById(i).value = '');
-    }
+    const name = document.getElementById('bName').value, spent = parseFloat(document.getElementById('bBuy').value);
+    if (!name || isNaN(spent)) return showNotif("PLEASE FILL ALL FIELDS");
+    businessData.push({ id: Date.now(), name, totalCapitalInvested: spent, unitSellPrice: parseFloat(document.getElementById('bSell').value), currentStock: parseInt(document.getElementById('bStock').value), totalSalesRevenue: 0 });
+    stockHistory.push({ cost: spent });
+    showNotif("ITEM ADDED TO INVENTORY");
+    renderAll(); syncData();
 }
 
 function handleSale(id, isDebt) {
     const qty = parseInt(document.getElementById(`qty_${id}`).value);
     const item = businessData.find(x => x.id === id);
-    const selectedMonth = parseInt(document.getElementById('globalMonth').value);
-    if (!item || item.currentStock < qty) return alert("Insufficient Stock!");
-    const totalVal = item.unitSellPrice * qty; item.currentStock -= qty;
+    if (item.currentStock < qty) return showNotif("INSUFFICIENT STOCK");
+    item.currentStock -= qty;
+    const total = item.unitSellPrice * qty;
     if (isDebt) {
-        const n = prompt("Debtor Name:"), p = prompt("Phone:"); if(!n) return;
-        debtors.push({ id: Date.now(), name: n, phone: p || "N/A", product: item.name, total: totalVal, paid: 0, balance: totalVal, originalItemId: id, month: selectedMonth });
-    } else { item.totalSalesRevenue += totalVal; }
-    renderAll(); syncData();
-}
-
-function payDebt(id) {
-    const d = debtors.find(x => x.id === id);
-    const amt = parseFloat(prompt(`Balance: K ${d.balance}\nEnter Payment Amount:`));
-    if (amt > 0 && amt <= d.balance) {
-        d.paid += amt; d.balance -= amt;
-        const item = businessData.find(x => x.id === d.originalItemId);
-        if (item) item.totalSalesRevenue += amt;
-        renderAll(); syncData();
+        const n = prompt("Name:");
+        debtors.push({ id: Date.now(), name: n, product: item.name, balance: total, originalItemId: id });
+        showNotif("DEBT RECORDED");
+    } else {
+        item.totalSalesRevenue += total;
+        showNotif("SALE COMPLETED");
     }
-}
-
-function makeWithdrawal() {
-    const amt = parseFloat(document.getElementById('wAmount').value);
-    const note = document.getElementById('wNote').value || "Profit Withdrawal";
-    const selectedMonth = parseInt(document.getElementById('globalMonth').value);
-    const cap = stockHistory.reduce((s, x) => s + x.cost, 0);
-    const rev = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
-    const prevW = withdrawals.reduce((s, x) => s + x.amount, 0);
-    const avail = rev - cap - prevW;
-    if (isNaN(amt) || amt <= 0) return alert("Enter valid amount!");
-    if (amt > avail) return alert(`Limit: K ${avail.toFixed(2)}`);
-    const wId = Date.now();
-    withdrawals.push({ id: wId, amount: amt, note, month: selectedMonth });
-    personalLedger.push({ id: wId, date: new Date().toLocaleDateString(), desc: `Business Profit: ${note}`, amt, type: 'income', isWithdrawalLink: true, month: selectedMonth });
     renderAll(); syncData();
-}
-
-function addPersonalRecord() {
-    const desc = document.getElementById('pDesc').value, amt = parseFloat(document.getElementById('pAmt').value), type = document.getElementById('pType').value;
-    const selectedMonth = parseInt(document.getElementById('globalMonth').value);
-    if (desc && !isNaN(amt)) {
-        personalLedger.push({ date: new Date().toLocaleDateString(), desc, amt, type, id: Date.now(), month: selectedMonth });
-        renderAll(); syncData();
-        document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
-    }
 }
 
 function renderAll() {
-    const selectedMonth = parseInt(document.getElementById('globalMonth').value);
-    document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === selectedMonth).map(x => `
+    document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `
         <tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td>K ${x.totalSalesRevenue}</td>
-        <td><input type="number" id="qty_${x.id}" value="1" style="width:50px; padding:4px;"></td>
-        <td class="action-btns">
-            <button onclick="handleSale(${x.id}, false)" class="btn-small" style="background:var(--success); color:#000">CASH</button>
-            <button onclick="handleSale(${x.id}, true)" class="btn-small" style="background:var(--warning); color:#000">DEBT</button>
-        </td></tr>`).join('');
+        <td><input type="number" id="qty_${x.id}" value="1" style="width:40px; margin:0; padding:2px;"></td>
+        <td><button onclick="handleSale(${x.id}, false)" class="btn-small" style="background:var(--success)">$</button>
+            <button onclick="handleSale(${x.id}, true)" class="btn-small" style="background:var(--warning)">!</button></td></tr>`).join('');
+    
     document.querySelector("#debtTable tbody").innerHTML = debtors.map(d => `
-        <tr><td>${d.name}</td><td>${d.phone}</td><td>${d.product}</td><td>K ${d.total}</td><td>K ${d.balance}</td>
-        <td><button onclick="payDebt(${d.id})" class="btn-small" style="background:var(--success); color:#000">PAY</button></td></tr>`).join('');
-    document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(x => x.month === selectedMonth).slice().reverse().map(x => `
-        <tr style="color:${x.type === 'expense' ? 'var(--danger)' : 'var(--success)'}">
-            <td>${x.date}</td><td>${x.desc}</td><td>${x.type.toUpperCase()}</td><td>K ${x.amt}</td>
-            <td><button onclick="deletePersonal(${x.id})" class="btn-danger btn-small">X</button></td>
-        </tr>`).join('');
+        <tr><td>${d.name}</td><td>${d.product}</td><td>K ${d.balance}</td><td>...</td></tr>`).join('');
+
     const cap = stockHistory.reduce((s, x) => s + x.cost, 0);
     const rev = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
-    const pBal = personalLedger.reduce((s, x) => x.type === 'income' ? s + x.amt : s - x.amt, 0);
-    const debt = debtors.reduce((s, x) => s + x.balance, 0);
-    const withdr = withdrawals.reduce((s, x) => s + x.amount, 0);
-    document.getElementById('statCap').innerText = `K ${cap.toFixed(2)}`;
-    document.getElementById('statRev').innerText = `K ${rev.toFixed(2)}`;
-    document.getElementById('statDebt').innerText = `K ${debt.toFixed(2)}`;
-    document.getElementById('statProfit').innerText = `K ${(rev - cap - withdr).toFixed(2)}`;
-    document.getElementById('statPersBal').innerText = `K ${pBal.toFixed(2)}`;
-    document.getElementById('withdrawableLimit').innerText = `K ${(rev - cap - withdr).toFixed(2)}`;
-    let reportHTML = "";
-    months.forEach((mName, index) => {
-        const mCap = stockHistory.filter(x => x.month === index).reduce((s, x) => s + x.cost, 0);
-        const mRev = businessData.filter(x => x.month === index).reduce((s, x) => s + x.totalSalesRevenue, 0);
-        reportHTML += `<tr><td>${mName}</td><td>K ${mCap.toFixed(2)}</td><td>K ${mRev.toFixed(2)}</td><td style="color:${(mRev-mCap)>=0?'var(--success)':'var(--danger)'}">K ${(mRev-mCap).toFixed(2)}</td></tr>`;
-    });
-    document.querySelector("#ySummaryTable tbody").innerHTML = reportHTML;
-    document.getElementById('vaultContainer').innerHTML = archiveVault.map(v => `<div style="border:1px solid var(--warning); padding:15px; margin-top:10px; background:rgba(255,170,0,0.1); border-radius:8px;"><h3 style="margin:0; color:var(--warning);">${v.year} RECORDS</h3><p>Net Profit: K ${(v.summary.totalRev - v.summary.totalCap).toFixed(2)}</p></div>`).join('');
+    document.getElementById('statCap').innerText = `K ${cap}`;
+    document.getElementById('statRev').innerText = `K ${rev}`;
+    document.getElementById('statProfit').innerText = `K ${rev - cap}`;
 }
 
 function openTab(evt, t) {
     document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
     document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
 }
-function deletePersonal(id) { if(confirm("Delete?")) { personalLedger = personalLedger.filter(x => x.id !== id); renderAll(); syncData(); } }
-function archiveYear() {
-    const label = prompt("Year Label:"); if (!label) return;
-    const summary = { totalCap: stockHistory.reduce((s, x) => s + x.cost, 0), totalRev: businessData.reduce((s, x) => s + x.totalSalesRevenue, 0), debtRemaining: debtors.reduce((s, x) => s + x.balance, 0) };
-    archiveVault.push({ year: label, summary });
-    businessData = []; stockHistory = []; debtors = []; withdrawals = []; personalLedger = []; renderAll(); syncData();
-}
+function logoutUser() { supabaseClient.auth.signOut(); location.reload(); }
+
+// Default background
+applyBackground("https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4", true);
 </script>
 </body>
 </html>

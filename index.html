@@ -13,6 +13,7 @@
     <meta name="theme-color" content="#000b1a">
     <title>KLPB - Business Engine v2.9</title>
     
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
@@ -97,6 +98,7 @@
         td { padding: 12px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); font-size: 0.8rem; }
         
         .btn-small { padding: 8px 12px; font-size: 0.7rem; border-radius: 4px; cursor: pointer; border: none; font-weight: bold; }
+        .action-btns { display: flex; gap: 4px; }
 
         .month-selector-bar {
             background: rgba(0, 242, 255, 0.15); padding: 15px; border-radius: 8px;
@@ -121,7 +123,7 @@
 
 <div id="authOverlay">
     <div class="auth-card">
-        <h2 style="color: var(--neon-blue); letter-spacing: 2px;">KLPB ENGINE</h2>
+        <h2 style="color: var(--neon-blue); letter-spacing: 2px;"><i class="fas fa-microchip"></i> KLPB ENGINE</h2>
         <input type="email" id="authEmail" placeholder="Email Address">
         <input type="password" id="authPass" placeholder="Access Key">
         <button onclick="loginUser()" class="btn-main" style="background: var(--neon-blue); margin-top:10px;">INITIALIZE SESSION</button>
@@ -134,13 +136,13 @@
         <div>
             <span id="userDisplay" style="color: var(--success); font-size: 0.7rem; border: 1px solid var(--success); padding: 4px 10px; border-radius: 20px; background: rgba(0,0,0,0.5);"></span>
             <input type="file" id="bgUpload" accept="image/*,video/*" style="display: none;" onchange="handleBackgroundUpload(this)">
-            <button onclick="document.getElementById('bgUpload').click()" class="btn-small" style="background: var(--neon-blue); color: #000; margin-left:10px;">BG</button>
+            <button onclick="document.getElementById('bgUpload').click()" class="btn-small" style="background: var(--neon-blue); color: #000; margin-left:10px;"><i class="fas fa-image"></i> BG</button>
         </div>
-        <button onclick="logoutUser()" class="btn-small" style="background: var(--danger); color: white;">LOGOUT</button>
+        <button onclick="logoutUser()" class="btn-small" style="background: var(--danger); color: white;"><i class="fas fa-sign-out-alt"></i> LOGOUT</button>
     </div>
 
     <div class="month-selector-bar">
-        <label style="font-weight: bold; color: var(--neon-blue); font-size: 0.8rem;">WORKING MONTH:</label>
+        <label style="font-weight: bold; color: var(--neon-blue); font-size: 0.8rem;"><i class="fas fa-calendar-alt"></i> WORKING MONTH:</label>
         <select id="globalMonth" style="max-width: 200px; margin: 0; border-color: var(--neon-blue);" onchange="renderAll()">
             <option value="0">JANUARY</option><option value="1">FEBRUARY</option><option value="2">MARCH</option>
             <option value="3">APRIL</option><option value="4">MAY</option><option value="5">JUNE</option>
@@ -150,35 +152,35 @@
     </div>
 
     <div class="metric-grid">
-        <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
-        <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--warning);">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--success);">PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
-        <div class="metric-box">PERSONAL<span id="statPersBal" class="metric-val">K 0</span></div>
+        <div class="metric-box"><i class="fas fa-vault"></i> CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
+        <div class="metric-box"><i class="fas fa-chart-line"></i> REVENUE<span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--warning);"><i class="fas fa-hand-holding-usd"></i> DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--success);"><i class="fas fa-coins"></i> PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+        <div class="metric-box"><i class="fas fa-user-tie"></i> PERSONAL<span id="statPersBal" class="metric-val">K 0</span></div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'business')">STOCK</button>
-        <button class="tab-btn" onclick="openTab(event, 'debtors')">DEBTORS</button>
-        <button class="tab-btn" onclick="openTab(event, 'withdraw')">WITHDRAW</button>
-        <button class="tab-btn" onclick="openTab(event, 'personal')">BUDGET</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')">REPORTS</button>
-        <button class="tab-btn" onclick="openTab(event, 'vault')">VAULT</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')"><i class="fas fa-boxes"></i> STOCK</button>
+        <button class="tab-btn" onclick="openTab(event, 'debtors')"><i class="fas fa-users-slash"></i> DEBTORS</button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')"><i class="fas fa-external-link-alt"></i> WITHDRAW</button>
+        <button class="tab-btn" onclick="openTab(event, 'personal')"><i class="fas fa-wallet"></i> BUDGET</button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')"><i class="fas fa-file-invoice-dollar"></i> REPORTS</button>
+        <button class="tab-btn" onclick="openTab(event, 'vault')"><i class="fas fa-archive"></i> VAULT</button>
     </div>
 
     <div id="business" class="tab-content active">
         <section>
-            <h2 style="margin-top:0; font-size: 1rem;">// INVENTORY</h2>
+            <h2 style="margin-top:0; font-size: 1rem;">// INVENTORY ENGINE</h2>
             <input type="text" id="bName" placeholder="Item Name">
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                 <input type="number" id="bBuy" placeholder="Cap (K)">
                 <input type="number" id="bSell" placeholder="Sell (K)">
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
-            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK</button>
+            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;"><i class="fas fa-plus-circle"></i> ADD NEW STOCK</button>
             <div class="table-wrap">
                 <table id="bTable">
-                    <thead><tr><th>ITEM</th><th>CAP</th><th>STOCK</th><th>REV</th><th>QTY</th><th>SELL</th></tr></thead>
+                    <thead><tr><th>ITEM</th><th>CAP</th><th>STOCK</th><th>REV</th><th>QTY</th><th>ACTION</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -187,7 +189,7 @@
 
     <div id="debtors" class="tab-content">
         <section>
-            <h2 style="font-size: 1rem;">// DEBTORS</h2>
+            <h2 style="font-size: 1rem;">// DEBTORS LEDGER</h2>
             <div class="table-wrap">
                 <table id="debtTable">
                     <thead><tr><th>NAME</th><th>PHONE</th><th>PRODUCT</th><th>BALANCE</th><th>ACTION</th></tr></thead>
@@ -202,19 +204,19 @@
             <h2 style="font-size: 1rem;">// WITHDRAW PROFIT</h2>
             <h1 id="withdrawableLimit" style="color: var(--success); margin: 15px 0;">K 0.00</h1>
             <input type="number" id="wAmount" placeholder="Amount (K)">
-            <button onclick="makeWithdrawal()" class="btn-main" style="background: var(--danger); color: white;">CONFIRM WITHDRAWAL</button>
+            <button onclick="makeWithdrawal()" class="btn-main" style="background: var(--danger); color: white;"><i class="fas fa-check-double"></i> CONFIRM WITHDRAWAL</button>
         </section>
     </div>
 
     <div id="personal" class="tab-content">
         <section>
             <h2 style="font-size: 1rem;">// PERSONAL BUDGET</h2>
-            <label>Savings Goal (K):</label>
+            <label><i class="fas fa-bullseye"></i> Savings Goal (K):</label>
             <input type="number" id="pGoal" onchange="syncData()">
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount (K)">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-            <button onclick="addPersonalRecord()" class="btn-main">LOG ENTRY</button>
+            <button onclick="addPersonalRecord()" class="btn-main"><i class="fas fa-pen-nib"></i> LOG ENTRY</button>
             <div class="table-wrap">
                 <table id="pTable">
                     <thead><tr><th>DATE</th><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead>
@@ -228,7 +230,7 @@
         <section>
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2 style="font-size: 1rem;">// PERFORMANCE REPORT</h2>
-                <button onclick="generatePDF()" class="btn-small" style="background: var(--neon-blue); color: black;">GENERATE PDF</button>
+                <button onclick="generatePDF()" class="btn-small" style="background: var(--neon-blue); color: black;"><i class="fas fa-file-pdf"></i> GENERATE PDF</button>
             </div>
             <div class="table-wrap">
                 <table id="ySummaryTable">
@@ -236,7 +238,7 @@
                     <tbody></tbody>
                 </table>
             </div>
-            <button onclick="archiveYear()" class="btn-main" style="background: var(--warning); color: black; margin-top: 20px;">ARCHIVE & RESET YEAR</button>
+            <button onclick="archiveYear()" class="btn-main" style="background: var(--warning); color: black; margin-top: 20px;"><i class="fas fa-folder-plus"></i> ARCHIVE & RESET YEAR</button>
         </section>
     </div>
 
@@ -265,7 +267,7 @@ function showNotify(msg, duration = 3000) {
     setTimeout(() => { el.style.display = 'none'; }, duration);
 }
 
-// Auth
+// Auth Logic
 async function loginUser() {
     const email = document.getElementById('authEmail').value;
     const pass = document.getElementById('authPass').value;
@@ -326,27 +328,36 @@ async function loadData(userId) {
 function renderAll() {
     const m = parseInt(document.getElementById('globalMonth').value);
     
-    // Inventory
+    // Inventory Rendering
     document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === m).map(x => `
-        <tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td>K ${x.totalSalesRevenue}</td>
-        <td><input type="number" id="qty_${x.id}" value="1" style="width:45px; padding:4px; margin:0;"></td>
-        <td class="action-btns">
-            <button onclick="handleSale(${x.id}, false)" class="btn-small" style="background:var(--success); color:#000">CASH</button>
-            <button onclick="handleSale(${x.id}, true)" class="btn-small" style="background:var(--warning); color:#000">DEBT</button>
-        </td></tr>`).join('');
+        <tr>
+            <td>${x.name}</td>
+            <td>K ${x.totalCapitalInvested}</td>
+            <td style="color:${x.currentStock <= 3 ? 'var(--danger)' : 'inherit'}">${x.currentStock}</td>
+            <td>K ${x.totalSalesRevenue}</td>
+            <td><input type="number" id="qty_${x.id}" value="1" style="width:45px; padding:4px; margin:0;"></td>
+            <td>
+                <div class="action-btns">
+                    <button onclick="handleSale(${x.id}, false)" class="btn-small" style="background:var(--success); color:#000" title="Cash Sale"><i class="fas fa-money-bill-wave"></i></button>
+                    <button onclick="handleSale(${x.id}, true)" class="btn-small" style="background:var(--warning); color:#000" title="Debt Sale"><i class="fas fa-handshake"></i></button>
+                    <button onclick="restockItem(${x.id})" class="btn-small" style="background:var(--neon-blue); color:#000" title="Restock"><i class="fas fa-sync-alt"></i></button>
+                </div>
+            </td>
+        </tr>`).join('');
 
-    // Debtors
+    // Debtors Rendering
     document.querySelector("#debtTable tbody").innerHTML = debtors.map(d => `
         <tr><td>${d.name}</td><td>${d.phone}</td><td>${d.product}</td><td>K ${d.balance.toFixed(2)}</td>
-        <td><button onclick="payDebt(${d.id})" class="btn-small" style="background:var(--success); color:#000">PAY</button></td></tr>`).join('');
+        <td><button onclick="payDebt(${d.id})" class="btn-small" style="background:var(--success); color:#000"><i class="fas fa-check"></i> PAY</button></td></tr>`).join('');
 
-    // Personal
+    // Personal Rendering
     document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(x => x.month === m).slice().reverse().map(x => `
         <tr style="color:${x.type === 'expense' ? 'var(--danger)' : 'var(--success)'}">
             <td>${x.date}</td><td>${x.desc}</td><td>K ${x.amt}</td><td>${x.type}</td>
             <td><button onclick="deletePersonal(${x.id})" class="btn-small" style="background:var(--danger); color:white;">X</button></td>
         </tr>`).join('');
 
+    // Stats Calculation
     const totalCap = stockHistory.reduce((s, x) => s + parseFloat(x.cost), 0);
     const totalRev = businessData.reduce((s, x) => s + parseFloat(x.totalSalesRevenue), 0);
     const totalWith = withdrawals.reduce((s, x) => s + parseFloat(x.amount), 0);
@@ -373,12 +384,39 @@ function renderAll() {
     // Vault Sync
     document.getElementById('vaultContainer').innerHTML = archiveVault.map(v => `
         <div style="border:1px solid var(--warning); padding:15px; margin-top:10px; background:rgba(255,170,0,0.1); border-radius:8px;">
-            <h3 style="margin:0; color:var(--warning);">${v.year} DATA</h3>
+            <h3 style="margin:0; color:var(--warning);"><i class="fas fa-history"></i> ${v.year} DATA</h3>
             <p>Net Profit: K ${(v.summary.totalRev - v.summary.totalCap).toFixed(2)}</p>
         </div>`).join('');
 }
 
-// Actions
+// RESTOCK LOGIC
+function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    if (!item) return;
+
+    const newQty = parseInt(prompt(`RESTOCK [${item.name}]\nEnter Quantity to add:`));
+    const newCost = parseFloat(prompt(`Enter Capital spent for these ${newQty} units (K):`));
+
+    if (!isNaN(newQty) && !isNaN(newCost) && newQty > 0) {
+        item.currentStock += newQty;
+        item.totalCapitalInvested += newCost;
+        
+        // Record in stock history to affect global Capital stats
+        stockHistory.push({ 
+            id: Date.now(), 
+            name: item.name, 
+            qty: newQty, 
+            cost: newCost, 
+            month: parseInt(document.getElementById('globalMonth').value) 
+        });
+
+        showNotify("INVENTORY UPDATED & CAPITAL SYNCED");
+        renderAll();
+        syncData();
+    }
+}
+
+// Business Actions
 function addBusiness() {
     const name = document.getElementById('bName').value, spent = parseFloat(document.getElementById('bBuy').value), sell = parseFloat(document.getElementById('bSell').value), qty = parseInt(document.getElementById('bStock').value);
     const m = parseInt(document.getElementById('globalMonth').value);
@@ -496,14 +534,5 @@ function archiveYear() {
     showNotify("YEAR ARCHIVED TO VAULT");
 }
 </script>
-    <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js')
-      .then(() => console.log("KLPB Service Worker Registered"));
-  }
-</script>
 </body>
 </html>
-
-
-

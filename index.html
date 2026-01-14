@@ -3,208 +3,303 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KLPB - Reinvestment Engine</title>
+    <title>KLPB - Pro Business Engine v2</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
             --neon-blue: #00f2ff;
             --deep-blue: #000b1a;
-            --panel-bg: rgba(0, 242, 255, 0.1);
+            --panel-bg: rgba(0, 242, 255, 0.05);
             --border-glow: rgba(0, 242, 255, 0.4);
             --text-main: #e0faff;
             --danger: #ff4d4d;
-            --success: #00ff88;
             --warning: #ffaa00;
+            --success: #00ff88;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--deep-blue); color: var(--text-main); margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        body { 
+            font-family: 'Segoe UI Semibold', sans-serif; 
+            background-color: var(--deep-blue); color: var(--neon-blue); 
+            margin: 0; padding: 0; 
+            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 11, 26, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
+
+        .container { max-width: 1100px; margin: auto; padding: 20px; display: none; }
+        .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); overflow-x: auto; }
+        .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 25px; cursor: pointer; opacity: 0.5; transition: 0.4s; white-space: nowrap; }
+        .tab-btn.active { opacity: 1; color: var(--neon-blue); border-bottom: 3px solid var(--neon-blue); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
+        
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 4px; margin-bottom: 20px; }
         
         .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .metric-box { border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.3); }
+        .metric-box { border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.4); }
+        .metric-val { display: block; font-size: 1.5rem; font-weight: bold; margin-top: 5px; }
+
+        input, select { background: rgba(0, 20, 40, 0.8); border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 12px; width: 100%; margin: 10px 0; box-sizing: border-box; border-radius: 4px; }
+        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; font-size: 0.8rem; border-radius: 4px; }
+        button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
         
-        input, select { background: #001428; border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 10px; width: 100%; margin: 5px 0; border-radius: 4px; }
-        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 10px; cursor: pointer; width: 100%; transition: 0.3s; margin-top: 5px; border-radius: 4px; }
-        button:hover { background: var(--neon-blue); color: #000; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8rem; }
+        th { text-align: left; color: #70a1ff; padding: 10px; border-bottom: 1px solid var(--border-glow); }
+        td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 10px; border-bottom: 1px solid var(--border-glow); color: var(--neon-blue); font-size: 0.8rem; }
-        td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); font-size: 0.85rem; }
-        
-        .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-        .tab-btn { flex: 1; border-bottom: 2px solid transparent; opacity: 0.6; }
-        .tab-btn.active { opacity: 1; border-bottom: 2px solid var(--neon-blue); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+        .archive-entry { border: 1px solid var(--warning); padding: 15px; margin-bottom: 15px; border-radius: 5px; background: rgba(255, 170, 0, 0.05); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h1 style="text-align: center; color: var(--neon-blue); letter-spacing: 3px;">KLPB BUSINESS ENGINE</h1>
+<div id="authOverlay">
+    <div class="auth-card">
+        <h2>KLPB_AUTH_GATE</h2>
+        <input type="email" id="authEmail" placeholder="USER_EMAIL">
+        <input type="password" id="authPass" placeholder="ACCESS_KEY">
+        <button onclick="loginUser()">INITIALIZE_SESSION</button>
+        <button onclick="registerUser()" style="border-color: var(--success); color: var(--success); margin-top: 10px;">REGISTER</button>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <small id="userDisplay"></small>
+        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px;">LOGOUT</button>
+    </div>
+
+    <h1 style="text-align: center; letter-spacing: 5px;">KLPB BUSINESS ENGINE</h1>
+
+    <div class="metric-grid">
+        <div class="metric-box">TOTAL CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
+        <div class="metric-box">TOTAL REVENUE<span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--danger);">WITHDRAWN<span id="statWith" class="metric-val" style="color: var(--danger);">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--success);">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+    </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'biz')">INVENTORY & SALES</button>
-        <button class="tab-btn" onclick="openTab(event, 'stats')">ANALYTICS & VAULT</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')">01_LIVE_STOCK</button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')">02_WITHDRAWALS</button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')">03_REPORTS</button>
+        <button class="tab-btn" onclick="openTab(event, 'vault')">04_ARCHIVE_VAULT</button>
     </div>
 
-    <div id="biz" class="tab-content active">
+    <div id="business" class="tab-content active">
         <section>
-            <div class="metric-grid" id="topStats"></div>
-            <h3>// ADD STOCK</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <input type="text" id="itemName" placeholder="ITEM">
-                <input type="number" id="itemCap" placeholder="CAPITAL (K)">
-                <input type="number" id="itemQty" placeholder="QTY">
+            <h2>// ADD_INVENTORY</h2>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 5px;">
+                <input type="text" id="bName" placeholder="ITEM NAME">
+                <input type="number" id="bBuy" placeholder="CAPITAL PAID (K)">
+                <input type="number" id="bSell" placeholder="RETAIL SELL PRICE">
             </div>
-            <input type="number" id="itemSell" placeholder="RETAIL SELL PRICE (K)">
-            <button onclick="addItem()">INITIALIZE STOCK</button>
-        </section>
-
-        <section>
-            <h3>// CURRENT STOCK</h3>
-            <table>
-                <thead><tr><th>ITEM</th><th>TOTAL CAP</th><th>QTY</th><th>REVENUE</th><th>ACTION</th></tr></thead>
-                <tbody id="inventoryBody"></tbody>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <input type="number" id="bStock" placeholder="QTY ADDED">
+                <select id="bMonth">
+                    <option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option>
+                    <option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option>
+                    <option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option>
+                </select>
+            </div>
+            <button onclick="addBusiness()">ADD_NEW_ITEM</button>
+            <table id="bTable">
+                <thead><tr><th>PRODUCT</th><th>CAPITAL</th><th>STOCK</th><th>REVENUE</th><th>ACTION</th></tr></thead>
+                <tbody></tbody>
             </table>
         </section>
     </div>
 
-    <div id="stats" class="tab-content">
+    <div id="withdraw" class="tab-content">
         <section>
-            <h2>// FINANCIAL PERFORMANCE</h2>
-            <div class="metric-grid" id="analyticsGrid"></div>
-            <button onclick="withdrawProfit()" style="border-color: var(--danger); color: var(--danger);">WITHDRAW PROFIT</button>
+            <h2>// INITIALIZE_WITHDRAWAL</h2>
+            <p style="font-size: 0.8rem; color: var(--text-main);">Deduct earnings from the engine for personal use.</p>
+            <input type="number" id="wAmount" placeholder="AMOUNT TO WITHDRAW (K)">
+            <input type="text" id="wNote" placeholder="REASON / NOTE">
+            <button onclick="makeWithdrawal()" style="border-color: var(--danger); color: var(--danger);">CONFIRM_WITHDRAWAL</button>
         </section>
+    </div>
 
+    <div id="summary" class="tab-content">
         <section>
-            <h3>// ARCHIVE VAULT</h3>
-            <table id="vaultTable">
-                <thead><tr><th>YEAR/PERIOD</th><th>CAPITAL</th><th>REINVESTED</th><th>SALES</th><th>WITHDRAWN</th></tr></thead>
-                <tbody id="vaultBody"></tbody>
+            <h2>// CURRENT_YEAR_REPORTS</h2>
+            <table id="ySummaryTable">
+                <thead><tr><th>MONTH</th><th>CAPITAL</th><th>SALES</th><th>PROFIT</th></tr></thead>
+                <tbody></tbody>
             </table>
-            <button onclick="archiveYear()" style="margin-top: 20px;">ARCHIVE CURRENT DATA</button>
+            <br>
+            <button onclick="archiveYear()" style="border-color: var(--warning); color: var(--warning);">ARCHIVE_TO_VAULT & RESET_CYCLE</button>
+        </section>
+    </div>
+
+    <div id="vault" class="tab-content">
+        <section>
+            <h2 style="color: var(--warning);">// PERMANENT_VAULT_RECORDS</h2>
+            <div id="vaultContainer">
+                </div>
         </section>
     </div>
 </div>
 
 <script>
-// Logic State
-let items = [], history = [], vault = [], totalWithdrawn = 0, totalReinvested = 0;
+const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function addItem() {
-    const name = document.getElementById('itemName').value;
-    const cap = parseFloat(document.getElementById('itemCap').value);
-    const qty = parseInt(document.getElementById('itemQty').value);
-    const sell = parseFloat(document.getElementById('itemSell').value);
+let businessData = [], stockHistory = [], archiveVault = [], withdrawals = [];
+const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-    if (name && !isNaN(cap)) {
-        items.push({ id: Date.now(), name, capital: cap, qty, sell, revenue: 0 });
-        history.push({ type: 'Purchase', name, amt: cap, qty });
-        render();
+// --- AUTH ---
+async function loginUser() { await supabaseClient.auth.signInWithPassword({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
+async function registerUser() { await supabaseClient.auth.signUp({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
+async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) { 
+        document.getElementById('authOverlay').style.display = 'none'; 
+        document.getElementById('mainApp').style.display = 'block'; 
+        document.getElementById('userDisplay').innerText = `SESSION_ACTIVE: ${session.user.email}`;
+        loadData(session.user.id); 
+    }
+});
+
+async function syncData() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    await supabaseClient.from('user_budgets').upsert({ 
+        user_id: user.id, 
+        payload: { businessData, stockHistory, archiveVault, withdrawals }, 
+        updated_at: new Date() 
+    });
+}
+
+async function loadData(userId) {
+    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
+    if (data?.payload) {
+        businessData = data.payload.businessData || [];
+        stockHistory = data.payload.stockHistory || [];
+        archiveVault = data.payload.archiveVault || [];
+        withdrawals = data.payload.withdrawals || [];
+        renderAll();
     }
 }
 
-function sellRetail(id) {
-    const item = items.find(i => i.id === id);
-    if (item.qty > 0) {
-        item.qty -= 1;
-        item.revenue += item.sell;
-        render();
-    } else { alert("OUT OF STOCK"); }
-}
-
-function restockItem(id) {
-    const item = items.find(i => i.id === id);
-    const qty = parseInt(prompt("QTY TO ADD:"));
-    const cost = parseFloat(prompt("COST (K):"));
-    const useProfit = confirm("USE EXISTING PROFIT (REINVEST)? \nCancel means using NEW external capital.");
-
-    if (!isNaN(cost)) {
-        item.qty += qty;
-        item.capital += cost;
-        if (useProfit) {
-            totalReinvested += cost;
-            history.push({ type: 'Reinvestment', name: item.name, amt: cost, qty });
-        } else {
-            history.push({ type: 'Purchase', name: item.name, amt: cost, qty });
-        }
-        render();
-    }
-}
-
-function withdrawProfit() {
-    const totalRev = items.reduce((s, i) => s + i.revenue, 0);
-    const totalCap = items.reduce((s, i) => s + i.capital, 0);
-    const availableProfit = totalRev - totalCap - totalWithdrawn;
-
-    if (availableProfit <= 0) return alert("NO PROFIT AVAILABLE TO WITHDRAW");
+// --- LOGIC ---
+function addBusiness() {
+    const name = document.getElementById('bName').value, 
+          spent = parseFloat(document.getElementById('bBuy').value), 
+          sell = parseFloat(document.getElementById('bSell').value), 
+          qty = parseInt(document.getElementById('bStock').value), 
+          mIdx = parseInt(document.getElementById('bMonth').value);
     
-    const amt = parseFloat(prompt(`Available Profit: K${availableProfit}. Amount to withdraw:`));
-    if (amt > 0 && amt <= availableProfit) {
-        totalWithdrawn += amt;
-        render();
-    } else { alert("INVALID AMOUNT"); }
+    if (name && !isNaN(spent)) {
+        businessData.push({ id: Date.now(), name, unitSellPrice: sell, currentStock: qty, totalCapitalInvested: spent, month: mIdx, totalSalesRevenue: 0 });
+        stockHistory.push({ id: Date.now(), name, qty: qty, cost: spent, month: months[mIdx] });
+        renderAll(); syncData();
+    }
 }
 
-function render() {
-    const totalCap = items.reduce((s, i) => s + i.capital, 0);
-    const totalRev = items.reduce((s, i) => s + i.revenue, 0);
-    const netProfit = totalRev - totalCap;
+function handleSale(id) {
+    const item = businessData.find(x => x.id === id);
+    if (!item || item.currentStock <= 0) return alert("OUT OF STOCK");
+    item.currentStock -= 1;
+    item.totalSalesRevenue += item.unitSellPrice;
+    renderAll(); syncData();
+}
 
-    // Analytics Grid
-    document.getElementById('analyticsGrid').innerHTML = `
-        <div class="metric-box"><small>TOTAL CAPITAL</small><h2 style="color:var(--warning)">K ${totalCap}</h2></div>
-        <div class="metric-box"><small>TOTAL REINVESTED</small><h2 style="color:var(--neon-blue)">K ${totalReinvested}</h2></div>
-        <div class="metric-box"><small>TOTAL SALES</small><h2 style="color:var(--success)">K ${totalRev}</h2></div>
-        <div class="metric-box"><small>WITHDRAWN</small><h2 style="color:var(--danger)">K ${totalWithdrawn}</h2></div>
-        <div class="metric-box"><small>BUSINESS CASH ON HAND</small><h2>K ${totalRev - totalWithdrawn}</h2></div>
-    `;
-
-    // Inventory
-    document.getElementById('inventoryBody').innerHTML = items.map(i => `
-        <tr>
-            <td>${i.name}</td>
-            <td>K ${i.capital}</td>
-            <td style="color:${i.qty < 5 ? 'var(--danger)' : 'white'}">${i.qty}</td>
-            <td>K ${i.revenue}</td>
-            <td>
-                <button onclick="sellRetail(${i.id})" style="width:auto; padding:5px;">SELL</button>
-                <button onclick="restockItem(${i.id})" style="width:auto; padding:5px; border-color:var(--warning); color:var(--warning);">RESTOCK</button>
-            </td>
-        </tr>
-    `).join('');
-
-    // Vault
-    document.getElementById('vaultBody').innerHTML = vault.map(v => `
-        <tr><td>${v.year}</td><td>K ${v.cap}</td><td>K ${v.reinvest}</td><td>K ${v.sales}</td><td>K ${v.withdrawn}</td></tr>
-    `).join('');
+function makeWithdrawal() {
+    const amt = parseFloat(document.getElementById('wAmount').value);
+    const note = document.getElementById('wNote').value || "No reason provided";
+    if (isNaN(amt) || amt <= 0) return alert("Enter valid amount");
+    
+    withdrawals.push({ date: new Date().toLocaleDateString(), amount: amt, note });
+    document.getElementById('wAmount').value = '';
+    document.getElementById('wNote').value = '';
+    renderAll(); syncData();
 }
 
 function archiveYear() {
-    const label = prompt("Year Label:");
-    if (!label) return;
-    vault.push({
-        year: label,
-        cap: items.reduce((s, i) => s + i.capital, 0),
-        reinvest: totalReinvested,
-        sales: items.reduce((s, i) => s + i.revenue, 0),
-        withdrawn: totalWithdrawn
-    });
-    items = []; totalWithdrawn = 0; totalReinvested = 0;
-    render();
+    const yearLabel = prompt("ENTER YEAR LABEL (e.g. 2025):");
+    if (!yearLabel) return;
+
+    const reinvest = confirm("REINVEST CAPITAL?\n\nOK: Carry over capital to new cycle.\nCancel: Start from zero.");
+
+    const totalCap = stockHistory.reduce((s, x) => s + x.cost, 0);
+    const totalSales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
+    
+    const archiveRecord = {
+        year: yearLabel,
+        summary: { capital: totalCap, sales: totalSales, profit: totalSales - totalCap },
+        items: [...businessData] // Save detailed records
+    };
+
+    archiveVault.push(archiveRecord);
+
+    if (reinvest) {
+        // Keep stock history but clear sales revenue for a fresh start using same capital
+        businessData.forEach(item => {
+            item.totalSalesRevenue = 0;
+            // Optionally reset stock or keep remaining stock as current capital
+        });
+    } else {
+        businessData = [];
+        stockHistory = [];
+    }
+    
+    withdrawals = []; // Reset withdrawals for the new year/cycle
+    renderAll(); syncData();
 }
 
-function openTab(evt, name) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(name).classList.add('active');
-    evt.currentTarget.classList.add('active');
+function renderAll() {
+    // Inventory
+    document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `
+        <tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td>K ${x.totalSalesRevenue}</td>
+        <td><button onclick="handleSale(${x.id})" style="padding: 2px 10px;">SALE</button></td></tr>`).join('');
+    
+    // Reports
+    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((m, i) => {
+        const c = stockHistory.filter(x => x.month === m).reduce((s, x) => s + x.cost, 0);
+        const s = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
+        return `<tr><td>${m}</td><td>K ${c}</td><td>K ${s}</td><td>K ${s-c}</td></tr>`;
+    }).join('');
+
+    // Vault Details
+    document.getElementById('vaultContainer').innerHTML = archiveVault.map(v => `
+        <div class="archive-entry">
+            <h3 style="margin-top:0;">YEAR: ${v.year}</h3>
+            <table style="margin-bottom: 10px;">
+                <tr style="color: var(--success);"><td>TOTAL_SALES: K ${v.summary.sales}</td><td>NET_PROFIT: K ${v.summary.profit}</td></tr>
+            </table>
+            <details>
+                <summary style="cursor:pointer; color: var(--neon-blue);">VIEW_DETAILED_RECORDS</summary>
+                <table>
+                    <thead><tr><th>ITEM</th><th>CAPITAL</th><th>REVENUE</th></tr></thead>
+                    <tbody>
+                        ${v.items.map(it => `<tr><td>${it.name}</td><td>K ${it.totalCapitalInvested}</td><td>K ${it.totalSalesRevenue}</td></tr>`).join('')}
+                    </tbody>
+                </table>
+            </details>
+        </div>
+    `).join('');
+
+    // Analytics Dashboard
+    const totalCap = stockHistory.reduce((s, x) => s + x.cost, 0);
+    const totalSales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
+    const totalWith = withdrawals.reduce((s, x) => s + x.amount, 0);
+
+    document.getElementById('statCap').innerText = `K ${totalCap}`;
+    document.getElementById('statRev').innerText = `K ${totalSales}`;
+    document.getElementById('statWith').innerText = `K ${totalWith}`;
+    document.getElementById('statProfit').innerText = `K ${totalSales - totalCap - totalWith}`;
 }
 
-render();
+function openTab(evt, t) {
+    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
+    document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
+}
 </script>
 </body>
 </html>

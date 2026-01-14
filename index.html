@@ -10,7 +10,7 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.7);
+            --notif-purple: rgba(191, 0, 255, 0.8);
         }
 
         #video-bg-container {
@@ -24,15 +24,16 @@
             object-fit: cover;
         }
 
-        /* Centered Translucent Purple Notification */
+        /* Centered Translucent Purple Notification - Per User Instructions */
         #customNotification {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: var(--notif-purple); color: white; padding: 25px 50px;
-            border-radius: 15px; backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 10000;
+            border-radius: 15px; backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 10000;
             display: none; text-align: center; font-weight: bold;
-            box-shadow: 0 0 40px rgba(191, 0, 255, 0.4);
+            box-shadow: 0 0 40px rgba(191, 0, 255, 0.5);
             letter-spacing: 1px; animation: modalPop 0.3s ease;
+            max-width: 80%; word-wrap: break-word;
         }
 
         @keyframes modalPop { 
@@ -64,7 +65,7 @@
         .metric-box { border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.7); }
         .metric-val { display: block; font-size: 1.4rem; font-weight: bold; color: var(--neon-blue); margin-top: 5px; }
 
-        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 4px; }
+        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 4px; box-sizing: border-box; }
         .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; transition: 0.3s; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; background: rgba(0,0,0,0.4); }
@@ -231,7 +232,7 @@ let businessData = [], stockHistory = [], archiveVault = [], withdrawals = [], p
 let userBackground = null, userBgType = 'video';
 const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-// Notification System
+// Notification System - Translucent Purple Modal per User Prefs
 function showNotify(msg, duration = 3000) {
     const el = document.getElementById('customNotification');
     el.innerText = msg;
@@ -240,65 +241,71 @@ function showNotify(msg, duration = 3000) {
 }
 window.alert = function(msg) { showNotify(msg); };
 
+// FIX: Registration & Login Buttons
 async function loginUser() { 
-    const { error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); 
-    if(error) showNotify("LOGIN ERROR: " + error.message);
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPass').value;
+    if(!email || !pass) return showNotify("CREDENTIALS REQUIRED");
+    
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass }); 
+    if(error) showNotify("LOGIN ERROR: " + error.message.toUpperCase());
+    else showNotify("SESSION INITIALIZED");
 }
+
 async function registerUser() { 
-    const { error } = await supabaseClient.auth.signUp({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); 
-    if(error) showNotify("ERROR: " + error.message);
-    else showNotify("CHECK EMAIL TO CONFIRM");
+    const email = document.getElementById('authEmail').value;
+    const pass = document.getElementById('authPass').value;
+    if(!email || !pass) return showNotify("CREDENTIALS REQUIRED");
+
+    const { data, error } = await supabaseClient.auth.signUp({ email, password: pass }); 
+    if(error) showNotify("ERROR: " + error.message.toUpperCase());
+    else showNotify("CHECK EMAIL TO CONFIRM ACCOUNT");
 }
+
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
+// Auth State Listener
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) { 
         document.getElementById('authOverlay').style.display = 'none'; 
         document.getElementById('mainApp').style.display = 'block'; 
-        document.getElementById('userDisplay').innerText = `USER: ${session.user.email}`;
+        document.getElementById('userDisplay').innerText = `ID: ${session.user.email}`;
         loadData(session.user.id); 
     }
 });
 
+// FIX: Data Syncing logic
 async function syncData() {
-    // Get the current user session
     const { data: { user } } = await supabaseClient.auth.getUser();
-    
-    if (!user) {
-        console.error("No active session found for syncing.");
-        return;
-    }
+    if(!user) return;
 
     savingsGoal = parseFloat(document.getElementById('pGoal').value) || 0;
+    
+    const { error } = await supabaseClient.from('user_budgets').upsert({ 
+        user_id: user.id, 
+        payload: { businessData, stockHistory, archiveVault, withdrawals, personalLedger, debtors, savingsGoal, userBackground, userBgType }, 
+        updated_at: new Date().toISOString() 
+    }, { onConflict: 'user_id' });
 
-    // Construct the object to match your Supabase table columns
-    const { error } = await supabaseClient
-        .from('user_budgets')
-        .upsert({ 
-            user_id: user.id, 
-            payload: { 
-                businessData, 
-                stockHistory, 
-                archiveVault, 
-                withdrawals, 
-                personalLedger, 
-                debtors, 
-                savingsGoal, 
-                userBackground, 
-                userBgType 
-            }, 
-            updated_at: new Date().toISOString() 
-        }, {
-            onConflict: 'user_id' // Ensures it updates the existing row for this user
-        });
-
-    if (error) {
-        console.error("Sync Error:", error.message);
-        showNotify("CLOUD SYNC ERROR: " + error.message);
-    } else {
-        console.log("Data successfully synced to Supabase");
-    }
+    if(error) console.error("Sync Error:", error.message);
 }
+
+async function loadData(userId) {
+    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
+    if (data?.payload) {
+        const p = data.payload;
+        businessData = p.businessData || [];
+        stockHistory = p.stockHistory || [];
+        archiveVault = p.archiveVault || [];
+        withdrawals = p.withdrawals || [];
+        personalLedger = p.personalLedger || [];
+        debtors = p.debtors || [];
+        userBackground = p.userBackground;
+        userBgType = p.userBgType || 'video';
+        document.getElementById('pGoal').value = p.savingsGoal || 0;
+        
+        if (userBackground) applyBackground(userBackground, userBgType);
+        renderAll();
     }
 }
 
@@ -311,7 +318,7 @@ function handleBackgroundUpload(input) {
         userBgType = file.type.startsWith('video/') ? 'video' : 'image';
         applyBackground(userBackground, userBgType);
         syncData();
-        showNotify("BACKGROUND SAVED TO VAULT");
+        showNotify("UI BACKGROUND UPDATED");
     };
     reader.readAsDataURL(file);
 }
@@ -339,27 +346,35 @@ function addBusiness() {
 }
 
 function handleSale(id, isDebt) {
-    const qty = parseInt(document.getElementById(`qty_${id}`).value);
+    const qtyInput = document.getElementById(`qty_${id}`);
+    const qty = parseInt(qtyInput.value);
     const item = businessData.find(x => x.id === id);
     if (!item || item.currentStock < qty) return showNotify("INSUFFICIENT STOCK");
+    
     const totalVal = item.unitSellPrice * qty;
     item.currentStock -= qty;
+    
     if (isDebt) {
-        const n = prompt("Debtor Name:"), p = prompt("Phone:");
+        const n = prompt("Debtor Name:");
+        const p = prompt("Phone:");
         if(!n) return;
         debtors.push({ id: Date.now(), name: n, phone: p || "N/A", product: item.name, total: totalVal, paid: 0, balance: totalVal, originalItemId: id, month: item.month });
-    } else { item.totalSalesRevenue += totalVal; }
-    showNotify("SALE PROCESSED"); renderAll(); syncData();
+    } else { 
+        item.totalSalesRevenue += totalVal; 
+    }
+    showNotify("TRANSACTION RECORDED"); 
+    renderAll(); 
+    syncData();
 }
 
 function payDebt(id) {
     const d = debtors.find(x => x.id === id);
-    const amt = parseFloat(prompt(`Balance: K ${d.balance}\nEnter Payment:`));
+    const amt = parseFloat(prompt(`Balance: K ${d.balance}\nEnter Payment Amount:`));
     if (amt > 0 && amt <= d.balance) {
         d.paid += amt; d.balance -= amt;
         const item = businessData.find(x => x.id === d.originalItemId);
         if (item) item.totalSalesRevenue += amt;
-        showNotify("DEBT UPDATED"); renderAll(); syncData();
+        showNotify("DEBT PAYMENT PROCESSED"); renderAll(); syncData();
     }
 }
 
@@ -369,36 +384,49 @@ function makeWithdrawal() {
     const rev = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
     const prevW = withdrawals.reduce((s, x) => s + x.amount, 0);
     const avail = rev - cap - prevW;
-    if (amt > avail) return showNotify(`LIMIT EXCEEDED: K ${avail.toFixed(2)}`);
+    
+    if (amt > avail) return showNotify(`LIMIT EXCEEDED: MAX K ${avail.toFixed(2)}`);
+    
     const wId = Date.now();
     withdrawals.push({ id: wId, amount: amt, month: parseInt(document.getElementById('globalMonth').value) });
-    personalLedger.push({ id: wId, date: new Date().toLocaleDateString(), desc: `Profit Payout`, amt, type: 'income', month: parseInt(document.getElementById('globalMonth').value) });
-    showNotify("WITHDRAWAL COMPLETE"); renderAll(); syncData();
+    personalLedger.push({ id: wId, date: new Date().toLocaleDateString(), desc: `Profit Withdrawal`, amt, type: 'income', month: parseInt(document.getElementById('globalMonth').value) });
+    showNotify("WITHDRAWAL SUCCESSFUL"); 
+    document.getElementById('wAmount').value = '';
+    renderAll(); syncData();
 }
 
 function addPersonalRecord() {
     const desc = document.getElementById('pDesc').value, amt = parseFloat(document.getElementById('pAmt').value), type = document.getElementById('pType').value;
     const m = parseInt(document.getElementById('globalMonth').value);
     const bal = personalLedger.reduce((s, x) => x.type === 'income' ? s + x.amt : s - x.amt, 0);
-    if (type === 'expense' && (bal - amt) < savingsGoal) return showNotify(`SAVINGS GOAL BLOCKED: K ${savingsGoal}`);
+    
+    if (type === 'expense' && (bal - amt) < savingsGoal) return showNotify(`LIMIT: SAVINGS GOAL K ${savingsGoal}`);
+    
     if (desc && !isNaN(amt)) {
         personalLedger.push({ date: new Date().toLocaleDateString(), desc, amt, type, id: Date.now(), month: m });
+        ["pDesc", "pAmt"].forEach(i => document.getElementById(i).value = '');
         showNotify("LEDGER UPDATED"); renderAll(); syncData();
     }
 }
 
 function renderAll() {
     const m = parseInt(document.getElementById('globalMonth').value);
+    
+    // Inventory
     document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === m).map(x => `
         <tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td>K ${x.totalSalesRevenue}</td>
-        <td><input type="number" id="qty_${x.id}" value="1" style="width:50px; padding:4px;"></td>
+        <td><input type="number" id="qty_${x.id}" value="1" style="width:60px; padding:4px; margin:0;"></td>
         <td class="action-btns">
             <button onclick="handleSale(${x.id}, false)" class="btn-small" style="background:var(--success); color:#000">CASH</button>
             <button onclick="handleSale(${x.id}, true)" class="btn-small" style="background:var(--warning); color:#000">DEBT</button>
         </td></tr>`).join('');
+    
+    // Debtors
     document.querySelector("#debtTable tbody").innerHTML = debtors.map(d => `
         <tr><td>${d.name}</td><td>${d.phone}</td><td>${d.product}</td><td>K ${d.total}</td><td>K ${d.balance}</td>
         <td><button onclick="payDebt(${d.id})" class="btn-small" style="background:var(--success); color:#000">PAY</button></td></tr>`).join('');
+    
+    // Personal
     document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(x => x.month === m).slice().reverse().map(x => `
         <tr style="color:${x.type === 'expense' ? 'var(--danger)' : 'var(--success)'}">
             <td>${x.date}</td><td>${x.desc}</td><td>${x.type.toUpperCase()}</td><td>K ${x.amt}</td>
@@ -417,6 +445,7 @@ function renderAll() {
     document.getElementById('statPersBal').innerText = `K ${pBal.toFixed(2)}`;
     document.getElementById('withdrawableLimit').innerText = `K ${(rev - cap - withdr).toFixed(2)}`;
     
+    // Performance Summary
     let reportHTML = "";
     months.forEach((mName, i) => {
         const mCap = stockHistory.filter(x => x.month === i).reduce((s, x) => s + x.cost, 0);
@@ -431,15 +460,22 @@ function openTab(evt, t) {
     document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
     document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
 }
-function deletePersonal(id) { if(confirm("Delete record?")) { personalLedger = personalLedger.filter(x => x.id !== id); renderAll(); syncData(); showNotify("RECORD REMOVED"); } }
+
+function deletePersonal(id) { 
+    if(confirm("Permanently delete this record?")) { 
+        personalLedger = personalLedger.filter(x => x.id !== id); 
+        renderAll(); syncData(); 
+        showNotify("RECORD PURGED"); 
+    } 
+}
+
 function archiveYear() {
-    const label = prompt("Enter Year Label:");
+    const label = prompt("Enter Year Label (e.g., 2025):");
     if (!label) return;
     archiveVault.push({ year: label, summary: { totalCap: stockHistory.reduce((s, x) => s + x.cost, 0), totalRev: businessData.reduce((s, x) => s + x.totalSalesRevenue, 0) } });
     businessData = []; stockHistory = []; debtors = []; withdrawals = []; personalLedger = [];
-    showNotify("SYSTEM RESET & ARCHIVED"); renderAll(); syncData();
+    showNotify("ANNUAL SYSTEM RESET COMPLETE"); renderAll(); syncData();
 }
 </script>
 </body>
 </html>
-

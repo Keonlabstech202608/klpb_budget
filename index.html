@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KLPB - Pro Business Engine v2.0</title>
+    <title>KLPB - Pro Business Engine v2.3</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -29,7 +29,7 @@
         #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 11, 26, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
 
-        .container { max-width: 1100px; margin: auto; padding: 20px; display: none; }
+        .container { max-width: 1250px; margin: auto; padding: 20px; display: none; }
         .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); overflow-x: auto; gap: 5px; }
         .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 20px; cursor: pointer; opacity: 0.5; transition: 0.4s; font-size: 0.75rem; white-space: nowrap; }
         .tab-btn.active { opacity: 1; color: var(--neon-blue); border-bottom: 3px solid var(--neon-blue); }
@@ -43,16 +43,20 @@
         .metric-box { border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.4); }
         .metric-val { display: block; font-size: 1.3rem; font-weight: bold; margin-top: 5px; }
 
-        input, select { background: rgba(0, 20, 40, 0.8); border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 12px; width: 100%; margin: 8px 0; box-sizing: border-box; border-radius: 4px; font-size: 0.9rem; }
-        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; font-size: 0.75rem; border-radius: 4px; font-weight: bold; }
-        button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 15px var(--neon-blue); }
+        input, select { background: rgba(0, 20, 40, 0.8); border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 10px; width: 100%; margin: 5px 0; box-sizing: border-box; border-radius: 4px; font-size: 0.85rem; }
+        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 8px; cursor: pointer; text-transform: uppercase; transition: 0.3s; font-size: 0.6rem; border-radius: 4px; font-weight: bold; }
+        button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8rem; }
-        th { text-align: left; color: #70a1ff; padding: 10px; border-bottom: 1px solid var(--border-glow); text-transform: uppercase; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.75rem; }
+        th { text-align: left; color: #70a1ff; padding: 10px; border-bottom: 1px solid var(--border-glow); }
         td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         
-        .archive-card { border: 1px solid var(--warning); padding: 15px; margin-bottom: 15px; background: rgba(255, 170, 0, 0.03); border-radius: 4px; }
-        details summary { cursor: pointer; padding: 10px 0; color: var(--warning); outline: none; }
+        .qty-input { width: 45px !important; margin: 0 !important; padding: 4px !important; text-align: center; }
+        .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+        
+        .edit-btn { border-color: var(--neon-blue) !important; color: var(--neon-blue) !important; }
+        .danger-btn { border-color: var(--danger) !important; color: var(--danger) !important; }
+        .danger-btn:hover { background: var(--danger) !important; color: white !important; }
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
@@ -61,57 +65,49 @@
 
 <div id="authOverlay">
     <div class="auth-card">
-        <h2 style="letter-spacing: 3px;">KLPB_AUTH_GATE</h2>
+        <h2>KLPB_AUTH_GATE</h2>
         <input type="email" id="authEmail" placeholder="USER_EMAIL">
         <input type="password" id="authPass" placeholder="ACCESS_KEY">
-        <button onclick="loginUser()">INITIALIZE_SESSION</button>
-        <button onclick="registerUser()" style="border-color: var(--success); color: var(--success); margin-top: 10px;">REGISTER_ACCOUNT</button>
+        <button onclick="loginUser()" style="width:100%">INITIALIZE_SESSION</button>
+        <button onclick="registerUser()" style="border-color: var(--success); color: var(--success); margin-top: 10px; width:100%">REGISTER_ACCOUNT</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <small id="userDisplay" style="color: var(--success);"></small>
-        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px; font-size: 0.6rem;">LOGOUT</button>
+        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px;">LOGOUT</button>
     </div>
 
-    <h1 style="text-align: center; letter-spacing: 5px; margin-bottom: 30px;">BUSINESS_ENGINE</h1>
+    <h1 style="text-align: center; letter-spacing: 5px;">KLPB_PRO_SYSTEM</h1>
 
     <div class="metric-grid">
-        <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
-        <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--danger);">WITHDRAWN<span id="statWith" class="metric-val" style="color: var(--danger);">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--success);">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+        <div class="metric-box">TOTAL CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
+        <div class="metric-box">GROSS REVENUE<span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--danger);">WITHDRAWALS<span id="statWith" class="metric-val" style="color: var(--danger);">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--success);">AVAIL. PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'business')">01_LIVE_STOCK</button>
-        <button class="tab-btn" onclick="openTab(event, 'withdraw')">02_WITHDRAWALS</button>
-        <button class="tab-btn" onclick="openTab(event, 'personal')">03_PERSONAL_LEDGER</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')">01_INVENTORY</button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')">02_WITHDRAW</button>
+        <button class="tab-btn" onclick="openTab(event, 'personal')">03_PERSONAL</button>
         <button class="tab-btn" onclick="openTab(event, 'summary')">04_REPORTS</button>
-        <button class="tab-btn" onclick="openTab(event, 'vault')">05_ARCHIVE_VAULT</button>
+        <button class="tab-btn" onclick="openTab(event, 'vault')">05_VAULT</button>
     </div>
 
     <div id="business" class="tab-content active">
         <section>
-            <h2>// INVENTORY_INPUT</h2>
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 8px;">
+            <h2>// ADD_STOCK</h2>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 8px;">
                 <input type="text" id="bName" placeholder="ITEM NAME">
-                <input type="number" id="bBuy" placeholder="CAPITAL (K)">
+                <input type="number" id="bBuy" placeholder="UNIT COST">
                 <input type="number" id="bSell" placeholder="SELL PRICE">
+                <input type="number" id="bStock" placeholder="QTY">
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <input type="number" id="bStock" placeholder="QTY ADDED">
-                <select id="bMonth">
-                    <option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option>
-                    <option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option>
-                    <option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option>
-                    <option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option>
-                </select>
-            </div>
-            <button onclick="addBusiness()">ADD_TO_INVENTORY</button>
+            <button onclick="addBusiness()" style="width:100%; margin-top:5px;">ADD_STOCK_ENTRY</button>
             <table id="bTable">
-                <thead><tr><th>PRODUCT</th><th>CAPITAL</th><th>STOCK</th><th>REVENUE</th><th>ACTION</th></tr></thead>
+                <thead><tr><th>PRODUCT</th><th>COST</th><th>STOCK</th><th>REVENUE</th><th>SELL QTY</th><th>ACTIONS</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -119,27 +115,31 @@
 
     <div id="withdraw" class="tab-content">
         <section>
-            <h2 style="color: var(--danger);">// WITHDRAW_FROM_BUSINESS</h2>
-            <input type="number" id="wAmount" placeholder="AMOUNT TO WITHDRAW (K)">
-            <input type="text" id="wNote" placeholder="PURPOSE (e.g., Rent, Reinvestment)">
-            <button onclick="makeWithdrawal()" style="border-color: var(--danger); color: var(--danger);">CONFIRM_WITHDRAWAL</button>
+            <h2>// WITHDRAW_EARNINGS</h2>
+            <div style="background: rgba(0, 255, 136, 0.05); padding: 15px; border: 1px solid var(--success); margin-bottom: 15px;">
+                <small>AVAILABLE TO WITHDRAW:</small>
+                <h3 id="withdrawableLimit" style="color: var(--success); margin: 5px 0;">K 0</h3>
+            </div>
+            <input type="number" id="wAmount" placeholder="AMOUNT (K)">
+            <input type="text" id="wNote" placeholder="REASON">
+            <button onclick="makeWithdrawal()" class="danger-btn" style="width:100%">PROCESS_WITHDRAWAL</button>
         </section>
     </div>
 
     <div id="personal" class="tab-content">
         <section>
-            <h2>// PERSONAL_FINANCE_TRACKER</h2>
-            <div style="display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px;">
+            <h2>// PERSONAL_LEDGER</h2>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px;">
                 <input type="text" id="pDesc" placeholder="DESCRIPTION">
                 <input type="number" id="pAmt" placeholder="AMOUNT (K)">
+                <select id="pType">
+                    <option value="expense">EXPENSE</option>
+                    <option value="income">INCOME</option>
+                </select>
             </div>
-            <select id="pType">
-                <option value="expense">PERSONAL EXPENSE (OUT)</option>
-                <option value="income">EXTERNAL INCOME (IN)</option>
-            </select>
-            <button onclick="addPersonalRecord()">LOG_TRANSACTION</button>
+            <button onclick="addPersonalRecord()" style="width:100%">LOG_TRANSACTION</button>
             <table id="pTable">
-                <thead><tr><th>DATE</th><th>DESCRIPTION</th><th>TYPE</th><th>AMOUNT</th></tr></thead>
+                <thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMOUNT</th><th>ACTION</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -147,26 +147,26 @@
 
     <div id="summary" class="tab-content">
         <section>
-            <h2>// PERFORMANCE_SUMMARY</h2>
+            <h2>// ANNUAL_PERFORMANCE</h2>
             <table id="ySummaryTable">
                 <thead><tr><th>MONTH</th><th>CAPITAL</th><th>SALES</th><th>PROFIT</th></tr></thead>
                 <tbody></tbody>
             </table>
             <br>
-            <button onclick="archiveYear()" style="border-color: var(--warning); color: var(--warning);">ARCHIVE_TO_VAULT & RESET_CYCLE</button>
+            <button onclick="archiveYear()" style="border-color: var(--warning); color: var(--warning); width:100%">ARCHIVE_YEAR_&_REINVEST</button>
         </section>
     </div>
 
     <div id="vault" class="tab-content">
         <section>
-            <h2 style="color: var(--warning);">// HISTORICAL_RECORDS</h2>
+            <h2 style="color: var(--warning);">// ARCHIVED_VAULT</h2>
             <div id="vaultContainer"></div>
         </section>
     </div>
 </div>
 
 <script>
-// --- CONFIGURATION ---
+// SUPABASE (UNTOUCHED)
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -183,7 +183,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) { 
         document.getElementById('authOverlay').style.display = 'none'; 
         document.getElementById('mainApp').style.display = 'block'; 
-        document.getElementById('userDisplay').innerText = `ACTIVE_USER: ${session.user.email}`;
+        document.getElementById('userDisplay').innerText = `USER: ${session.user.email}`;
         loadData(session.user.id); 
     }
 });
@@ -209,39 +209,78 @@ async function loadData(userId) {
     }
 }
 
-// --- BUSINESS LOGIC ---
+// --- INVENTORY CRUD ---
 function addBusiness() {
     const name = document.getElementById('bName').value, 
-          spent = parseFloat(document.getElementById('bBuy').value), 
+          buy = parseFloat(document.getElementById('bBuy').value), 
           sell = parseFloat(document.getElementById('bSell').value), 
-          qty = parseInt(document.getElementById('bStock').value), 
-          mIdx = parseInt(document.getElementById('bMonth').value);
+          qty = parseInt(document.getElementById('bStock').value);
     
-    if (name && !isNaN(spent)) {
-        businessData.push({ id: Date.now(), name, unitSellPrice: sell, currentStock: qty, totalCapitalInvested: spent, month: mIdx, totalSalesRevenue: 0 });
-        stockHistory.push({ id: Date.now(), name, qty: qty, cost: spent, month: months[mIdx] });
+    if (name && !isNaN(buy) && !isNaN(qty)) {
+        const totalCost = buy * qty;
+        businessData.push({ id: Date.now(), name, unitBuyPrice: buy, unitSellPrice: sell, currentStock: qty, totalCapitalInvested: totalCost, month: new Date().getMonth(), totalSalesRevenue: 0 });
+        stockHistory.push({ id: Date.now(), name, qty, cost: totalCost, month: months[new Date().getMonth()] });
         renderAll(); syncData();
-        ["bName", "bBuy", "bSell", "bStock"].forEach(id => document.getElementById(id).value = '');
+        ["bName", "bBuy", "bSell", "bStock"].forEach(i => document.getElementById(i).value = '');
     }
 }
 
-function handleSale(id) {
+function deleteStockItem(id) {
+    if(confirm("Permanently delete this item?")) {
+        businessData = businessData.filter(x => x.id !== id);
+        renderAll(); syncData();
+    }
+}
+
+function updateStockItem(id) {
     const item = businessData.find(x => x.id === id);
-    if (!item || item.currentStock <= 0) return alert("OUT OF STOCK");
-    item.currentStock -= 1;
-    item.totalSalesRevenue += item.unitSellPrice;
+    const newName = prompt("New Name:", item.name);
+    const newSell = parseFloat(prompt("New Sell Price (K):", item.unitSellPrice));
+    if(newName && !isNaN(newSell)) {
+        item.name = newName;
+        item.unitSellPrice = newSell;
+        renderAll(); syncData();
+    }
+}
+
+function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const addQty = parseInt(prompt(`RESTOCK [${item.name}]\nHow many units?`));
+    if (isNaN(addQty) || addQty <= 0) return;
+    const unitCost = parseFloat(prompt(`Unit Cost (K):`, item.unitBuyPrice));
+    if (isNaN(unitCost)) return;
+
+    item.currentStock += addQty;
+    item.totalCapitalInvested += (addQty * unitCost);
+    stockHistory.push({ id: Date.now(), name: item.name, qty: addQty, cost: (addQty * unitCost), month: months[new Date().getMonth()] });
     renderAll(); syncData();
 }
 
-// --- WITHDRAWAL & PERSONAL LOGIC ---
+function handleBulkSale(id) {
+    const qtyInput = document.getElementById(`qty_${id}`);
+    const qtyToSell = parseInt(qtyInput.value);
+    const item = businessData.find(x => x.id === id);
+    if (!item || isNaN(qtyToSell) || qtyToSell <= 0 || item.currentStock < qtyToSell) return alert("Check Quantity/Stock!");
+    item.currentStock -= qtyToSell;
+    item.totalSalesRevenue += (item.unitSellPrice * qtyToSell);
+    qtyInput.value = 1;
+    renderAll(); syncData();
+}
+
+// --- WITHDRAWAL & PERSONAL CRUD ---
 function makeWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmount').value);
     const note = document.getElementById('wNote').value || "Withdrawal";
-    if (isNaN(amt) || amt <= 0) return alert("Enter valid amount");
+    const totalCap = stockHistory.reduce((s, x) => s + x.cost, 0);
+    const totalSales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
+    const previousWith = withdrawals.reduce((s, x) => s + x.amount, 0);
+    const avail = totalSales - totalCap - previousWith;
+
+    if (amt > avail) return alert(`NO ENOUGH MONEY!\nAvailable: K ${avail.toFixed(2)}`);
     
-    withdrawals.push({ date: new Date().toLocaleDateString(), amount: amt, note });
-    // Automatically log into personal ledger as income
-    personalLedger.push({ date: new Date().toLocaleDateString(), desc: `From Business: ${note}`, amt, type: 'income', id: Date.now() });
+    const wId = Date.now();
+    withdrawals.push({ id: wId, date: new Date().toLocaleDateString(), amount: amt, note });
+    personalLedger.push({ id: wId, date: new Date().toLocaleDateString(), desc: `Biz Withdrawal: ${note}`, amt, type: 'income', isWithdrawalLink: true });
     
     document.getElementById('wAmount').value = '';
     document.getElementById('wNote').value = '';
@@ -257,79 +296,70 @@ function addPersonalRecord() {
     }
 }
 
-// --- ARCHIVE LOGIC ---
-function archiveYear() {
-    const yearLabel = prompt("ENTER YEAR LABEL (e.g. 2025):");
-    if (!yearLabel) return;
-    
-    const reinvest = confirm("REINVEST CAPITAL?\n\nOK: Carry capital over to new cycle.\nCANCEL: Clear everything.");
-
-    const totalCap = stockHistory.reduce((s, x) => s + x.cost, 0);
-    const totalSales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
-    
-    archiveVault.push({
-        year: yearLabel,
-        summary: { capital: totalCap, sales: totalSales, profit: totalSales - totalCap },
-        items: JSON.parse(JSON.stringify(businessData)) // Deep copy
-    });
-
-    if (!reinvest) {
-        businessData = [];
-        stockHistory = [];
-    } else {
-        // If reinvesting, we reset revenue but keep capital investment history
-        businessData.forEach(i => i.totalSalesRevenue = 0);
+function deletePersonal(id) {
+    if(confirm("Delete this transaction?")) {
+        const record = personalLedger.find(x => x.id === id);
+        // If it was a withdrawal, remove from withdrawal list too
+        if(record.isWithdrawalLink) withdrawals = withdrawals.filter(w => w.id !== id);
+        personalLedger = personalLedger.filter(x => x.id !== id);
+        renderAll(); syncData();
     }
-    
+}
+
+// --- SYSTEM ---
+function archiveYear() {
+    const label = prompt("Year Label:");
+    if (!label) return;
+    const cap = stockHistory.reduce((s, x) => s + x.cost, 0);
+    const sales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
+    archiveVault.push({ year: label, summary: { capital: cap, sales, profit: sales - cap }, items: JSON.parse(JSON.stringify(businessData)) });
+    businessData.forEach(i => i.totalSalesRevenue = 0);
     withdrawals = [];
     renderAll(); syncData();
 }
 
-// --- RENDERING ---
 function renderAll() {
-    // 1. Stock Table
+    // Inventory
     document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `
-        <tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td>K ${x.totalSalesRevenue}</td>
-        <td><button onclick="handleSale(${x.id})" style="padding: 5px; font-size: 0.6rem;">SALE</button></td></tr>`).join('');
+        <tr>
+            <td>${x.name}</td>
+            <td>K ${x.unitBuyPrice}</td>
+            <td style="color:${x.currentStock < 5 ? 'var(--danger)' : 'inherit'}">${x.currentStock}</td>
+            <td>K ${x.totalSalesRevenue}</td>
+            <td><input type="number" id="qty_${x.id}" value="1" min="1" class="qty-input"></td>
+            <td class="btn-group">
+                <button onclick="handleBulkSale(${x.id})" style="background:var(--success);color:#000">SELL</button>
+                <button onclick="restockItem(${x.id})" class="restock-btn" style="border-color:var(--warning);color:var(--warning)">STOCK</button>
+                <button onclick="updateStockItem(${x.id})" class="edit-btn">EDIT</button>
+                <button onclick="deleteStockItem(${x.id})" class="danger-btn">DEL</button>
+            </td>
+        </tr>`).join('');
     
-    // 2. Personal Ledger
+    // Personal Ledger
     document.querySelector("#pTable tbody").innerHTML = personalLedger.slice().reverse().map(x => `
-        <tr style="color: ${x.type === 'expense' ? 'var(--danger)' : 'var(--success)'}">
+        <tr style="color:${x.type === 'expense' ? 'var(--danger)' : 'var(--success)'}">
             <td>${x.date}</td><td>${x.desc}</td><td>${x.type.toUpperCase()}</td><td>K ${x.amt}</td>
+            <td><button onclick="deletePersonal(${x.id})" class="danger-btn">DEL</button></td>
         </tr>`).join('');
 
-    // 3. Monthly Reports
+    // Reports
     document.querySelector("#ySummaryTable tbody").innerHTML = months.map((m, i) => {
         const c = stockHistory.filter(x => x.month === m).reduce((s, x) => s + x.cost, 0);
         const s = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
         return `<tr><td>${m}</td><td>K ${c}</td><td>K ${s}</td><td>K ${s-c}</td></tr>`;
     }).join('');
 
-    // 4. Vault
-    document.getElementById('vaultContainer').innerHTML = archiveVault.map(v => `
-        <div class="archive-card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <strong>YEAR ${v.year}</strong>
-                <span>PROFIT: K ${v.summary.profit}</span>
-            </div>
-            <details>
-                <summary>VIEW ITEM BREAKDOWN</summary>
-                <table>
-                    <thead><tr><th>PRODUCT</th><th>CAPITAL</th><th>REVENUE</th></tr></thead>
-                    <tbody>${v.items.map(it => `<tr><td>${it.name}</td><td>K ${it.totalCapitalInvested}</td><td>K ${it.totalSalesRevenue}</td></tr>`).join('')}</tbody>
-                </table>
-            </details>
-        </div>`).join('');
-
-    // 5. Dashboard
+    // Dashboard
     const totalCap = stockHistory.reduce((s, x) => s + x.cost, 0);
     const totalSales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
     const totalWith = withdrawals.reduce((s, x) => s + x.amount, 0);
+    const profit = totalSales - totalCap - totalWith;
     
-    document.getElementById('statCap').innerText = `K ${totalCap}`;
-    document.getElementById('statRev').innerText = `K ${totalSales}`;
-    document.getElementById('statWith').innerText = `K ${totalWith}`;
-    document.getElementById('statProfit').innerText = `K ${totalSales - totalCap - totalWith}`;
+    document.getElementById('statCap').innerText = `K ${totalCap.toFixed(2)}`;
+    document.getElementById('statRev').innerText = `K ${totalSales.toFixed(2)}`;
+    document.getElementById('statWith').innerText = `K ${totalWith.toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${profit.toFixed(2)}`;
+    document.getElementById('withdrawableLimit').innerText = `K ${profit.toFixed(2)}`;
 }
 
 function openTab(evt, t) {

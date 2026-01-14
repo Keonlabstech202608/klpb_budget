@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
@@ -11,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v2.9</title>
+    <title>KLPB - Business Engine v2.9.1</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -37,7 +36,7 @@
             object-fit: cover;
         }
 
-        /* Notifications per Instructions */
+        /* Notifications - Translucent Purple Modal per Instructions */
         #customNotification {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: var(--notif-purple); color: white; padding: 25px 50px;
@@ -49,7 +48,6 @@
             max-width: 80%; word-wrap: break-word;
         }
 
-        /* Custom Popup Modal Styling */
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.8); z-index: 20000; backdrop-filter: blur(8px);
@@ -140,63 +138,73 @@
 <div id="authOverlay">
     <div class="auth-card">
         <h2 style="color: var(--neon-blue); letter-spacing: 2px;"><i class="fas fa-microchip"></i> KLPB ENGINE</h2>
+        <select id="authLang" style="margin-bottom: 10px; border-color: var(--success);" onchange="setLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="bm">Bemba</option>
+            <option value="ny">Nyanja</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
+        </select>
         <input type="email" id="authEmail" placeholder="Email Address">
         <input type="password" id="authPass" placeholder="Access Key">
-        <button onclick="loginUser()" class="btn-main" style="background: var(--neon-blue); margin-top:10px;">INITIALIZE SESSION</button>
-        <button onclick="registerUser()" style="background: transparent; color: var(--success); border: 1px solid var(--success); padding: 10px; width: 100%; cursor: pointer; margin-top:10px; border-radius:4px;">CREATE ACCESS</button>
+        <button onclick="loginUser()" class="btn-main" style="background: var(--neon-blue); margin-top:10px;" data-i18n="init_session">INITIALIZE SESSION</button>
+        <button onclick="registerUser()" style="background: transparent; color: var(--success); border: 1px solid var(--success); padding: 10px; width: 100%; cursor: pointer; margin-top:10px; border-radius:4px;" data-i18n="create_access">CREATE ACCESS</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
             <span id="userDisplay" style="color: var(--success); font-size: 0.7rem; border: 1px solid var(--success); padding: 4px 10px; border-radius: 20px; background: rgba(0,0,0,0.5);"></span>
+            <select id="appLang" style="width: auto; padding: 4px; font-size: 0.7rem; height: 28px; margin: 0;" onchange="setLanguage(this.value)">
+                <option value="en">EN</option>
+                <option value="bm">BM</option>
+                <option value="ny">NY</option>
+                <option value="fr">FR</option>
+                <option value="es">ES</option>
+            </select>
             <input type="file" id="bgUpload" accept="image/*,video/*" style="display: none;" onchange="handleBackgroundUpload(this)">
-            <button onclick="document.getElementById('bgUpload').click()" class="btn-small" style="background: var(--neon-blue); color: #000; margin-left:10px;"><i class="fas fa-image"></i> BG</button>
+            <button onclick="document.getElementById('bgUpload').click()" class="btn-small" style="background: var(--neon-blue); color: #000;"><i class="fas fa-image"></i> BG</button>
         </div>
-        <button onclick="logoutUser()" class="btn-small" style="background: var(--danger); color: white;"><i class="fas fa-power-off"></i> LOGOUT</button>
+        <button onclick="logoutUser()" class="btn-small" style="background: var(--danger); color: white;" data-i18n="logout"><i class="fas fa-power-off"></i> LOGOUT</button>
     </div>
 
     <div class="month-selector-bar" style="background: rgba(0, 242, 255, 0.15); padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 15px; border: 1px solid var(--neon-blue);">
-        <label style="font-weight: bold; color: var(--neon-blue); font-size: 0.8rem;">WORKING MONTH:</label>
+        <label style="font-weight: bold; color: var(--neon-blue); font-size: 0.8rem;" data-i18n="working_month">WORKING MONTH:</label>
         <select id="globalMonth" style="max-width: 200px; margin: 0; border-color: var(--neon-blue);" onchange="renderAll()">
-            <option value="0">JANUARY</option><option value="1">FEBRUARY</option><option value="2">MARCH</option>
-            <option value="3">APRIL</option><option value="4">MAY</option><option value="5">JUNE</option>
-            <option value="6">JULY</option><option value="7">AUGUST</option><option value="8">SEPTEMBER</option>
-            <option value="9">OCTOBER</option><option value="10">NOVEMBER</option><option value="11">DECEMBER</option>
-        </select>
+            </select>
     </div>
 
     <div class="metric-grid">
-        <div class="metric-box"><i class="fas fa-wallet"></i> CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
-        <div class="metric-box"><i class="fas fa-chart-bar"></i> REVENUE<span id="statRev" class="metric-val">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--warning);"><i class="fas fa-user-clock"></i> DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
-        <div class="metric-box" style="border-color: var(--success);"><i class="fas fa-piggy-bank"></i> PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
-        <div class="metric-box"><i class="fas fa-user-shield"></i> PERSONAL<span id="statPersBal" class="metric-val">K 0</span></div>
+        <div class="metric-box"><i class="fas fa-wallet"></i> <span data-i18n="capital">CAPITAL</span><span id="statCap" class="metric-val">K 0</span></div>
+        <div class="metric-box"><i class="fas fa-chart-bar"></i> <span data-i18n="revenue">REVENUE</span><span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--warning);"><i class="fas fa-user-clock"></i> <span data-i18n="debt">DEBT</span><span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
+        <div class="metric-box" style="border-color: var(--success);"><i class="fas fa-piggy-bank"></i> <span data-i18n="profit">PROFIT</span><span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+        <div class="metric-box"><i class="fas fa-user-shield"></i> <span data-i18n="personal">PERSONAL</span><span id="statPersBal" class="metric-val">K 0</span></div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'business')"><i class="fas fa-boxes"></i> STOCK</button>
-        <button class="tab-btn" onclick="openTab(event, 'debtors')"><i class="fas fa-users-slash"></i> DEBTORS</button>
-        <button class="tab-btn" onclick="openTab(event, 'withdraw')"><i class="fas fa-money-bill-transfer"></i> WITHDRAW</button>
-        <button class="tab-btn" onclick="openTab(event, 'personal')"><i class="fas fa-receipt"></i> BUDGET</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')"><i class="fas fa-file-contract"></i> REPORTS</button>
-        <button class="tab-btn" onclick="openTab(event, 'vault')"><i class="fas fa-vault"></i> VAULT</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')"><i class="fas fa-boxes"></i> <span data-i18n="tab_stock">STOCK</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'debtors')"><i class="fas fa-users-slash"></i> <span data-i18n="tab_debtors">DEBTORS</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')"><i class="fas fa-money-bill-transfer"></i> <span data-i18n="tab_withdraw">WITHDRAW</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'personal')"><i class="fas fa-receipt"></i> <span data-i18n="tab_budget">BUDGET</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')"><i class="fas fa-file-contract"></i> <span data-i18n="tab_reports">REPORTS</span></button>
+        <button class="tab-btn" onclick="openTab(event, 'vault')"><i class="fas fa-vault"></i> <span data-i18n="tab_vault">VAULT</span></button>
     </div>
 
     <div id="business" class="tab-content active">
         <section>
-            <h2 style="margin-top:0; font-size: 1rem;">// INVENTORY</h2>
+            <h2 style="margin-top:0; font-size: 1rem;">// <span data-i18n="inventory">INVENTORY</span></h2>
             <input type="text" id="bName" placeholder="Item Name">
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
                 <input type="number" id="bBuy" placeholder="Cap (K)">
                 <input type="number" id="bSell" placeholder="Sell (K)">
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
-            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;"><i class="fas fa-plus"></i> ADD STOCK</button>
+            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;"><i class="fas fa-plus"></i> <span data-i18n="add_stock">ADD STOCK</span></button>
             <div class="table-wrap">
                 <table id="bTable">
-                    <thead><tr><th>ITEM</th><th>CAP</th><th>STOCK</th><th>REV</th><th>QTY</th><th>SELL</th></tr></thead>
+                    <thead><tr><th data-i18n="th_item">ITEM</th><th data-i18n="th_cap">CAP</th><th data-i18n="th_stock">STOCK</th><th data-i18n="th_rev">REV</th><th data-i18n="th_qty">QTY</th><th data-i18n="th_sell">SELL</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -205,10 +213,10 @@
 
     <div id="debtors" class="tab-content">
         <section>
-            <h2 style="font-size: 1rem;">// DEBTORS</h2>
+            <h2 style="font-size: 1rem;">// <span data-i18n="tab_debtors">DEBTORS</span></h2>
             <div class="table-wrap">
                 <table id="debtTable">
-                    <thead><tr><th>NAME</th><th>PHONE</th><th>PRODUCT</th><th>BALANCE</th><th>ACTION</th></tr></thead>
+                    <thead><tr><th data-i18n="th_name">NAME</th><th data-i18n="th_phone">PHONE</th><th data-i18n="th_prod">PRODUCT</th><th data-i18n="th_bal">BALANCE</th><th data-i18n="th_act">ACTION</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -217,25 +225,25 @@
 
     <div id="withdraw" class="tab-content">
         <section style="text-align: center;">
-            <h2 style="font-size: 1rem;">// WITHDRAW PROFIT</h2>
+            <h2 style="font-size: 1rem;">// <span data-i18n="tab_withdraw">WITHDRAW PROFIT</span></h2>
             <h1 id="withdrawableLimit" style="color: var(--success); margin: 15px 0;">K 0.00</h1>
             <input type="number" id="wAmount" placeholder="Amount (K)">
-            <button onclick="makeWithdrawal()" class="btn-main" style="background: var(--danger); color: white;"><i class="fas fa-check"></i> CONFIRM WITHDRAWAL</button>
+            <button onclick="makeWithdrawal()" class="btn-main" style="background: var(--danger); color: white;"><i class="fas fa-check"></i> <span data-i18n="confirm_withdrawal">CONFIRM WITHDRAWAL</span></button>
         </section>
     </div>
 
     <div id="personal" class="tab-content">
         <section>
-            <h2 style="font-size: 1rem;">// PERSONAL BUDGET</h2>
-            <label>Savings Goal (K):</label>
+            <h2 style="font-size: 1rem;">// <span data-i18n="personal_budget">PERSONAL BUDGET</span></h2>
+            <label><span data-i18n="savings_goal">Savings Goal</span> (K):</label>
             <input type="number" id="pGoal" onchange="syncData()">
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount (K)">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-            <button onclick="addPersonalRecord()" class="btn-main"><i class="fas fa-save"></i> LOG ENTRY</button>
+            <button onclick="addPersonalRecord()" class="btn-main"><i class="fas fa-save"></i> <span data-i18n="log_entry">LOG ENTRY</span></button>
             <div class="table-wrap">
                 <table id="pTable">
-                    <thead><tr><th>DATE</th><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead>
+                    <thead><tr><th data-i18n="th_date">DATE</th><th data-i18n="th_desc">DESC</th><th data-i18n="th_amt">AMT</th><th data-i18n="th_type">TYPE</th><th>X</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
@@ -245,22 +253,22 @@
     <div id="summary" class="tab-content">
         <section>
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="font-size: 1rem;">// PERFORMANCE REPORT</h2>
+                <h2 style="font-size: 1rem;">// <span data-i18n="perf_report">PERFORMANCE REPORT</span></h2>
                 <button onclick="generatePDF()" class="btn-small" style="background: var(--neon-blue); color: black;"><i class="fas fa-print"></i> PDF</button>
             </div>
             <div class="table-wrap">
                 <table id="ySummaryTable">
-                    <thead><tr><th>MONTH</th><th>CAPITAL</th><th>SALES</th><th>PROFIT</th></tr></thead>
+                    <thead><tr><th data-i18n="th_month">MONTH</th><th data-i18n="th_cap">CAPITAL</th><th data-i18n="th_sales">SALES</th><th data-i18n="th_profit">PROFIT</th></tr></thead>
                     <tbody></tbody>
                 </table>
             </div>
-            <button onclick="archiveYear()" class="btn-main" style="background: var(--warning); color: black; margin-top: 20px;"><i class="fas fa-archive"></i> ARCHIVE & RESET YEAR</button>
+            <button onclick="archiveYear()" class="btn-main" style="background: var(--warning); color: black; margin-top: 20px;"><i class="fas fa-archive"></i> <span data-i18n="archive_btn">ARCHIVE & RESET YEAR</span></button>
         </section>
     </div>
 
     <div id="vault" class="tab-content">
         <section>
-            <h2 style="color: var(--warning); font-size: 1rem;">// ARCHIVE VAULT</h2>
+            <h2 style="color: var(--warning); font-size: 1rem;">// <span data-i18n="archive_vault">ARCHIVE VAULT</span></h2>
             <div id="vaultContainer"></div>
         </section>
     </div>
@@ -271,10 +279,95 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// TRANSLATIONS OBJECT
+const translations = {
+    en: {
+        init_session: "INITIALIZE SESSION", create_access: "CREATE ACCESS", logout: "LOGOUT",
+        working_month: "WORKING MONTH:", capital: "CAPITAL", revenue: "REVENUE", debt: "DEBT", profit: "PROFIT", personal: "PERSONAL",
+        tab_stock: "STOCK", tab_debtors: "DEBTORS", tab_withdraw: "WITHDRAW", tab_budget: "BUDGET", tab_reports: "REPORTS", tab_vault: "VAULT",
+        inventory: "INVENTORY", add_stock: "ADD STOCK", confirm_withdrawal: "CONFIRM WITHDRAWAL", personal_budget: "PERSONAL BUDGET",
+        savings_goal: "Savings Goal", log_entry: "LOG ENTRY", perf_report: "PERFORMANCE REPORT", archive_btn: "ARCHIVE & RESET YEAR",
+        archive_vault: "ARCHIVE VAULT", th_item: "ITEM", th_cap: "CAP", th_stock: "STOCK", th_rev: "REV", th_qty: "QTY", th_sell: "SELL",
+        th_name: "NAME", th_phone: "PHONE", th_prod: "PRODUCT", th_bal: "BALANCE", th_act: "ACTION", th_date: "DATE", th_desc: "DESC",
+        th_amt: "AMT", th_type: "TYPE", th_month: "MONTH", th_sales: "SALES", th_profit: "PROFIT",
+        months: ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
+    },
+    bm: { // Bemba
+        init_session: "INGILENI", create_access: "PANGENI ACCOUTI", logout: "FUMENIMO",
+        working_month: "MWESHI WA MULEBOMBA:", capital: "NDALAMA SHA KUTANTIKILA", revenue: "NDALAMA SHINGILE", debt: "INKONGOLO", profit: "UBUNONO", personal: "NDALAMA SHANDI",
+        tab_stock: "IFIPE", tab_debtors: "ABAKWETE NKONGOLO", tab_withdraw: "UKUFUMYA NDALAMA", tab_budget: "IKOSA LYA NDALAMA", tab_reports: "ALIPOTI", tab_vault: "KUBIKILAMO",
+        inventory: "IFIPE FILIPO", add_stock: "BIKENI IFIPE", confirm_withdrawal: "SUMINENI UKUFUMYA", personal_budget: "UMUTANDASHA WANDI",
+        savings_goal: "KUBIKILA", log_entry: "LEMBENI", perf_report: "IFILI IFIPE", archive_btn: "SUNGIRE UMWAICE",
+        archive_vault: "UMUTANDA WA KUSUNGILAMO", th_item: "ICIPE", th_cap: "NDALAMA", th_stock: "STOCK", th_rev: "SHINGILE", th_qty: "AMAFULI", th_sell: "SHITISHA",
+        th_name: "ISHINA", th_phone: "FONI", th_prod: "ICIPE", th_bal: "ASHALA", th_act: "CHITENI", th_date: "UBUSHIKU", th_desc: "ULONDOLOLO",
+        th_amt: "NDALAMA", th_type: "MUSAINGO", th_month: "MWESHI", th_sales: "SHASHITISHIWA", th_profit: "UBUNONO",
+        months: ["JANUARI", "FEBRUARI", "MACHI", "APRILI", "MEI", "JUNI", "JULAI", "AUGUSTI", "SEPTEMBA", "OKTOBA", "NOVEMBA", "DISEMBA"]
+    },
+    ny: { // Nyanja
+        init_session: "YAMBITSANI", create_access: "PANGANI AKAUNTI", logout: "TURUKANI",
+        working_month: "MWEZI WA NTCHITO:", capital: "NDALAMA ZOYAMBIRA", revenue: "NDALAMA ZALOWA", debt: "NGONGOLI", profit: "PHINDU", personal: "NDALAMA ZANGA",
+        tab_stock: "KATUNDU", tab_debtors: "ANTHU A NGONGOLI", tab_withdraw: "KUTENGA NDALAMA", tab_budget: "BAJETI", tab_reports: "RIPOTI", tab_vault: "KOSUNGIRA",
+        inventory: "KATUNDU ALIPO", add_stock: "ONJEZANI KATUNDU", confirm_withdrawal: "TSIMIKIZANI", personal_budget: "BAJETI YANGA",
+        savings_goal: "CHOLINGA CHOSUNGA", log_entry: "LEMBANI", perf_report: "RIPOTI YA NTCHITO", archive_btn: "SUNGANI CHAKA",
+        archive_vault: "VOTI YOSUNGIRA", th_item: "CHINTU", th_cap: "NDALAMA", th_stock: "ALIPO", th_rev: "YALOWA", th_qty: "MBIRI", th_sell: "GULITSANI",
+        th_name: "DZINA", th_phone: "FONI", th_prod: "CHINTU", th_bal: "NDALAMA", th_act: "CHITANI", th_date: "TSIKU", th_desc: "MAFOTOKOZEDWE",
+        th_amt: "NDALAMA", th_type: "MTUNDU", th_month: "MWEZI", th_sales: "ZOGULITSIDWA", th_profit: "PHINDU",
+        months: ["JANUARE", "FEBUARE", "MARCHI", "EPROLO", "MEI", "JUNI", "JULAYI", "OGASTI", "SEPUTEMBA", "OKTOBA", "NOVEMBA", "DISEMBA"]
+    },
+    fr: { // French
+        init_session: "INITIALISER LA SESSION", create_access: "CRÉER UN ACCÈS", logout: "DÉCONNEXION",
+        working_month: "MOIS DE TRAVAIL:", capital: "CAPITAL", revenue: "REVENU", debt: "DETTE", profit: "PROFIT", personal: "PERSONNEL",
+        tab_stock: "STOCK", tab_debtors: "DÉBITEURS", tab_withdraw: "RETRAIT", tab_budget: "BUDGET", tab_reports: "RAPPORTS", tab_vault: "COFFRE",
+        inventory: "INVENTAIRE", add_stock: "AJOUTER STOCK", confirm_withdrawal: "CONFIRMER LE RETRAIT", personal_budget: "BUDGET PERSONNEL",
+        savings_goal: "Objectif d'épargne", log_entry: "ENREGISTRER", perf_report: "RAPPORT DE PERFORMANCE", archive_btn: "ARCHIVER L'ANNÉE",
+        archive_vault: "COFFRE D'ARCHIVES", th_item: "ARTICLE", th_cap: "CAPITAL", th_stock: "STOCK", th_rev: "REV", th_qty: "QTÉ", th_sell: "VENTE",
+        th_name: "NOM", th_phone: "TÉL", th_prod: "PRODUIT", th_bal: "SOLDE", th_act: "ACTION", th_date: "DATE", th_desc: "DESC",
+        th_amt: "MONTANT", th_type: "TYPE", th_month: "MOIS", th_sales: "VENTES", th_profit: "PROFIT",
+        months: ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI", "JUIN", "JUILLET", "AOÛT", "SEPTEMBRE", "OCTOBRE", "NOVEMBRE", "DÉCEMBRE"]
+    },
+    es: { // Spanish
+        init_session: "INICIAR SESIÓN", create_access: "CREAR ACCESO", logout: "SALIR",
+        working_month: "MES LABORAL:", capital: "CAPITAL", revenue: "INGRESOS", debt: "DEUDA", profit: "GANANCIA", personal: "PERSONAL",
+        tab_stock: "INVENTARIO", tab_debtors: "DEUDORES", tab_withdraw: "RETIRAR", tab_budget: "PRESUPUESTO", tab_reports: "REPORTES", tab_vault: "BÓVEDA",
+        inventory: "INVENTARIO", add_stock: "AÑADIR STOCK", confirm_withdrawal: "CONFIRMAR RETIRO", personal_budget: "PRESUPUESTO PERSONAL",
+        savings_goal: "Meta de ahorro", log_entry: "REGISTRAR", perf_report: "REPORTE DE DESEMPEÑO", archive_btn: "ARCHIVAR AÑO",
+        archive_vault: "BÓVEDA DE ARCHIVOS", th_item: "ARTÍCULO", th_cap: "CAP", th_stock: "STOCK", th_rev: "ING", th_qty: "CANT", th_sell: "VENTA",
+        th_name: "NOMBRE", th_phone: "TEL", th_prod: "PRODUCTO", th_bal: "SALDO", th_act: "ACCIÓN", th_date: "FECHA", th_desc: "DESC",
+        th_amt: "MONTO", th_type: "TIPO", th_month: "MES", th_sales: "VENTAS", th_profit: "GANANCIA",
+        months: ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
+    }
+};
+
+let currentLang = 'en';
 let businessData = [], stockHistory = [], archiveVault = [], withdrawals = [], personalLedger = [], debtors = [], savingsGoal = 0;
 let userBackground = null, userBgType = 'video';
 let modalResolve;
-const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+// Multi-language system
+function setLanguage(lang) {
+    currentLang = lang;
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) {
+            // Keep icons if present
+            const icon = el.querySelector('i');
+            el.innerText = translations[lang][key];
+            if (icon) el.prepend(icon, " ");
+        }
+    });
+    
+    // Update placeholders
+    document.getElementById('bName').placeholder = translations[lang].th_item;
+    document.getElementById('pDesc').placeholder = translations[lang].th_desc;
+    
+    // Refresh Month Select
+    const monthSelect = document.getElementById('globalMonth');
+    const currentVal = monthSelect.value || 0;
+    monthSelect.innerHTML = translations[lang].months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+    monthSelect.value = currentVal;
+
+    renderAll();
+}
 
 // Notifications
 function showNotify(msg, duration = 3000) {
@@ -316,8 +409,9 @@ function closeCustomModal() {
     if(modalResolve) modalResolve(null);
 }
 
-// Auth
+// Optimized Auth & Load
 async function loginUser() {
+    showNotify("AUTHENTICATING...");
     const email = document.getElementById('authEmail').value;
     const pass = document.getElementById('authPass').value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
@@ -350,12 +444,13 @@ async function syncData() {
     savingsGoal = parseFloat(document.getElementById('pGoal').value) || 0;
     await supabaseClient.from('user_budgets').upsert({ 
         user_id: user.id, 
-        payload: { businessData, stockHistory, archiveVault, withdrawals, personalLedger, debtors, savingsGoal, userBackground, userBgType }, 
+        payload: { businessData, stockHistory, archiveVault, withdrawals, personalLedger, debtors, savingsGoal, userBackground, userBgType, currentLang }, 
         updated_at: new Date().toISOString() 
     }, { onConflict: 'user_id' });
 }
 
 async function loadData(userId) {
+    showNotify("LOADING ENGINE...");
     const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
     if (data?.payload) {
         const p = data.payload;
@@ -367,9 +462,15 @@ async function loadData(userId) {
         debtors = p.debtors || [];
         userBackground = p.userBackground;
         userBgType = p.userBgType || 'video';
+        currentLang = p.currentLang || 'en';
         document.getElementById('pGoal').value = p.savingsGoal || 0;
+        document.getElementById('appLang').value = currentLang;
+        document.getElementById('authLang').value = currentLang;
+        setLanguage(currentLang);
         if (userBackground) applyBackground(userBackground, userBgType);
         renderAll();
+    } else {
+        setLanguage('en');
     }
 }
 
@@ -412,7 +513,7 @@ function renderAll() {
 
     // Reports Sync
     let reportHTML = "";
-    months.forEach((mName, i) => {
+    translations[currentLang].months.forEach((mName, i) => {
         const mCap = stockHistory.filter(x => x.month === i).reduce((s, x) => s + parseFloat(x.cost), 0);
         const mRev = businessData.filter(x => x.month === i).reduce((s, x) => s + parseFloat(x.totalSalesRevenue), 0);
         if(mCap > 0 || mRev > 0) {
@@ -427,15 +528,15 @@ function renderAll() {
             <div style="grid-column: span 2; border-bottom: 1px solid var(--warning); padding-bottom: 5px; margin-bottom: 5px;">
                 <h3 style="margin:0; color:var(--warning); text-transform: uppercase;"><i class="fas fa-folder-open"></i> ${v.year}</h3>
             </div>
-            <div><small>CAPITAL:</small><br><b>K ${v.summary.totalCap.toFixed(2)}</b></div>
-            <div><small>REVENUE:</small><br><b>K ${v.summary.totalRev.toFixed(2)}</b></div>
+            <div><small>${translations[currentLang].capital}:</small><br><b>K ${v.summary.totalCap.toFixed(2)}</b></div>
+            <div><small>${translations[currentLang].revenue}:</small><br><b>K ${v.summary.totalRev.toFixed(2)}</b></div>
             <div style="grid-column: span 2; background: rgba(0, 255, 136, 0.1); padding: 5px; text-align: center; border-radius: 4px;">
                 <small>NET PROFIT:</small><br><b style="color: var(--success)">K ${(v.summary.totalRev - v.summary.totalCap).toFixed(2)}</b>
             </div>
         </div>`).join('');
 }
 
-// Restock Logic
+// REST OF YOUR LOGIC (restockItem, handleSale, payDebt, etc.) REMAINS THE SAME
 async function restockItem(id) {
     const item = businessData.find(x => x.id === id);
     const res = await openCustomModal(`Restock: ${item.name}`, [
@@ -450,9 +551,9 @@ async function restockItem(id) {
     }
 }
 
-// Sales with Custom Popups
 async function handleSale(id, isDebt) {
-    const qty = parseInt(document.getElementById(`qty_${id}`).value);
+    const qtyInput = document.getElementById(`qty_${id}`);
+    const qty = parseInt(qtyInput.value);
     const item = businessData.find(x => x.id === id);
     if (!item || item.currentStock < qty) return showNotify("INSUFFICIENT STOCK");
     
@@ -534,13 +635,13 @@ function generatePDF() {
     const doc = new jsPDF();
     doc.setFontSize(20); doc.text("KLPB BUSINESS REPORT", 10, 20);
     const rows = [];
-    months.forEach((mName, i) => {
+    translations[currentLang].months.forEach((mName, i) => {
         const mCap = stockHistory.filter(x => x.month === i).reduce((s, x) => s + x.cost, 0);
         const mRev = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
         if(mCap > 0 || mRev > 0) rows.push([mName, `K ${mCap.toFixed(2)}`, `K ${mRev.toFixed(2)}`, `K ${(mRev-mCap).toFixed(2)}`]);
     });
-    doc.autoTable({ head: [['Month', 'Capital', 'Sales', 'Profit']], body: rows, startY: 40 });
-    doc.save("KLPB_Report.pdf");
+    doc.autoTable({ head: [[translations[currentLang].th_month, translations[currentLang].capital, translations[currentLang].th_sales, translations[currentLang].th_profit]], body: rows, startY: 40 });
+    doc.save(`KLPB_Report_${new Date().getFullYear()}.pdf`);
     showNotify("REPORT DOWNLOADED");
 }
 
@@ -569,6 +670,9 @@ function openTab(evt, t) {
 }
 
 function deletePersonal(id) { personalLedger = personalLedger.filter(x => x.id !== id); renderAll(); syncData(); }
+
+// INITIALIZE WITH ENGLISH
+setLanguage('en');
 </script>
 </body>
 </html>

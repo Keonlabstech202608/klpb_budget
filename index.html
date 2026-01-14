@@ -261,31 +261,44 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 });
 
 async function syncData() {
-    savingsGoal = parseFloat(document.getElementById('pGoal').value) || 0;
+    // Get the current user session
     const { data: { user } } = await supabaseClient.auth.getUser();
-    await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, 
-        payload: { businessData, stockHistory, archiveVault, withdrawals, personalLedger, debtors, savingsGoal, userBackground, userBgType }, 
-        updated_at: new Date() 
-    });
-}
+    
+    if (!user) {
+        console.error("No active session found for syncing.");
+        return;
+    }
 
-async function loadData(userId) {
-    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
-    if (data?.payload) {
-        const p = data.payload;
-        businessData = p.businessData || [];
-        stockHistory = p.stockHistory || [];
-        archiveVault = p.archiveVault || [];
-        withdrawals = p.withdrawals || [];
-        personalLedger = p.personalLedger || [];
-        debtors = p.debtors || [];
-        userBackground = p.userBackground;
-        userBgType = p.userBgType || 'video';
-        document.getElementById('pGoal').value = p.savingsGoal || 0;
-        
-        if (userBackground) applyBackground(userBackground, userBgType);
-        renderAll();
+    savingsGoal = parseFloat(document.getElementById('pGoal').value) || 0;
+
+    // Construct the object to match your Supabase table columns
+    const { error } = await supabaseClient
+        .from('user_budgets')
+        .upsert({ 
+            user_id: user.id, 
+            payload: { 
+                businessData, 
+                stockHistory, 
+                archiveVault, 
+                withdrawals, 
+                personalLedger, 
+                debtors, 
+                savingsGoal, 
+                userBackground, 
+                userBgType 
+            }, 
+            updated_at: new Date().toISOString() 
+        }, {
+            onConflict: 'user_id' // Ensures it updates the existing row for this user
+        });
+
+    if (error) {
+        console.error("Sync Error:", error.message);
+        showNotify("CLOUD SYNC ERROR: " + error.message);
+    } else {
+        console.log("Data successfully synced to Supabase");
+    }
+}
     }
 }
 
@@ -429,3 +442,4 @@ function archiveYear() {
 </script>
 </body>
 </html>
+

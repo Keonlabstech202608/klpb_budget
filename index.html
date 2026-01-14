@@ -86,82 +86,37 @@
 
     <div id="business" class="tab-content active">
         <section>
-            <h2>// CAPITAL_INVENTORY</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>// RETAIL_INVENTORY</h2>
+                <div style="width: 200px;">
+                    <small style="font-size: 0.6rem;">LOW_STOCK_ALERT_LEVEL</small>
+                    <input type="number" id="threshold" value="3" onchange="renderAll()" style="padding: 5px; margin: 0;">
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 5px;">
                 <input type="text" id="bName" placeholder="ITEM NAME">
-                <input type="number" id="bBuy" placeholder="TOTAL CAPITAL SPENT">
-                <input type="number" id="bSell" placeholder="UNIT SELL PRICE">
+                <input type="number" id="bBuy" placeholder="CAPITAL PAID (K)">
+                <input type="number" id="bSell" placeholder="RETAIL SELL PRICE">
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                <input type="number" id="bStock" placeholder="TOTAL QTY BOUGHT">
+                <input type="number" id="bStock" placeholder="QTY ADDED">
                 <select id="bMonth"><option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option></select>
             </div>
             <button onclick="addBusiness()">ADD_NEW_ITEM_TO_SYSTEM</button>
             <table id="bTable"><thead><tr><th>PRODUCT</th><th>TOTAL_CAPITAL</th><th>STOCK_LEFT</th><th>SALES_REVENUE</th><th>ACTION</th></tr></thead><tbody></tbody></table>
             
-            <h3 style="margin-top: 40px;">// STOCK_PURCHASE_HISTORY (LEDGER)</h3>
-            <input type="text" id="historySearch" placeholder="SEARCH HISTORY BY ITEM NAME..." oninput="renderHistory()">
-            <table id="historyTable"><thead><tr><th>MONTH</th><th>ITEM</th><th>QTY</th><th>SPENT</th></tr></thead><tbody></tbody></table>
-            
+            <h3 style="margin-top: 40px;">// PURCHASE_LEDGER (HISTORY)</h3>
+            <input type="text" id="historySearch" placeholder="SEARCH PURCHASES..." oninput="renderHistory()">
+            <table id="historyTable"><thead><tr><th>MONTH</th><th>ITEM</th><th>QTY_IN</th><th>MONEY_OUT</th></tr></thead><tbody></tbody></table>
             <hr style="border:0; border-top: 1px solid var(--border-glow); margin: 25px 0;">
             <button onclick="withdrawMoney()" style="border-color: var(--purple); color: var(--purple);">WITHDRAW_PROFIT_TO_PERSONAL</button>
         </section>
     </div>
 
-    <div id="debt" class="tab-content">
-        <section>
-            <h2>// CUSTOMER_DEBTS</h2>
-            <input type="text" id="debtSearch" placeholder="SEARCH CUSTOMER..." oninput="renderDebtList()">
-            <div id="debtList"></div>
-        </section>
-    </div>
-
-    <div id="personal" class="tab-content">
-        <section>
-            <h2>// PERSONAL_WALLET</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;">
-                <div class="metric-box" style="border-color: var(--purple);">
-                    <small>WALLET_BALANCE</small>
-                    <h2 id="personalWallet" style="color: var(--purple);">K 0</h2>
-                </div>
-                <button onclick="depositExternal()" style="border-color: var(--success); color: var(--success); height: 100%;">DEPOSIT_EXTERNAL_FUNDS</button>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-                <input type="text" id="pItem" placeholder="EXPENSE">
-                <input type="number" id="pCost" placeholder="K COST">
-                <select id="pCat">
-                    <option value="Food">FOOD</option>
-                    <option value="Rent">RENT</option>
-                    <option value="Transport">TRANSPORT</option>
-                    <option value="Health">HEALTH</option>
-                    <option value="Other">OTHER</option>
-                </select>
-            </div>
-            <button onclick="addPersonal()">LOG_PERSONAL_EXPENSE</button>
-            <table id="pTable"><thead><tr><th>CATEGORY</th><th>ITEM</th><th>COST</th><th>ACT</th></tr></thead><tbody></tbody></table>
-        </section>
-    </div>
-
-    <div id="analytics" class="tab-content">
-        <section>
-            <h2>// PERFORMANCE</h2>
-            <div id="graphicalMetrics" class="metric-grid"></div>
-            <h3>// PERSONAL_SPENDING_SPLIT</h3>
-            <div id="spendingChart" style="margin-top: 20px;"></div>
-        </section>
-    </div>
-
-    <div id="summary" class="tab-content">
-        <section>
-            <h2>// FINANCIAL_REPORTS</h2>
-            <table id="ySummaryTable">
-                <thead><tr><th>MONTH</th><th>CAPITAL_SPENT</th><th>TOTAL_SALES</th><th>UNCOLLECTED_DEBT</th><th>PROFIT</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <br>
-            <button onclick="archiveYear()" style="border-color: var(--danger); color: var(--danger);">ARCHIVE_CURRENT_YEAR_DATA</button>
-        </section>
-    </div>
+    <div id="debt" class="tab-content"><section><h2>// CUSTOMER_DEBTS</h2><input type="text" id="debtSearch" placeholder="SEARCH CUSTOMER..." oninput="renderDebtList()"><div id="debtList"></div></section></div>
+    <div id="personal" class="tab-content"><section><h2>// PERSONAL_WALLET</h2><div class="metric-grid"><div class="metric-box" style="border-color: var(--purple);"><small>WALLET_BALANCE</small><h2 id="personalWallet" style="color: var(--purple);">K 0</h2></div><button onclick="depositExternal()" style="border-color: var(--success); color: var(--success); height: 100%;">DEPOSIT_EXTERNAL_FUNDS</button></div><div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;"><input type="text" id="pItem" placeholder="EXPENSE"><input type="number" id="pCost" placeholder="K COST"><select id="pCat"><option value="Food">FOOD</option><option value="Rent">RENT</option><option value="Transport">TRANSPORT</option><option value="Health">HEALTH</option><option value="Other">OTHER</option></select></div><button onclick="addPersonal()">LOG_PERSONAL_EXPENSE</button><table id="pTable"><thead><tr><th>CATEGORY</th><th>ITEM</th><th>COST</th><th>ACT</th></tr></thead><tbody></tbody></table></section></div>
+    <div id="analytics" class="tab-content"><section><h2>// PERFORMANCE</h2><div id="graphicalMetrics" class="metric-grid"></div><h3>// PERSONAL_SPENDING_SPLIT</h3><div id="spendingChart" style="margin-top: 20px;"></div></section></div>
+    <div id="summary" class="tab-content"><section><h2>// FINANCIAL_REPORTS</h2><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>MONEY_OUT (CAPITAL)</th><th>MONEY_IN (SALES)</th><th>UNCOLLECTED_DEBT</th><th>NET_PROFIT</th></tr></thead><tbody></tbody></table><br><button onclick="archiveYear()" style="border-color: var(--danger); color: var(--danger);">ARCHIVE_CURRENT_YEAR_DATA</button></section></div>
 </div>
 
 <script>
@@ -169,10 +124,9 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let personalData = [], businessData = [], debtData = [], withdrawals = [], externalDeposits = 0, stockHistory = [];
+let personalData = [], businessData = [], debtData = [], withdrawals = [], externalDeposits = 0, stockHistory = [], config = { threshold: 3 };
 const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-// --- CORE ---
 async function loginUser() { await supabaseClient.auth.signInWithPassword({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
 async function registerUser() { await supabaseClient.auth.signUp({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
@@ -183,7 +137,8 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
 
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { personalData, businessData, debtData, withdrawals, externalDeposits, stockHistory }, updated_at: new Date() });
+    config.threshold = parseInt(document.getElementById('threshold').value) || 3;
+    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { personalData, businessData, debtData, withdrawals, externalDeposits, stockHistory, config }, updated_at: new Date() });
 }
 
 async function loadData(userId) {
@@ -195,13 +150,20 @@ async function loadData(userId) {
         withdrawals = data.payload.withdrawals || [];
         externalDeposits = data.payload.externalDeposits || 0;
         stockHistory = data.payload.stockHistory || [];
+        config = data.payload.config || { threshold: 3 };
+        document.getElementById('threshold').value = config.threshold;
         renderAll();
     }
 }
 
-// --- LOGIC ---
+// THE USER LOGIC: NO MULTIPLICATION ON CAPITAL
 function addBusiness() {
-    const name = document.getElementById('bName').value, spent = parseFloat(document.getElementById('bBuy').value), sell = parseFloat(document.getElementById('bSell').value), qty = parseInt(document.getElementById('bStock').value), mIdx = parseInt(document.getElementById('bMonth').value);
+    const name = document.getElementById('bName').value, 
+          spent = parseFloat(document.getElementById('bBuy').value), // Flat amount paid
+          sell = parseFloat(document.getElementById('bSell').value), 
+          qty = parseInt(document.getElementById('bStock').value),
+          mIdx = parseInt(document.getElementById('bMonth').value);
+    
     if (name && !isNaN(spent)) {
         businessData.push({ id: Date.now(), name, unitSellPrice: sell, currentStock: qty, totalCapitalInvested: spent, month: mIdx, totalSalesRevenue: 0 });
         stockHistory.push({ id: Date.now(), name, qty: qty, cost: spent, month: months[mIdx] });
@@ -211,12 +173,12 @@ function addBusiness() {
 
 function restockItem(id) {
     const item = businessData.find(x => x.id === id);
-    const qty = parseInt(prompt("QTY TO ADD:"));
-    const spentOnBatch = parseFloat(prompt("TOTAL MONEY SPENT ON THIS NEW BATCH:"));
-    if (item && !isNaN(spentOnBatch)) {
-        item.currentStock += qty;
-        item.totalCapitalInvested += spentOnBatch;
-        stockHistory.push({ id: Date.now(), name: item.name, qty: qty, cost: spentOnBatch, month: months[item.month] });
+    const qty = parseInt(prompt("HOW MANY ITEMS ARE YOU ADDING?"));
+    const moneyPaid = parseFloat(prompt("TOTAL MONEY PAID FOR THIS STOCK (FLAT AMOUNT):"));
+    if (item && !isNaN(moneyPaid)) {
+        item.currentStock += qty; // Just increment qty
+        item.totalCapitalInvested += moneyPaid; // Just add the flat amount
+        stockHistory.push({ id: Date.now(), name: item.name, qty: qty, cost: moneyPaid, month: months[item.month] });
         renderAll(); syncData();
     }
 }
@@ -226,55 +188,30 @@ function handleSale(id, isDebt) {
     if (!item || item.currentStock <= 0) return alert("OUT OF STOCK");
     if (isDebt) {
         const cName = prompt("CUSTOMER:"); if (cName) { debtData.push({ id: Date.now(), customer: cName, balance: item.unitSellPrice, product: item.name, month: item.month }); item.currentStock -= 1; }
-    } else { item.currentStock -= 1; item.totalSalesRevenue += item.unitSellPrice; }
+    } else { 
+        item.currentStock -= 1; // Decrease qty by 1
+        item.totalSalesRevenue += item.unitSellPrice; // Add retail price to revenue
+    }
     renderAll(); syncData();
 }
 
-function archiveYear() {
-    if (confirm("ARE YOU SURE? DATA WILL BE WIPED FOR THE NEW YEAR.")) {
-        personalData = []; businessData = []; debtData = []; withdrawals = []; stockHistory = []; externalDeposits = 0;
-        renderAll(); syncData();
-    }
+function renderAll() {
+    const t = parseInt(document.getElementById('threshold').value) || 3;
+    document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `<tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td class="${x.currentStock <= t ? 'low-stock' : ''}">${x.currentStock}</td><td style="color:var(--success)">K ${x.totalSalesRevenue}</td><td><button onclick="handleSale(${x.id}, false)" class="small-btn">RETAIL SALE</button><button onclick="handleSale(${x.id}, true)" class="small-btn">DEBT</button><button onclick="restockItem(${x.id})" class="small-btn">RESTOCK</button></td></tr>`).join('');
+    renderHistory(); renderDebtList(); updateAnalytics(); updateYearlySummary();
+    const totalW = withdrawals.reduce((s, x) => s + x.amount, 0), totalS = personalData.reduce((s, x) => s + x.cost, 0);
+    document.getElementById('personalWallet').innerText = `K ${(externalDeposits + totalW - totalS).toLocaleString()}`;
+    document.querySelector("#pTable tbody").innerHTML = personalData.map(x => `<tr><td>${x.category}</td><td>${x.item}</td><td>K ${x.cost}</td><td><button onclick="syncData()" class="small-btn">X</button></td></tr>`).join('');
 }
 
 function renderHistory() {
     const q = (document.getElementById('historySearch')?.value || "").toLowerCase();
-    const filtered = stockHistory.filter(h => h.name.toLowerCase().includes(q));
-    document.querySelector("#historyTable tbody").innerHTML = filtered.slice().reverse().map(x => `<tr><td>${x.month}</td><td>${x.name}</td><td>${x.qty}</td><td>K ${x.cost}</td></tr>`).join('');
-}
-
-function renderAll() {
-    document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `<tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td style="color:var(--success)">K ${x.totalSalesRevenue}</td><td><button onclick="handleSale(${x.id}, false)" class="small-btn">CASH</button><button onclick="handleSale(${x.id}, true)" class="small-btn">DEBT</button><button onclick="restockItem(${x.id})" class="small-btn">ADD</button></td></tr>`).join('');
-    renderHistory();
-    const totalW = withdrawals.reduce((s, x) => s + x.amount, 0), totalS = personalData.reduce((s, x) => s + x.cost, 0);
-    document.getElementById('personalWallet').innerText = `K ${(externalDeposits + totalW - totalS).toLocaleString()}`;
-    document.querySelector("#pTable tbody").innerHTML = personalData.map(x => `<tr><td>${x.category}</td><td>${x.item}</td><td>K ${x.cost}</td><td><button onclick="syncData()" class="small-btn">X</button></td></tr>`).join('');
-    renderDebtList(); updateAnalytics(); updateYearlySummary();
-}
-
-function renderDebtList() {
-    const q = (document.getElementById('debtSearch')?.value || "").toLowerCase();
-    document.getElementById('debtList').innerHTML = debtData.filter(d => d.customer.toLowerCase().includes(q)).map(x => `<div style="border:1px solid var(--border-glow); padding:10px; margin:5px 0; display:flex; justify-content:space-between; align-items:center;"><div><strong>${x.customer}</strong> (K ${x.balance})</div><button onclick="payDebt(${x.id})" class="small-btn">PAY</button></div>`).join('');
-}
-
-function payDebt(id) {
-    const d = debtData.find(x => x.id === id), amt = parseFloat(prompt("PAY:"));
-    if (amt > 0 && amt <= d.balance) {
-        const p = businessData.find(b => b.name === d.product); if (p) p.totalSalesRevenue += amt;
-        d.balance -= amt; if (d.balance <= 0) debtData = debtData.filter(x => x.id !== id);
-        renderAll(); syncData();
-    }
+    document.querySelector("#historyTable tbody").innerHTML = stockHistory.filter(h => h.name.toLowerCase().includes(q)).slice().reverse().map(x => `<tr><td>${x.month}</td><td>${x.name}</td><td>${x.qty}</td><td>K ${x.cost}</td></tr>`).join('');
 }
 
 function updateAnalytics() {
-    const totalCap = stockHistory.reduce((s, x) => s + x.cost, 0);
-    const totalSales = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
-    const profit = totalSales - totalCap;
-    document.getElementById('graphicalMetrics').innerHTML = `
-        <div class="metric-box"><small>TOTAL_CAPITAL</small><h3 style="color:var(--warning)">K ${totalCap}</h3></div>
-        <div class="metric-box"><small>TOTAL_SALES</small><h3 style="color:var(--neon-blue)">K ${totalSales}</h3></div>
-        <div class="metric-box"><small>NET_PROFIT</small><h3 style="color:${profit >= 0 ? 'var(--success)' : 'var(--danger)'}">K ${profit}</h3></div>
-    `;
+    const cap = stockHistory.reduce((s, x) => s + x.cost, 0), sal = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0), profit = sal - cap;
+    document.getElementById('graphicalMetrics').innerHTML = `<div class="metric-box"><small>TOTAL_CAPITAL_PAID</small><h3 style="color:var(--warning)">K ${cap}</h3></div><div class="metric-box"><small>TOTAL_SALES_REVENUE</small><h3 style="color:var(--neon-blue)">K ${sal}</h3></div><div class="metric-box"><small>TRUE_PROFIT</small><h3 style="color:${profit >= 0 ? 'var(--success)' : 'var(--danger)'}">K ${profit}</h3></div>`;
     const cats = ["Food", "Rent", "Transport", "Health", "Other"], totalP = personalData.reduce((s, x) => s + x.cost, 0) || 1;
     document.getElementById('spendingChart').innerHTML = cats.map(c => {
         const cost = personalData.filter(x => x.category === c).reduce((s, x) => s + x.cost, 0), per = (cost / totalP) * 100;
@@ -282,27 +219,14 @@ function updateAnalytics() {
     }).join('');
 }
 
-function updateYearlySummary() {
-    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((m, i) => {
-        const c = stockHistory.filter(x => x.month === m).reduce((s, x) => s + x.cost, 0);
-        const s = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
-        const d = debtData.filter(x => x.month === i).reduce((s, x) => s + x.balance, 0);
-        return `<tr><td>${m}</td><td>K ${c}</td><td>K ${s}</td><td>K ${d}</td><td>K ${s-c}</td></tr>`;
-    }).join('');
-}
-
+function archiveYear() { if (confirm("ARCHIVE DATA?")) { personalData=[]; businessData=[]; debtData=[]; withdrawals=[]; stockHistory=[]; externalDeposits=0; renderAll(); syncData(); } }
+function renderDebtList() { const q = (document.getElementById('debtSearch')?.value || "").toLowerCase(); document.getElementById('debtList').innerHTML = debtData.filter(d => d.customer.toLowerCase().includes(q)).map(x => `<div style="border:1px solid var(--border-glow); padding:10px; margin:5px 0; display:flex; justify-content:space-between; align-items:center;"><div><strong>${x.customer}</strong> (K ${x.balance})</div><button onclick="payDebt(${x.id})" class="small-btn">PAY</button></div>`).join(''); }
+function payDebt(id) { const d = debtData.find(x => x.id === id), amt = parseFloat(prompt("PAY:")); if (amt > 0 && amt <= d.balance) { const p = businessData.find(b => b.name === d.product); if (p) p.totalSalesRevenue += amt; d.balance -= amt; if (d.balance <= 0) debtData = debtData.filter(x => x.id !== id); renderAll(); syncData(); } }
+function updateYearlySummary() { document.querySelector("#ySummaryTable tbody").innerHTML = months.map((m, i) => { const c = stockHistory.filter(x => x.month === m).reduce((s, x) => s + x.cost, 0), s = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0), d = debtData.filter(x => x.month === i).reduce((s, x) => s + x.balance, 0); return `<tr><td>${m}</td><td>K ${c}</td><td>K ${s}</td><td>K ${d}</td><td>K ${s-c}</td></tr>`; }).join(''); }
 function withdrawMoney() { const amount = parseFloat(prompt("AMOUNT:")); if (amount > 0) { withdrawals.push({ id: Date.now(), amount, month: parseInt(document.getElementById('bMonth').value) }); renderAll(); syncData(); } }
 function depositExternal() { const amount = parseFloat(prompt("DEPOSIT:")); if (amount > 0) { externalDeposits += amount; renderAll(); syncData(); } }
-function addPersonal() {
-    const item = document.getElementById('pItem').value, cost = parseFloat(document.getElementById('pCost').value), cat = document.getElementById('pCat').value;
-    const wallet = (externalDeposits + withdrawals.reduce((s, x) => s + x.amount, 0)) - personalData.reduce((s, x) => s + x.cost, 0);
-    if (cost > wallet) return alert("WALLET EMPTY!");
-    if (item && cost) { personalData.push({ id: Date.now(), item, cost, category: cat }); renderAll(); syncData(); }
-}
-function openTab(evt, t) {
-    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
-    document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
-}
+function addPersonal() { const item = document.getElementById('pItem').value, cost = parseFloat(document.getElementById('pCost').value), cat = document.getElementById('pCat').value; if (item && cost) { personalData.push({ id: Date.now(), item, cost, category: cat }); renderAll(); syncData(); } }
+function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
 </script>
 </body>
 </html>

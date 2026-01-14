@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Keonlabs_personal budget-KLPB</title>
+    <title>KLPB - Business & Personal Separation</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -16,6 +16,7 @@
             --danger: #ff4d4d;
             --warning: #ffaa00;
             --success: #00ff88;
+            --purple: #bc13fe;
         }
 
         body { 
@@ -31,7 +32,7 @@
 
         .container { max-width: 1100px; margin: auto; padding: 20px; display: none; }
         .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); overflow-x: auto; }
-        .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 25px; cursor: pointer; opacity: 0.5; transition: 0.4s; white-space: nowrap; }
+        .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 25px; cursor: pointer; opacity: 0.5; transition: 0.4s; }
         .tab-btn.active { opacity: 1; color: var(--neon-blue); border-bottom: 3px solid var(--neon-blue); }
         
         .tab-content { display: none; }
@@ -39,20 +40,21 @@
         
         section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 4px; margin-bottom: 20px; }
         
-        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .metric-box { border: 1px solid var(--border-glow); padding: 20px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.4); box-shadow: inset 0 0 10px rgba(0,242,255,0.1); }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .metric-box { border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.4); }
 
         input, select { background: rgba(0, 20, 40, 0.8); border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 12px; width: 100%; margin: 10px 0; box-sizing: border-box; }
-        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; }
+        button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; font-size: 0.8rem; }
         button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.8rem; }
         th { text-align: left; color: #70a1ff; padding: 10px; border-bottom: 1px solid var(--border-glow); }
         td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
 
-        .bar-container { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
-        .bar-fill { height: 100%; background: var(--neon-blue); transition: width 0.6s ease; }
-        
+        .small-btn { padding: 4px 8px; width: auto; font-size: 0.65rem; }
+        .low-stock { color: var(--danger); font-weight: bold; animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -72,61 +74,73 @@
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <small id="userDisplay"></small>
-        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px; font-size: 0.7rem;">TERMINATE</button>
+        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px;">LOGOUT</button>
     </div>
 
-    <h1 style="text-align: center; letter-spacing: 5px; text-shadow: 0 0 10px var(--neon-blue);">KEONLABS PERSONAL BUDGET</h1>
+    <h1 style="text-align: center; letter-spacing: 5px; color: var(--neon-blue);">KLPB BUSINESS ENGINE</h1>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'personal')">01_PERSONAL</button>
-        <button class="tab-btn" onclick="openTab(event, 'business')">02_BUSINESS</button>
-        <button class="tab-btn" onclick="openTab(event, 'analytics')">03_ANALYTICS</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')">04_SUMMARY</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')">01_BUSINESS</button>
+        <button class="tab-btn" onclick="openTab(event, 'debt')">02_DEBTORS</button>
+        <button class="tab-btn" onclick="openTab(event, 'personal')">03_PERSONAL</button>
+        <button class="tab-btn" onclick="openTab(event, 'analytics')">04_ANALYTICS</button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')">05_SUMMARY</button>
     </div>
 
-    <div id="personal" class="tab-content active">
+    <div id="business" class="tab-content active">
         <section>
-            <h2>// PERSONAL_FINANCE</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <select id="pMonth"><option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option></select>
-                <input type="number" id="pBudget" placeholder="BUDGET LIMIT (K)">
+            <h2>// INVENTORY_&_WITHDRAWALS</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <input type="text" id="bName" placeholder="PRODUCT NAME">
+                <input type="number" id="bBuy" placeholder="BUY_PRICE">
+                <input type="number" id="bSell" placeholder="SELL_PRICE">
             </div>
-            <input type="text" id="pItem" placeholder="ITEM NAME">
-            <input type="number" id="pCost" placeholder="COST (K)">
-            <button onclick="addPersonal()">LOG_EXPENSE</button>
-            <table id="pTable"><thead><tr><th>MONTH</th><th>ITEM</th><th>COST</th><th>ACTION</th></tr></thead><tbody></tbody></table>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <input type="number" id="bStock" placeholder="QTY">
+                <select id="bMonth"><option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option></select>
+            </div>
+            <button onclick="addBusiness()">LOG_STOCK</button>
+            <table id="bTable"><thead><tr><th>PRODUCT</th><th>CAPITAL</th><th>STOCK</th><th>SALES</th><th>ACTION</th></tr></thead><tbody></tbody></table>
+            
+            <hr style="border:0; border-top: 1px solid var(--border-glow); margin: 25px 0;">
+            <button onclick="withdrawMoney()" style="border-color: var(--purple); color: var(--purple);">WITHDRAW_FOR_PERSONAL (SALARY)</button>
         </section>
     </div>
 
-    <div id="business" class="tab-content">
+    <div id="debt" class="tab-content">
         <section>
-            <h2>// CAPITAL_&_INVENTORY</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-                <input type="text" id="bName" placeholder="PRODUCT NAME">
-                <input type="number" id="bBuy" placeholder="BUY_PRICE (K)">
-                <input type="number" id="bSell" placeholder="SELL_PRICE (K)">
+            <h2>// DEBT_LEDGER</h2>
+            <input type="text" id="debtSearch" placeholder="SEARCH CUSTOMER..." oninput="renderDebtList()">
+            <div id="debtList"></div>
+        </section>
+    </div>
+
+    <div id="personal" class="tab-content">
+        <section>
+            <h2>// PERSONAL_LOG (MY_MONEY)</h2>
+            <div class="metric-box" style="margin-bottom: 20px; border-color: var(--purple);">
+                <small>AVAILABLE TO SPEND (FROM BUSINESS)</small>
+                <h2 id="personalWallet" style="color: var(--purple);">K 0</h2>
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
-                <input type="number" id="bStock" placeholder="STOCK QTY">
-                <select id="bMonth"><option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option></select>
-            </div>
-            <button onclick="addBusiness()">INITIALIZE_STOCK</button>
-            <table id="bTable"><thead><tr><th>ITEM</th><th>CAPITAL_INV</th><th>SELL_VAL</th><th>STOCK</th><th>ACTION</th></tr></thead><tbody></tbody></table>
+            <input type="text" id="pItem" placeholder="EXPENSE NAME">
+            <input type="number" id="pCost" placeholder="COST">
+            <button onclick="addPersonal()">LOG_PERSONAL_EXPENSE</button>
+            <table id="pTable"><thead><tr><th>ITEM</th><th>COST</th><th>ACT</th></tr></thead><tbody></tbody></table>
         </section>
     </div>
 
     <div id="analytics" class="tab-content">
         <section>
-            <h2>// PERFORMANCE_METRICS</h2>
+            <h2>// PERFORMANCE</h2>
             <div id="graphicalMetrics" class="metric-grid"></div>
         </section>
     </div>
 
     <div id="summary" class="tab-content">
         <section>
-            <h2>// YEARLY_FINANCIAL_BREAKDOWN</h2>
+            <h2>// YEARLY_REPORT</h2>
             <table id="ySummaryTable">
-                <thead><tr><th>MONTH</th><th>PERS_EXPENSE</th><th>BUS_CAPITAL_INV</th><th>EST_REVENUE</th><th>POTENTIAL_PROFIT</th></tr></thead>
+                <thead><tr><th>MONTH</th><th>WITHDRAWN</th><th>CAPITAL</th><th>SALES</th><th>DEBT</th><th>BIZ_PROFIT</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -138,56 +152,90 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let personalData = [], businessData = [];
+let personalData = [], businessData = [], debtData = [], withdrawals = [];
 const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-// --- AUTH (STABLE) ---
-async function loginUser() {
-    const { error } = await supabaseClient.auth.signInWithPassword({
-        email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value
-    });
-    if (error) document.getElementById('authMsg').innerText = error.message;
-}
-async function registerUser() {
-    const { error } = await supabaseClient.auth.signUp({
-        email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value
-    });
-    if (error) document.getElementById('authMsg').innerText = "Verify Email";
-}
+// --- AUTH ---
+async function loginUser() { await supabaseClient.auth.signInWithPassword({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
+async function registerUser() { await supabaseClient.auth.signUp({ email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value }); }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('userDisplay').innerText = `ID: ${session.user.email}`;
         loadData(session.user.id);
     }
 });
 
-// --- CORE SYNC ---
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     await supabaseClient.from('user_budgets').upsert({
-        user_id: user.id, payload: { personalData, businessData }, updated_at: new Date()
+        user_id: user.id, payload: { personalData, businessData, debtData, withdrawals }, updated_at: new Date()
     });
 }
+
 async function loadData(userId) {
     const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
     if (data?.payload) {
         personalData = data.payload.personalData || [];
         businessData = data.payload.businessData || [];
+        debtData = data.payload.debtData || [];
+        withdrawals = data.payload.withdrawals || [];
         renderAll();
     }
 }
 
-// --- LOGIC ---
+// --- CORE LOGIC ---
+function withdrawMoney() {
+    const amount = parseFloat(prompt("HOW MUCH ARE YOU TAKING FROM BUSINESS FOR PERSONAL USE?"));
+    const currentMonth = parseInt(document.getElementById('bMonth').value);
+    if (!isNaN(amount) && amount > 0) {
+        withdrawals.push({ id: Date.now(), amount, month: currentMonth });
+        renderAll(); syncData();
+        alert("K " + amount + " moved to Personal Wallet.");
+    }
+}
+
+function handleSale(id, isDebt) {
+    const item = businessData.find(x => x.id === id);
+    if (!item || item.currentStock <= 0) return alert("OUT OF STOCK");
+    if (isDebt) {
+        const cName = prompt("CUSTOMER NAME:");
+        const cPhone = prompt("PHONE:");
+        if (cName) {
+            debtData.push({ id: Date.now(), customer: cName, phone: cPhone, balance: item.sell, product: item.name, month: item.month });
+            item.currentStock -= 1;
+        }
+    } else {
+        item.currentStock -= 1;
+        item.totalSalesRevenue += item.sell;
+    }
+    renderAll(); syncData();
+}
+
+function payPartialDebt(id) {
+    const debt = debtData.find(x => x.id === id);
+    const amount = parseFloat(prompt(`OWES K ${debt.balance}. PAYMENT:`));
+    if (amount > 0 && amount <= debt.balance) {
+        const product = businessData.find(x => x.name === debt.product);
+        if (product) product.totalSalesRevenue += amount;
+        debt.balance -= amount;
+        if (debt.balance <= 0) debtData = debtData.filter(x => x.id !== id);
+        renderAll(); syncData();
+    }
+}
+
 function addPersonal() {
     const item = document.getElementById('pItem').value;
     const cost = parseFloat(document.getElementById('pCost').value);
-    const month = parseInt(document.getElementById('pMonth').value);
+    const totalWithdrawn = withdrawals.reduce((s, x) => s + x.amount, 0);
+    const totalSpent = personalData.reduce((s, x) => s + x.cost, 0);
+    
+    if (cost > (totalWithdrawn - totalSpent)) return alert("NOT ENOUGH MONEY IN PERSONAL WALLET! WITHDRAW FROM BUSINESS FIRST.");
+    
     if (item && cost) {
-        personalData.push({ id: Date.now(), item, cost, month });
+        personalData.push({ id: Date.now(), item, cost });
         renderAll(); syncData();
         document.getElementById('pItem').value = ''; document.getElementById('pCost').value = '';
     }
@@ -198,78 +246,84 @@ function addBusiness() {
     const buy = parseFloat(document.getElementById('bBuy').value);
     const sell = parseFloat(document.getElementById('bSell').value);
     const stock = parseInt(document.getElementById('bStock').value);
-    const month = parseInt(document.getElementById('bMonth').value);
     if (name && buy && sell) {
-        businessData.push({ id: Date.now(), name, buy, sell, stock, month });
+        businessData.push({ id: Date.now(), name, buy, sell, currentStock: stock, totalPurchased: stock, month: parseInt(document.getElementById('bMonth').value), totalSalesRevenue: 0 });
         renderAll(); syncData();
-        ['bName', 'bBuy', 'bSell', 'bStock'].forEach(id => document.getElementById(id).value = '');
     }
+}
+
+function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const qty = parseInt(prompt("QTY TO ADD:"));
+    if (item && qty) { item.currentStock += qty; item.totalPurchased += qty; renderAll(); syncData(); }
 }
 
 function deleteItem(type, id) {
     if (type === 'p') personalData = personalData.filter(x => x.id !== id);
-    else businessData = businessData.filter(x => x.id !== id);
+    else if (type === 'b') businessData = businessData.filter(x => x.id !== id);
     renderAll(); syncData();
 }
 
+// --- RENDERING ---
 function renderAll() {
-    const pt = document.querySelector("#pTable tbody");
-    pt.innerHTML = personalData.map(x => `<tr><td>${months[x.month]}</td><td>${x.item}</td><td>K ${x.cost}</td><td><button onclick="deleteItem('p', ${x.id})" style="padding:2px 8px; width:auto;">X</button></td></tr>`).join('');
+    // Business Table
+    document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `
+        <tr>
+            <td>${x.name}</td><td>K ${x.buy * x.totalPurchased}</td>
+            <td class="${x.currentStock <= 3 ? 'low-stock' : ''}">${x.currentStock}</td>
+            <td style="color:var(--success)">K ${x.totalSalesRevenue}</td>
+            <td>
+                <button onclick="handleSale(${x.id}, false)" class="small-btn" style="color:var(--success)">CASH</button>
+                <button onclick="handleSale(${x.id}, true)" class="small-btn" style="color:var(--warning)">DEBT</button>
+                <button onclick="restockItem(${x.id})" class="small-btn">RESTOCK</button>
+            </td>
+        </tr>
+    `).join('');
 
-    const bt = document.querySelector("#bTable tbody");
-    bt.innerHTML = businessData.map(x => {
-        const capital = x.buy * x.stock;
-        const potentialRevenue = x.sell * x.stock;
-        return `<tr><td>${x.name}</td><td>K ${capital}</td><td>K ${potentialRevenue}</td><td>${x.stock}</td><td><button onclick="deleteItem('b', ${x.id})" style="padding:2px 8px; width:auto;">X</button></td></tr>`;
-    }).join('');
+    // Personal Section
+    const totalW = withdrawals.reduce((s, x) => s + x.amount, 0);
+    const totalS = personalData.reduce((s, x) => s + x.cost, 0);
+    document.getElementById('personalWallet').innerText = `K ${(totalW - totalS).toLocaleString()}`;
+    document.querySelector("#pTable tbody").innerHTML = personalData.map(x => `<tr><td>${x.item}</td><td>K ${x.cost}</td><td><button onclick="deleteItem('p', ${x.id})" class="small-btn">X</button></td></tr>`).join('');
 
+    renderDebtList();
     updateAnalytics();
     updateYearlySummary();
 }
 
+function renderDebtList() {
+    const query = (document.getElementById('debtSearch')?.value || "").toLowerCase();
+    const filtered = debtData.filter(d => d.customer.toLowerCase().includes(query) || d.phone.includes(query));
+    document.getElementById('debtList').innerHTML = filtered.map(x => `
+        <div class="debt-card">
+            <div><strong>${x.customer.toUpperCase()}</strong> | K ${x.balance}<br><small>${x.product}</small></div>
+            <button onclick="payPartialDebt(${x.id})" class="small-btn">PAY</button>
+        </div>
+    `).join('') || "<p style='text-align:center'>No debts.</p>";
+}
+
 function updateAnalytics() {
-    const totalP = personalData.reduce((s, x) => s + x.cost, 0);
-    const totalCapital = businessData.reduce((s, x) => s + (x.buy * x.stock), 0);
-    const totalProfit = businessData.reduce((s, x) => s + ((x.sell - x.buy) * x.stock), 0);
-    
-    const container = document.getElementById('graphicalMetrics');
-    container.innerHTML = `
-        <div class="metric-box">
-            <small>TOTAL_INVESTED_CAPITAL</small>
-            <h3 style="color:var(--warning)">K ${totalCapital.toLocaleString()}</h3>
-            <div class="bar-container"><div class="bar-fill" style="width: 100%; background: var(--warning)"></div></div>
-        </div>
-        <div class="metric-box">
-            <small>PERSONAL_EXPENDITURE</small>
-            <h3 style="color:var(--danger)">K ${totalP.toLocaleString()}</h3>
-            <div class="bar-container"><div class="bar-fill" style="width: ${Math.min(100, (totalP/totalCapital)*100)}%; background: var(--danger)"></div></div>
-        </div>
-        <div class="metric-box">
-            <small>ESTIMATED_NET_PROFIT</small>
-            <h3 style="color:var(--success)">K ${totalProfit.toLocaleString()}</h3>
-            <div class="bar-container"><div class="bar-fill" style="width: ${Math.min(100, (totalProfit/totalCapital)*100)}%; background: var(--success)"></div></div>
-        </div>
+    const cap = businessData.reduce((s, x) => s + (x.buy * x.totalPurchased), 0);
+    const sal = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
+    const withdr = withdrawals.reduce((s, x) => s + x.amount, 0);
+    const profit = sal - cap; // This is the business performance profit
+
+    document.getElementById('graphicalMetrics').innerHTML = `
+        <div class="metric-box"><small>CAPITAL_INV</small><h3 style="color:var(--warning)">K ${cap}</h3></div>
+        <div class="metric-box"><small>TOTAL_SALES</small><h3 style="color:var(--neon-blue)">K ${sal}</h3></div>
+        <div class="metric-box"><small>TOTAL_WITHDRAWN</small><h3 style="color:var(--purple)">K ${withdr}</h3></div>
+        <div class="metric-box"><small>BUSINESS_PROFIT</small><h3 style="color:${profit >= 0 ? 'var(--success)' : 'var(--danger)'}">K ${profit}</h3></div>
     `;
 }
 
 function updateYearlySummary() {
-    const st = document.querySelector("#ySummaryTable tbody");
-    let html = "";
-    for(let i=0; i<12; i++) {
-        const pMonth = personalData.filter(x => x.month === i).reduce((s, x) => s + x.cost, 0);
-        const bCapital = businessData.filter(x => x.month === i).reduce((s, x) => s + (x.buy * x.stock), 0);
-        const bRevenue = businessData.filter(x => x.month === i).reduce((s, x) => s + (x.sell * x.stock), 0);
-        const bProfit = bRevenue - bCapital;
-        
-        html += `<tr>
-            <td>${months[i]}</td>
-            <td style="color:var(--danger)">K ${pMonth}</td>
-            <td style="color:var(--warning)">K ${bCapital}</td>
-            <td style="color:var(--neon-blue)">K ${bRevenue}</td>
-            <td style="color:var(--success)">K ${bProfit}</td>
-        </tr>`;
-    }
-    st.innerHTML = html;
+    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((m, i) => {
+        const bW = withdrawals.filter(x => x.month === i).reduce((s, x) => s + x.amount, 0);
+        const bC = businessData.filter(x => x.month === i).reduce((s, x) => s + (x.buy * x.totalPurchased), 0);
+        const bS = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
+        const bD = debtData.filter(x => x.month === i).reduce((s, x) => s + x.balance, 0);
+        return `<tr><td>${m}</td><td style="color:var(--purple)">K ${bW}</td><td>K ${bC}</td><td>K ${bS}</td><td>K ${bD}</td><td>K ${bS-bC}</td></tr>`;
+    }).join('');
 }
 
 function openTab(evt, tabName) {

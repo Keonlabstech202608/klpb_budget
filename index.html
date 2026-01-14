@@ -26,41 +26,34 @@
             background-size: 50px 50px;
         }
 
-        #authOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 11, 26, 0.98); display: flex; align-items: center; 
-            justify-content: center; z-index: 9999;
-        }
-        .auth-card {
-            background: var(--panel-bg); border: 1px solid var(--border-glow);
-            padding: 40px; border-radius: 10px; width: 350px; text-align: center;
-        }
+        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 11, 26, 0.98); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 40px; border-radius: 10px; width: 350px; text-align: center; }
 
         .container { max-width: 1100px; margin: auto; padding: 20px; display: none; }
-        
-        .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); }
-        .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 30px; cursor: pointer; opacity: 0.5; transition: 0.4s; letter-spacing: 2px; }
+        .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 1px solid var(--border-glow); overflow-x: auto; }
+        .tab-btn { background: transparent; border: none; color: var(--text-main); padding: 15px 25px; cursor: pointer; opacity: 0.5; transition: 0.4s; white-space: nowrap; }
         .tab-btn.active { opacity: 1; color: var(--neon-blue); border-bottom: 3px solid var(--neon-blue); }
         
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease; }
         
         section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 4px; margin-bottom: 20px; }
         
-        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
-        .metric-box { border: 1px solid var(--border-glow); padding: 20px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.2); }
+        .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .metric-box { border: 1px solid var(--border-glow); padding: 20px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.4); box-shadow: inset 0 0 10px rgba(0,242,255,0.1); }
 
         input, select { background: rgba(0, 20, 40, 0.8); border: 1px solid var(--border-glow); color: var(--neon-blue); padding: 12px; width: 100%; margin: 10px 0; box-sizing: border-box; }
         button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; }
         button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
-        th { text-align: left; color: #70a1ff; font-size: 0.75rem; padding: 10px; border-bottom: 1px solid var(--border-glow); }
-        td { padding: 12px 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+        th { text-align: left; color: #70a1ff; padding: 10px; border-bottom: 1px solid var(--border-glow); }
+        td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
 
-        .archive-card { border-left: 3px solid var(--success); background: rgba(0, 255, 136, 0.05); padding: 15px; margin-bottom: 10px; border-radius: 4px; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .bar-container { background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--neon-blue); transition: width 0.6s ease; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -71,262 +64,218 @@
         <input type="email" id="authEmail" placeholder="USER_EMAIL">
         <input type="password" id="authPass" placeholder="ACCESS_KEY">
         <button onclick="loginUser()">INITIALIZE_SESSION</button>
-        <button onclick="registerUser()" style="border-color: var(--success); color: var(--success); font-size: 0.7rem; margin-top: 15px;">CREATE_NEW_ACCOUNT</button>
-        <p id="authMsg" style="color: var(--danger); font-size: 0.8rem; margin-top: 15px;"></p>
+        <button onclick="registerUser()" style="border-color: var(--success); color: var(--success); margin-top: 10px;">REGISTER</button>
+        <p id="authMsg"></p>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
         <small id="userDisplay"></small>
-        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px; font-size: 0.7rem;">TERMINATE_SESSION</button>
+        <button onclick="logoutUser()" style="width: auto; padding: 5px 15px; font-size: 0.7rem;">TERMINATE</button>
     </div>
-    
-    <h1 style="text-align: center; letter-spacing: 5px;">KEONLABS PERSONAL BUDGET</h1>
+
+    <h1 style="text-align: center; letter-spacing: 5px; text-shadow: 0 0 10px var(--neon-blue);">KEONLABS PERSONAL BUDGET</h1>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'personal')">01_PERSONAL</button>
         <button class="tab-btn" onclick="openTab(event, 'business')">02_BUSINESS</button>
         <button class="tab-btn" onclick="openTab(event, 'analytics')">03_ANALYTICS</button>
-        <button class="tab-btn" onclick="openTab(event, 'archive')">04_ARCHIVE</button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')">04_SUMMARY</button>
     </div>
 
     <div id="personal" class="tab-content active">
         <section>
-            <div id="budgetReminder" style="padding:10px; margin-bottom:10px; display:none; border:1px solid;"></div>
             <h2>// PERSONAL_FINANCE</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <select id="personalMonth" onchange="renderPersonalList()">
-                    <option value="1">JANUARY</option><option value="2">FEBRUARY</option><option value="3">MARCH</option>
-                    <option value="4">APRIL</option><option value="5">MAY</option><option value="6">JUNE</option>
-                    <option value="7">JULY</option><option value="8">AUGUST</option><option value="9">SEPTEMBER</option>
-                    <option value="10">OCTOBER</option><option value="11">NOVEMBER</option><option value="12">DECEMBER</option>
-                </select>
-                <input type="number" id="budgetLimit" placeholder="BUDGET LIMIT (K)" oninput="checkBudget()">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <select id="pMonth"><option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option></select>
+                <input type="number" id="pBudget" placeholder="BUDGET LIMIT (K)">
             </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <input type="text" id="groceryItem" placeholder="ITEM">
-                <select id="expenseCategory">
-                    <option value="Food">FOOD</option><option value="Housing">HOUSING</option><option value="Transport">TRANSPORT</option><option value="Utilities">UTILITIES</option><option value="Misc">MISC</option>
-                </select>
-                <input type="number" id="groceryAmount" placeholder="K">
-            </div>
-            <button onclick="addGrocery()">LOG_EXPENSE</button>
-            <table id="personalTable">
-                <thead><tr><th>CAT</th><th>ITEM</th><th>COST</th><th>ACT</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <input type="text" id="pItem" placeholder="ITEM NAME">
+            <input type="number" id="pCost" placeholder="COST (K)">
+            <button onclick="addPersonal()">LOG_EXPENSE</button>
+            <table id="pTable"><thead><tr><th>MONTH</th><th>ITEM</th><th>COST</th><th>ACTION</th></tr></thead><tbody></tbody></table>
         </section>
     </div>
 
     <div id="business" class="tab-content">
         <section>
-            <h2>// BUSINESS_INVENTORY</h2>
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
-                <input type="text" id="itemName" placeholder="PRODUCT NAME">
-                <input type="number" id="itemPrice" placeholder="UNIT PRICE (K)">
-                <input type="number" id="itemStock" placeholder="QTY">
+            <h2>// CAPITAL_&_INVENTORY</h2>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <input type="text" id="bName" placeholder="PRODUCT NAME">
+                <input type="number" id="bBuy" placeholder="BUY_PRICE (K)">
+                <input type="number" id="bSell" placeholder="SELL_PRICE (K)">
             </div>
-            <button onclick="addStock()">ADD_TO_INVENTORY</button>
-            <table id="businessTable">
-                <thead><tr><th>PRODUCT</th><th>PRICE</th><th>STOCK</th><th>ACT</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </section>
-    </div>
-    
-    <div id="analytics" class="tab-content">
-        <section>
-            <h2>// SYSTEM_ANALYTICS</h2>
-            <div class="metric-grid" id="analyticsGrid"></div>
-            <div style="margin-top:20px;">
-                <button onclick="archiveYear()" style="border-color: var(--success); color: var(--success);">ARCHIVE_CURRENT_YEAR_DATA</button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px;">
+                <input type="number" id="bStock" placeholder="STOCK QTY">
+                <select id="bMonth"><option value="0">JAN</option><option value="1">FEB</option><option value="2">MAR</option><option value="3">APR</option><option value="4">MAY</option><option value="5">JUN</option><option value="6">JUL</option><option value="7">AUG</option><option value="8">SEP</option><option value="9">OCT</option><option value="10">NOV</option><option value="11">DEC</option></select>
             </div>
+            <button onclick="addBusiness()">INITIALIZE_STOCK</button>
+            <table id="bTable"><thead><tr><th>ITEM</th><th>CAPITAL_INV</th><th>SELL_VAL</th><th>STOCK</th><th>ACTION</th></tr></thead><tbody></tbody></table>
         </section>
     </div>
 
-    <div id="archive" class="tab-content">
+    <div id="analytics" class="tab-content">
         <section>
-            <h2>// YEARLY_ARCHIVE_VAULT</h2>
-            <div id="archiveList"></div>
+            <h2>// PERFORMANCE_METRICS</h2>
+            <div id="graphicalMetrics" class="metric-grid"></div>
+        </section>
+    </div>
+
+    <div id="summary" class="tab-content">
+        <section>
+            <h2>// YEARLY_FINANCIAL_BREAKDOWN</h2>
+            <table id="ySummaryTable">
+                <thead><tr><th>MONTH</th><th>PERS_EXPENSE</th><th>BUS_CAPITAL_INV</th><th>EST_REVENUE</th><th>POTENTIAL_PROFIT</th></tr></thead>
+                <tbody></tbody>
+            </table>
         </section>
     </div>
 </div>
 
 <script>
-// Logic remains robust, Performance is enhanced via DOM caching
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const UI = {
-    pTable: document.querySelector("#personalTable tbody"),
-    bTable: document.querySelector("#businessTable tbody"),
-    aGrid: document.getElementById('analyticsGrid'),
-    aList: document.getElementById('archiveList'),
-    reminder: document.getElementById('budgetReminder'),
-    pMonth: document.getElementById('personalMonth'),
-    bLimit: document.getElementById('budgetLimit')
-};
+let personalData = [], businessData = [];
+const months = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-let groceries = [], stock = [], archives = [];
-
-// --- AUTH & SYNC ---
+// --- AUTH (STABLE) ---
 async function loginUser() {
     const { error } = await supabaseClient.auth.signInWithPassword({
-        email: document.getElementById('authEmail').value,
-        password: document.getElementById('authPass').value
+        email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value
     });
     if (error) document.getElementById('authMsg').innerText = error.message;
 }
-
 async function registerUser() {
     const { error } = await supabaseClient.auth.signUp({
-        email: document.getElementById('authEmail').value,
-        password: document.getElementById('authPass').value
+        email: document.getElementById('authEmail').value, password: document.getElementById('authPass').value
     });
-    if (error) document.getElementById('authMsg').innerText = error.message;
+    if (error) document.getElementById('authMsg').innerText = "Verify Email";
 }
-
-async function logoutUser() {
-    await supabaseClient.auth.signOut();
-    location.reload();
-}
+async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('userDisplay').innerText = `USER: ${session.user.email}`;
-        loadFromSupabase(session.user.id);
+        document.getElementById('userDisplay').innerText = `ID: ${session.user.email}`;
+        loadData(session.user.id);
     }
 });
 
-async function syncToSupabase() {
+// --- CORE SYNC ---
+async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if (!user) return;
-    await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, 
-        payload: { groceries, stock, archives }, // archives included in sync
-        updated_at: new Date().toISOString()
+    await supabaseClient.from('user_budgets').upsert({
+        user_id: user.id, payload: { personalData, businessData }, updated_at: new Date()
     });
 }
-
-async function loadFromSupabase(userId) {
+async function loadData(userId) {
     const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
     if (data?.payload) {
-        groceries = data.payload.groceries || [];
-        stock = data.payload.stock || [];
-        archives = data.payload.archives || [];
-        renderPersonalList();
-        renderBusinessList();
-        renderArchiveList();
+        personalData = data.payload.personalData || [];
+        businessData = data.payload.businessData || [];
+        renderAll();
     }
 }
 
-// --- PERSONAL & BUSINESS (High Performance Render) ---
-function renderPersonalList() {
-    const month = parseInt(UI.pMonth.value);
-    UI.pTable.innerHTML = groceries.filter(g => g.month === month).map(g => `
-        <tr><td>${g.category}</td><td>${g.item}</td><td>K ${g.amount.toFixed(2)}</td>
-        <td><button onclick="deleteItem('groceries', ${g.id})" style="padding:2px 5px; width:auto;">X</button></td></tr>
-    `).join('');
-    checkBudget();
-}
-
-function addGrocery() {
-    const item = document.getElementById('groceryItem').value.trim();
-    const amount = parseFloat(document.getElementById('groceryAmount').value);
-    if (item && !isNaN(amount)) {
-        groceries.push({ month: parseInt(UI.pMonth.value), item, category: document.getElementById('expenseCategory').value, amount, id: Date.now() });
-        renderPersonalList(); syncToSupabase();
-        document.getElementById('groceryItem').value = ''; document.getElementById('groceryAmount').value = '';
+// --- LOGIC ---
+function addPersonal() {
+    const item = document.getElementById('pItem').value;
+    const cost = parseFloat(document.getElementById('pCost').value);
+    const month = parseInt(document.getElementById('pMonth').value);
+    if (item && cost) {
+        personalData.push({ id: Date.now(), item, cost, month });
+        renderAll(); syncData();
+        document.getElementById('pItem').value = ''; document.getElementById('pCost').value = '';
     }
 }
 
-function addStock() {
-    const name = document.getElementById('itemName').value.trim();
-    const price = parseFloat(document.getElementById('itemPrice').value);
-    const qty = parseInt(document.getElementById('itemStock').value);
-    if (name && !isNaN(price)) {
-        stock.push({ id: Date.now(), name, price, qty });
-        renderBusinessList(); syncToSupabase();
-        ['itemName', 'itemPrice', 'itemStock'].forEach(id => document.getElementById(id).value = '');
+function addBusiness() {
+    const name = document.getElementById('bName').value;
+    const buy = parseFloat(document.getElementById('bBuy').value);
+    const sell = parseFloat(document.getElementById('bSell').value);
+    const stock = parseInt(document.getElementById('bStock').value);
+    const month = parseInt(document.getElementById('bMonth').value);
+    if (name && buy && sell) {
+        businessData.push({ id: Date.now(), name, buy, sell, stock, month });
+        renderAll(); syncData();
+        ['bName', 'bBuy', 'bSell', 'bStock'].forEach(id => document.getElementById(id).value = '');
     }
-}
-
-function renderBusinessList() {
-    UI.bTable.innerHTML = stock.map(s => `
-        <tr><td>${s.name}</td><td>K ${s.price.toFixed(2)}</td><td>${s.qty}</td>
-        <td><button onclick="deleteItem('stock', ${s.id})" style="padding:2px 5px; width:auto;">X</button></td></tr>
-    `).join('');
 }
 
 function deleteItem(type, id) {
-    if (type === 'groceries') { groceries = groceries.filter(i => i.id !== id); renderPersonalList(); }
-    else if (type === 'stock') { stock = stock.filter(i => i.id !== id); renderBusinessList(); }
-    else { archives = archives.filter(a => a.id !== id); renderArchiveList(); }
-    syncToSupabase();
+    if (type === 'p') personalData = personalData.filter(x => x.id !== id);
+    else businessData = businessData.filter(x => x.id !== id);
+    renderAll(); syncData();
 }
 
-// --- ANALYTICS & ARCHIVE ---
+function renderAll() {
+    const pt = document.querySelector("#pTable tbody");
+    pt.innerHTML = personalData.map(x => `<tr><td>${months[x.month]}</td><td>${x.item}</td><td>K ${x.cost}</td><td><button onclick="deleteItem('p', ${x.id})" style="padding:2px 8px; width:auto;">X</button></td></tr>`).join('');
+
+    const bt = document.querySelector("#bTable tbody");
+    bt.innerHTML = businessData.map(x => {
+        const capital = x.buy * x.stock;
+        const potentialRevenue = x.sell * x.stock;
+        return `<tr><td>${x.name}</td><td>K ${capital}</td><td>K ${potentialRevenue}</td><td>${x.stock}</td><td><button onclick="deleteItem('b', ${x.id})" style="padding:2px 8px; width:auto;">X</button></td></tr>`;
+    }).join('');
+
+    updateAnalytics();
+    updateYearlySummary();
+}
+
 function updateAnalytics() {
-    const totalExp = groceries.reduce((sum, g) => sum + g.amount, 0);
-    const invVal = stock.reduce((sum, s) => sum + (s.price * s.qty), 0);
-    UI.aGrid.innerHTML = `
-        <div class="metric-box"><h3>K ${totalExp.toLocaleString()}</h3><small>TOTAL_EXPENSES</small></div>
-        <div class="metric-box"><h3>K ${invVal.toLocaleString()}</h3><small>INVENTORY_VALUE</small></div>
-        <div class="metric-box"><h3>${stock.length}</h3><small>PRODUCT_LINES</small></div>
+    const totalP = personalData.reduce((s, x) => s + x.cost, 0);
+    const totalCapital = businessData.reduce((s, x) => s + (x.buy * x.stock), 0);
+    const totalProfit = businessData.reduce((s, x) => s + ((x.sell - x.buy) * x.stock), 0);
+    
+    const container = document.getElementById('graphicalMetrics');
+    container.innerHTML = `
+        <div class="metric-box">
+            <small>TOTAL_INVESTED_CAPITAL</small>
+            <h3 style="color:var(--warning)">K ${totalCapital.toLocaleString()}</h3>
+            <div class="bar-container"><div class="bar-fill" style="width: 100%; background: var(--warning)"></div></div>
+        </div>
+        <div class="metric-box">
+            <small>PERSONAL_EXPENDITURE</small>
+            <h3 style="color:var(--danger)">K ${totalP.toLocaleString()}</h3>
+            <div class="bar-container"><div class="bar-fill" style="width: ${Math.min(100, (totalP/totalCapital)*100)}%; background: var(--danger)"></div></div>
+        </div>
+        <div class="metric-box">
+            <small>ESTIMATED_NET_PROFIT</small>
+            <h3 style="color:var(--success)">K ${totalProfit.toLocaleString()}</h3>
+            <div class="bar-container"><div class="bar-fill" style="width: ${Math.min(100, (totalProfit/totalCapital)*100)}%; background: var(--success)"></div></div>
+        </div>
     `;
 }
 
-function archiveYear() {
-    if (groceries.length === 0 && stock.length === 0) return alert("NO DATA TO ARCHIVE");
-    const yearLabel = prompt("ENTER YEAR LABEL (e.g., 2025):", new Date().getFullYear());
-    if (yearLabel) {
-        const totalExp = groceries.reduce((sum, g) => sum + g.amount, 0);
-        archives.unshift({
-            id: Date.now(),
-            label: yearLabel,
-            date: new Date().toLocaleDateString(),
-            totalExp: totalExp,
-            itemCount: groceries.length,
-            stockVal: stock.reduce((sum, s) => sum + (s.price * s.qty), 0)
-        });
-        renderArchiveList();
-        syncToSupabase();
-        alert("YEAR ARCHIVED SUCCESSFULLY");
+function updateYearlySummary() {
+    const st = document.querySelector("#ySummaryTable tbody");
+    let html = "";
+    for(let i=0; i<12; i++) {
+        const pMonth = personalData.filter(x => x.month === i).reduce((s, x) => s + x.cost, 0);
+        const bCapital = businessData.filter(x => x.month === i).reduce((s, x) => s + (x.buy * x.stock), 0);
+        const bRevenue = businessData.filter(x => x.month === i).reduce((s, x) => s + (x.sell * x.stock), 0);
+        const bProfit = bRevenue - bCapital;
+        
+        html += `<tr>
+            <td>${months[i]}</td>
+            <td style="color:var(--danger)">K ${pMonth}</td>
+            <td style="color:var(--warning)">K ${bCapital}</td>
+            <td style="color:var(--neon-blue)">K ${bRevenue}</td>
+            <td style="color:var(--success)">K ${bProfit}</td>
+        </tr>`;
     }
-}
-
-function renderArchiveList() {
-    UI.aList.innerHTML = archives.map(a => `
-        <div class="archive-card">
-            <div style="display:flex; justify-content:space-between;">
-                <strong>YEAR_REPORT: ${a.label}</strong>
-                <button onclick="deleteItem('archive', ${a.id})" style="width:auto; padding:2px 10px; border-color:var(--danger); color:var(--danger);">DELETE</button>
-            </div>
-            <small>SNAPSHOT_DATE: ${a.date}</small><br>
-            <span style="color:var(--text-main)">EXPENSES: K ${a.totalExp.toFixed(2)} | ASSETS: K ${a.stockVal.toFixed(2)}</span>
-        </div>
-    `).join('');
-}
-
-function checkBudget() {
-    const limit = parseFloat(UI.bLimit.value);
-    const total = groceries.filter(g => g.month === parseInt(UI.pMonth.value)).reduce((sum, g) => sum + g.amount, 0);
-    if (limit && total > limit) {
-        UI.reminder.style = "display:block; border-color:var(--danger); color:var(--danger);";
-        UI.reminder.innerText = `[!] WARNING: K ${(total - limit).toFixed(2)} OVER BUDGET`;
-    } else UI.reminder.style.display = 'none';
+    st.innerHTML = html;
 }
 
 function openTab(evt, tabName) {
-    document.querySelectorAll(".tab-content, .tab-btn").forEach(el => el.classList.remove("active"));
+    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
     document.getElementById(tabName).classList.add("active");
     evt.currentTarget.classList.add("active");
-    if (tabName === 'analytics') updateAnalytics();
-    if (tabName === 'archive') renderArchiveList();
 }
 </script>
 </body>

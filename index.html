@@ -43,7 +43,7 @@
         .tab-btn.active { opacity: 1; color: var(--neon-blue); border-bottom: 3px solid var(--neon-blue); }
         
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-out; }
         
         section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 4px; margin-bottom: 20px; }
         
@@ -54,11 +54,13 @@
         button { background: rgba(0, 242, 255, 0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 12px; cursor: pointer; width: 100%; text-transform: uppercase; transition: 0.3s; }
         button:hover { background: var(--neon-blue); color: #000; box-shadow: 0 0 20px var(--neon-blue); }
         
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; table-layout: fixed; }
         th { text-align: left; color: #70a1ff; font-size: 0.75rem; padding: 10px; border-bottom: 1px solid var(--border-glow); }
-        td { padding: 12px 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); font-size: 0.85rem; }
+        td { padding: 12px 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); font-size: 0.85rem; overflow: hidden; text-overflow: ellipsis; }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .archive-card { border-left: 3px solid var(--success); background: rgba(0, 255, 136, 0.05); padding: 15px; margin-bottom: 10px; border-radius: 4px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -86,6 +88,7 @@
         <button class="tab-btn active" onclick="openTab(event, 'personal')">01_PERSONAL</button>
         <button class="tab-btn" onclick="openTab(event, 'business')">02_BUSINESS</button>
         <button class="tab-btn" onclick="openTab(event, 'analytics')">03_ANALYTICS</button>
+        <button class="tab-btn" onclick="openTab(event, 'archive')">04_ARCHIVE</button>
     </div>
 
     <div id="personal" class="tab-content active">
@@ -110,7 +113,7 @@
             </div>
             <button onclick="addGrocery()">LOG_EXPENSE</button>
             <table id="personalTable">
-                <thead><tr><th>CAT</th><th>ITEM</th><th>COST</th><th>ACTION</th></tr></thead>
+                <thead><tr><th>CAT</th><th>ITEM</th><th>COST</th><th>ACT</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -126,7 +129,7 @@
             </div>
             <button onclick="addStock()">ADD_TO_INVENTORY</button>
             <table id="businessTable">
-                <thead><tr><th>PRODUCT</th><th>PRICE</th><th>STOCK</th><th>ACTION</th></tr></thead>
+                <thead><tr><th>PRODUCT</th><th>PRICE</th><th>STOCK</th><th>ACT</th></tr></thead>
                 <tbody></tbody>
             </table>
         </section>
@@ -135,20 +138,40 @@
     <div id="analytics" class="tab-content">
         <section>
             <h2>// SYSTEM_ANALYTICS</h2>
-            <div class="metric-grid" id="analyticsGrid">
-                </div>
+            <div class="metric-grid" id="analyticsGrid"></div>
+            <div style="margin-top:20px;">
+                <button onclick="archiveYear()" style="border-color: var(--success); color: var(--success);">ARCHIVE_CURRENT_YEAR_DATA</button>
+            </div>
+        </section>
+    </div>
+
+    <div id="archive" class="tab-content">
+        <section>
+            <h2>// YEARLY_ARCHIVE_VAULT</h2>
+            <div id="archiveList"></div>
         </section>
     </div>
 </div>
 
 <script>
+// Logic remains robust, Performance is enhanced via DOM caching
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let groceries = [], stock = [];
+const UI = {
+    pTable: document.querySelector("#personalTable tbody"),
+    bTable: document.querySelector("#businessTable tbody"),
+    aGrid: document.getElementById('analyticsGrid'),
+    aList: document.getElementById('archiveList'),
+    reminder: document.getElementById('budgetReminder'),
+    pMonth: document.getElementById('personalMonth'),
+    bLimit: document.getElementById('budgetLimit')
+};
 
-// --- AUTH ---
+let groceries = [], stock = [], archives = [];
+
+// --- AUTH & SYNC ---
 async function loginUser() {
     const { error } = await supabaseClient.auth.signInWithPassword({
         email: document.getElementById('authEmail').value,
@@ -163,7 +186,6 @@ async function registerUser() {
         password: document.getElementById('authPass').value
     });
     if (error) document.getElementById('authMsg').innerText = error.message;
-    else document.getElementById('authMsg').innerText = "CHECK EMAIL FOR LINK";
 }
 
 async function logoutUser() {
@@ -180,112 +202,132 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// --- DATA ---
 async function syncToSupabase() {
     const { data: { user } } = await supabaseClient.auth.getUser();
+    if (!user) return;
     await supabaseClient.from('user_budgets').upsert({ 
         user_id: user.id, 
-        payload: { groceries, stock },
-        updated_at: new Date()
+        payload: { groceries, stock, archives }, // archives included in sync
+        updated_at: new Date().toISOString()
     });
 }
 
 async function loadFromSupabase(userId) {
     const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
-    if (data && data.payload) {
+    if (data?.payload) {
         groceries = data.payload.groceries || [];
         stock = data.payload.stock || [];
+        archives = data.payload.archives || [];
         renderPersonalList();
         renderBusinessList();
+        renderArchiveList();
     }
 }
 
-// --- PERSONAL LOGIC ---
-function addGrocery() {
-    const month = parseInt(document.getElementById('personalMonth').value);
-    const item = document.getElementById('groceryItem').value;
-    const cat = document.getElementById('expenseCategory').value;
-    const amount = parseFloat(document.getElementById('groceryAmount').value);
-
-    if (item && !isNaN(amount)) {
-        groceries.push({ month, item, category: cat, amount, id: Date.now() });
-        renderPersonalList();
-        syncToSupabase();
-        document.getElementById('groceryItem').value = '';
-        document.getElementById('groceryAmount').value = '';
-    }
-}
-
+// --- PERSONAL & BUSINESS (High Performance Render) ---
 function renderPersonalList() {
-    const tbody = document.querySelector("#personalTable tbody");
-    const month = parseInt(document.getElementById('personalMonth').value);
-    tbody.innerHTML = "";
-    groceries.filter(g => g.month === month).forEach(g => {
-        tbody.innerHTML += `<tr><td>${g.category}</td><td>${g.item}</td><td>K ${g.amount}</td>
-        <td><button onclick="deleteItem('groceries', ${g.id})" style="padding:2px 5px; width:auto;">X</button></td></tr>`;
-    });
+    const month = parseInt(UI.pMonth.value);
+    UI.pTable.innerHTML = groceries.filter(g => g.month === month).map(g => `
+        <tr><td>${g.category}</td><td>${g.item}</td><td>K ${g.amount.toFixed(2)}</td>
+        <td><button onclick="deleteItem('groceries', ${g.id})" style="padding:2px 5px; width:auto;">X</button></td></tr>
+    `).join('');
     checkBudget();
 }
 
-// --- BUSINESS LOGIC ---
+function addGrocery() {
+    const item = document.getElementById('groceryItem').value.trim();
+    const amount = parseFloat(document.getElementById('groceryAmount').value);
+    if (item && !isNaN(amount)) {
+        groceries.push({ month: parseInt(UI.pMonth.value), item, category: document.getElementById('expenseCategory').value, amount, id: Date.now() });
+        renderPersonalList(); syncToSupabase();
+        document.getElementById('groceryItem').value = ''; document.getElementById('groceryAmount').value = '';
+    }
+}
+
 function addStock() {
-    const name = document.getElementById('itemName').value;
+    const name = document.getElementById('itemName').value.trim();
     const price = parseFloat(document.getElementById('itemPrice').value);
     const qty = parseInt(document.getElementById('itemStock').value);
     if (name && !isNaN(price)) {
         stock.push({ id: Date.now(), name, price, qty });
-        renderBusinessList();
-        syncToSupabase();
+        renderBusinessList(); syncToSupabase();
+        ['itemName', 'itemPrice', 'itemStock'].forEach(id => document.getElementById(id).value = '');
     }
 }
 
 function renderBusinessList() {
-    const tbody = document.querySelector("#businessTable tbody");
-    tbody.innerHTML = "";
-    stock.forEach(s => {
-        tbody.innerHTML += `<tr><td>${s.name}</td><td>K ${s.price}</td><td>${s.qty}</td>
-        <td><button onclick="deleteItem('stock', ${s.id})" style="padding:2px 5px; width:auto;">X</button></td></tr>`;
-    });
+    UI.bTable.innerHTML = stock.map(s => `
+        <tr><td>${s.name}</td><td>K ${s.price.toFixed(2)}</td><td>${s.qty}</td>
+        <td><button onclick="deleteItem('stock', ${s.id})" style="padding:2px 5px; width:auto;">X</button></td></tr>
+    `).join('');
 }
 
 function deleteItem(type, id) {
-    if (type === 'groceries') groceries = groceries.filter(i => i.id !== id);
-    else stock = stock.filter(i => i.id !== id);
-    renderPersonalList();
-    renderBusinessList();
+    if (type === 'groceries') { groceries = groceries.filter(i => i.id !== id); renderPersonalList(); }
+    else if (type === 'stock') { stock = stock.filter(i => i.id !== id); renderBusinessList(); }
+    else { archives = archives.filter(a => a.id !== id); renderArchiveList(); }
     syncToSupabase();
 }
 
-// --- ANALYTICS ---
+// --- ANALYTICS & ARCHIVE ---
 function updateAnalytics() {
     const totalExp = groceries.reduce((sum, g) => sum + g.amount, 0);
     const invVal = stock.reduce((sum, s) => sum + (s.price * s.qty), 0);
-    const grid = document.getElementById('analyticsGrid');
-    grid.innerHTML = `
-        <div class="metric-box"><h3>K ${totalExp.toFixed(2)}</h3><small>TOTAL_EXPENSES</small></div>
-        <div class="metric-box"><h3>K ${invVal.toFixed(2)}</h3><small>INVENTORY_VALUE</small></div>
+    UI.aGrid.innerHTML = `
+        <div class="metric-box"><h3>K ${totalExp.toLocaleString()}</h3><small>TOTAL_EXPENSES</small></div>
+        <div class="metric-box"><h3>K ${invVal.toLocaleString()}</h3><small>INVENTORY_VALUE</small></div>
         <div class="metric-box"><h3>${stock.length}</h3><small>PRODUCT_LINES</small></div>
     `;
 }
 
+function archiveYear() {
+    if (groceries.length === 0 && stock.length === 0) return alert("NO DATA TO ARCHIVE");
+    const yearLabel = prompt("ENTER YEAR LABEL (e.g., 2025):", new Date().getFullYear());
+    if (yearLabel) {
+        const totalExp = groceries.reduce((sum, g) => sum + g.amount, 0);
+        archives.unshift({
+            id: Date.now(),
+            label: yearLabel,
+            date: new Date().toLocaleDateString(),
+            totalExp: totalExp,
+            itemCount: groceries.length,
+            stockVal: stock.reduce((sum, s) => sum + (s.price * s.qty), 0)
+        });
+        renderArchiveList();
+        syncToSupabase();
+        alert("YEAR ARCHIVED SUCCESSFULLY");
+    }
+}
+
+function renderArchiveList() {
+    UI.aList.innerHTML = archives.map(a => `
+        <div class="archive-card">
+            <div style="display:flex; justify-content:space-between;">
+                <strong>YEAR_REPORT: ${a.label}</strong>
+                <button onclick="deleteItem('archive', ${a.id})" style="width:auto; padding:2px 10px; border-color:var(--danger); color:var(--danger);">DELETE</button>
+            </div>
+            <small>SNAPSHOT_DATE: ${a.date}</small><br>
+            <span style="color:var(--text-main)">EXPENSES: K ${a.totalExp.toFixed(2)} | ASSETS: K ${a.stockVal.toFixed(2)}</span>
+        </div>
+    `).join('');
+}
+
 function checkBudget() {
-    const limit = parseFloat(document.getElementById('budgetLimit').value);
-    const month = parseInt(document.getElementById('personalMonth').value);
-    const total = groceries.filter(g => g.month === month).reduce((sum, g) => sum + g.amount, 0);
-    const reminder = document.getElementById('budgetReminder');
+    const limit = parseFloat(UI.bLimit.value);
+    const total = groceries.filter(g => g.month === parseInt(UI.pMonth.value)).reduce((sum, g) => sum + g.amount, 0);
     if (limit && total > limit) {
-        reminder.style.display = 'block';
-        reminder.style.color = 'var(--danger)';
-        reminder.innerText = `[!] WARNING: K ${(total - limit).toFixed(2)} OVER BUDGET`;
-    } else { reminder.style.display = 'none'; }
+        UI.reminder.style = "display:block; border-color:var(--danger); color:var(--danger);";
+        UI.reminder.innerText = `[!] WARNING: K ${(total - limit).toFixed(2)} OVER BUDGET`;
+    } else UI.reminder.style.display = 'none';
 }
 
 function openTab(evt, tabName) {
-    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".tab-content, .tab-btn").forEach(el => el.classList.remove("active"));
     document.getElementById(tabName).classList.add("active");
     evt.currentTarget.classList.add("active");
     if (tabName === 'analytics') updateAnalytics();
+    if (tabName === 'archive') renderArchiveList();
 }
 </script>
 </body>
+</html>

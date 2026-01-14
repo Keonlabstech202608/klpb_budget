@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v3.1.0</title>
+    <title>KLPB - Business Engine v3.2.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -67,11 +67,11 @@
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 10px; text-align: left; }
         td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         
-        /* Goal Bar Styles */
         .goal-container { background: rgba(255,255,255,0.1); border-radius: 10px; height: 12px; margin: 10px 0; overflow: hidden; border: 1px solid rgba(0, 242, 255, 0.2); }
         .goal-fill { background: linear-gradient(90deg, var(--neon-blue), var(--success)); height: 100%; transition: width 0.5s ease; width: 0%; }
 
-        .vault-card { border: 1px solid var(--warning); padding: 15px; margin-bottom: 10px; background: rgba(255, 170, 0, 0.08); border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .vault-card { border: 1px solid var(--warning); padding: 15px; margin-bottom: 15px; background: rgba(255, 170, 0, 0.08); border-radius: 8px; }
+        .vault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -143,7 +143,12 @@
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
             <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK ITEM</button>
-            <div style="overflow-x:auto; margin-top:15px;">
+            
+            <div style="margin: 15px 0 5px 0;">
+                <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="font-size:0.8rem;">
+            </div>
+
+            <div style="overflow-x:auto;">
                 <table id="bTable">
                     <thead><tr><th>ITEM</th><th>CAP</th><th>QTY</th><th>REV</th><th>ACTION</th></tr></thead>
                     <tbody></tbody>
@@ -281,18 +286,30 @@ function initMonths() {
 
 function renderAll() {
     const m = parseInt(document.getElementById('globalMonth').value);
+    const search = document.getElementById('stockSearch').value.toLowerCase();
 
-    // Stock
-    document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === m).map(x => `
-        <tr><td>${x.name}</td><td>K ${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td>K ${x.totalSalesRevenue}</td>
-        <td>
-            <div style="display:flex; gap:3px;">
-                <input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0; padding:2px;">
-                <button onclick="handleSale(${x.id}, false)" style="background:var(--success); border:none; padding:5px;"><i class="fas fa-dollar-sign"></i></button>
-                <button onclick="handleSale(${x.id}, true)" style="background:var(--warning); border:none; padding:5px;"><i class="fas fa-user-clock"></i></button>
-                <button onclick="restockItem(${x.id})" style="background:var(--neon-blue); border:none; padding:5px;"><i class="fas fa-plus"></i></button>
-            </div>
-        </td></tr>`).join('');
+    // Stock Rendering with Search and Alerts
+    document.querySelector("#bTable tbody").innerHTML = businessData
+    .filter(x => x.month === m && x.name.toLowerCase().includes(search))
+    .map(x => {
+        const qtyColor = x.currentStock <= 3 ? 'var(--warning)' : 'var(--neon-blue)';
+        const margin = x.unitSellPrice > 0 ? (((x.unitSellPrice - (x.totalCapitalInvested/x.currentStock || 0)) / x.unitSellPrice) * 100).toFixed(0) : 0;
+        
+        return `
+        <tr>
+            <td>${x.name}<br><small style="color:var(--success); font-size:0.6rem;">Margin: ${margin}%</small></td>
+            <td>K ${x.totalCapitalInvested}</td>
+            <td style="color:${qtyColor}; font-weight:bold;">${x.currentStock}</td>
+            <td>K ${x.totalSalesRevenue}</td>
+            <td>
+                <div style="display:flex; gap:3px;">
+                    <input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0; padding:2px;">
+                    <button onclick="handleSale(${x.id}, false)" style="background:var(--success); border:none; padding:5px;"><i class="fas fa-dollar-sign"></i></button>
+                    <button onclick="handleSale(${x.id}, true)" style="background:var(--warning); border:none; padding:5px;"><i class="fas fa-user-clock"></i></button>
+                    <button onclick="restockItem(${x.id})" style="background:var(--neon-blue); border:none; padding:5px;"><i class="fas fa-plus"></i></button>
+                </div>
+            </td>
+        </tr>`}).join('');
 
     // Debtors
     document.querySelector("#debtTable tbody").innerHTML = debtors.map(d => `
@@ -315,7 +332,7 @@ function renderAll() {
     document.getElementById('statDebt').innerText = `K ${debtors.reduce((s, x) => s + x.balance, 0).toFixed(2)}`;
     document.getElementById('withdrawableLimit').innerText = `K ${profit.toFixed(2)}`;
 
-    // Update Goal Bar
+    // Goal Bar
     const totalProfitBeforeWithdrawals = tRev - tCap;
     document.getElementById('goalCurrent').innerText = `K ${totalProfitBeforeWithdrawals.toFixed(2)}`;
     document.getElementById('goalTargetDisplay').innerText = `K ${profitGoal.toFixed(2)}`;
@@ -339,13 +356,47 @@ function renderVault() {
     if (archiveVault.length === 0) { vc.innerHTML = `<p style="opacity:0.5; text-align:center;">Vault Empty</p>`; return; }
     vc.innerHTML = archiveVault.slice().reverse().map(v => `
         <div class="vault-card">
-            <div style="grid-column: span 2; border-bottom: 1px solid var(--warning);"><h3>ARCHIVE: ${v.year}</h3></div>
-            <div><small>CAPITAL</small><br><b>K ${v.summary.totalCap.toFixed(2)}</b></div>
-            <div><small>REVENUE</small><br><b>K ${v.summary.totalRev.toFixed(2)}</b></div>
-            <div style="grid-column: span 2; background:rgba(0,0,0,0.3); padding:5px; text-align:center;">
-                <small>PROFIT</small><br><b style="color:var(--success)">K ${(v.summary.totalRev - v.summary.totalCap).toFixed(2)}</b>
+            <div style="border-bottom: 1px solid var(--warning); padding-bottom:5px;">
+                <h3 style="margin:0;">YEAR ARCHIVE: ${v.year}</h3>
+            </div>
+            <div class="vault-grid">
+                <div><small>BUSINESS CAP</small><br><b>K ${v.summary.totalCap.toFixed(2)}</b></div>
+                <div><small>BUSINESS REV</small><br><b>K ${v.summary.totalRev.toFixed(2)}</b></div>
+                <div><small>TOTAL PAYOUTS</small><br><b style="color:var(--danger)">K ${v.summary.totalWithdrawals.toFixed(2)}</b></div>
+                <div><small>NET PROFIT</small><br><b style="color:var(--success)">K ${(v.summary.totalRev - v.summary.totalCap - v.summary.totalWithdrawals).toFixed(2)}</b></div>
+            </div>
+            <div style="margin-top:10px; padding:8px; background:rgba(0,0,0,0.4); border-radius:4px;">
+                <small style="color:var(--neon-blue); font-weight:bold;">BUDGET SUMMARY (Personal):</small>
+                <div style="font-size:0.65rem; margin-top:5px; max-height:80px; overflow-y:auto;">
+                    ${v.budgetSummary.map(b => `${b.m}: <span style="color:var(--success)">+K${b.inc}</span> / <span style="color:var(--danger)">-K${b.exp}</span>`).join('<br>')}
+                </div>
             </div>
         </div>`).join('');
+}
+
+async function archiveYear() {
+    const res = await openCustomModal("Archive Year", [{ id: 'y', type: 'text', placeholder: 'Year Label (e.g. 2025)' }]);
+    if (!res || !res.y) return;
+
+    // Compile budget breakdown per month
+    const budgetSummary = months.map((mName, i) => {
+        const inc = personalLedger.filter(p => p.month === i && p.type === 'income').reduce((s, p) => s + p.amt, 0);
+        const exp = personalLedger.filter(p => p.month === i && p.type === 'expense').reduce((s, p) => s + p.amt, 0);
+        return { m: mName.substring(0,3), inc, exp };
+    }).filter(b => b.inc > 0 || b.exp > 0);
+
+    const summary = {
+        totalCap: stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0),
+        totalRev: businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0),
+        totalWithdrawals: withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0)
+    };
+
+    archiveVault.push({ year: res.y, summary, budgetSummary });
+    
+    // Clear current data for new year
+    businessData = []; stockHistory = []; debtors = []; personalLedger = []; withdrawals = []; profitGoal = 0;
+    await syncData(); renderAll();
+    showNotify("YEAR ARCHIVED TO VAULT");
 }
 
 async function setProfitGoal() {
@@ -365,18 +416,6 @@ async function makeWithdrawal() {
     personalLedger.push({ id: Date.now(), desc: "Business Payout", amt: amt, type: "income", month: m });
     document.getElementById('wAmount').value = '';
     showNotify("WITHDRAWAL SUCCESSFUL");
-    await syncData(); renderAll();
-}
-
-async function archiveYear() {
-    const res = await openCustomModal("Archive Year", [{ id: 'y', type: 'text', placeholder: 'Year Label' }]);
-    if (!res || !res.y) return;
-    const summary = {
-        totalCap: stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0),
-        totalRev: businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0)
-    };
-    archiveVault.push({ year: res.y, summary });
-    businessData = []; stockHistory = []; debtors = []; personalLedger = []; withdrawals = []; profitGoal = 0;
     await syncData(); renderAll();
 }
 

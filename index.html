@@ -16,7 +16,7 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.3); /* Glass effect base */
+            --notif-purple: rgba(191, 0, 255, 0.3); 
         }
 
         #video-bg-container {
@@ -29,7 +29,6 @@
             object-fit: cover;
         }
 
-        /* Glass Purple Notification */
         #customNotification {
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 20px 35px;
@@ -185,7 +184,7 @@
 
     <div id="summary" class="tab-content">
         <section>
-            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>SALES</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>SALES</th><th>PERS. EXP</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
             <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & START NEW YEAR</button>
         </section>
     </div>
@@ -206,7 +205,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], withdrawals = [], modalResolve, userBg = null, userBgType = 'video', profitGoal = 0;
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-// ENHANCED GLASS NOTIFICATION WITH EMOTIONS
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
     const face = isError ? "(>_<)" : "(^_^)";
@@ -306,10 +304,24 @@ function renderAll() {
             </td>
         </tr>`}).join('');
 
+    // RENDER PERSONAL LIST
+    document.querySelector("#pTable tbody").innerHTML = personalLedger
+    .filter(x => x.month === m)
+    .map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); border:none; background:none;">×</button></td></tr>`).join('');
+
     // RENDER DEBTORS
     document.querySelector("#debtTable tbody").innerHTML = debtors.map(d => `
-        <tr><td>${d.name}</td><td>${d.phone}</td><td>${d.product}</td><td>K${d.balance}</td>
+        <tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td>
         <td><button onclick="payDebt(${d.id})" style="background:var(--success); border:none; border-radius:3px; padding:5px;">PAY</button></td></tr>`).join('');
+
+    // RENDER SUMMARY REPORT
+    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, idx) => {
+        const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+        const mRev = businessData.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+        const mExp = personalLedger.filter(x => x.month === idx && x.type === 'expense').reduce((s, x) => s + (parseFloat(x.amt) || 0), 0);
+        const mProfit = mRev - mCap;
+        return `<tr><td>${name}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td>K${mExp.toFixed(2)}</td><td style="color:var(--success)">K${mProfit.toFixed(2)}</td></tr>`;
+    }).join('');
 
     // STATS
     const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
@@ -340,6 +352,28 @@ function renderVault() {
                 <div><small>NET PROFIT</small><br><b style="color:var(--success)">K${(v.summary.totalRev - v.summary.totalCap - v.summary.totalWithdrawals).toFixed(2)}</b></div>
             </div>
         </div>`).join('');
+}
+
+async function handleSale(id, isDebt) {
+    const qty = parseInt(document.getElementById(`q_${id}`).value);
+    const item = businessData.find(x => x.id === id);
+    if (item.currentStock < qty) return showNotify("INSUFFICIENT STOCK", true);
+    const total = item.unitSellPrice * qty;
+    
+    if (isDebt) {
+        const res = await openCustomModal("Debtor Info", [
+            { id: 'n', type: 'text', placeholder: 'Name' },
+            { id: 'p', type: 'text', placeholder: 'Phone Number' }
+        ]);
+        if(!res || !res.n) return;
+        debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: total, originalId: id });
+    } else { 
+        item.totalSalesRevenue += total; 
+    }
+    
+    item.currentStock -= qty;
+    syncData(); renderAll();
+    showNotify("SALE RECORDED");
 }
 
 async function deleteVault(idx) {
@@ -374,21 +408,6 @@ function addBusiness() {
     } else { showNotify("FILL ALL FIELDS", true); }
 }
 
-async function handleSale(id, isDebt) {
-    const qty = parseInt(document.getElementById(`q_${id}`).value);
-    const item = businessData.find(x => x.id === id);
-    if (item.currentStock < qty) return showNotify("INSUFFICIENT STOCK", true);
-    const total = item.unitSellPrice * qty;
-    if (isDebt) {
-        const res = await openCustomModal("Debtor", [{ id: 'n', type: 'text', placeholder: 'Name' }]);
-        if(!res || !res.n) return;
-        debtors.push({ id: Date.now(), name: res.n, product: item.name, balance: total, originalId: id });
-    } else { item.totalSalesRevenue += total; }
-    item.currentStock -= qty;
-    syncData(); renderAll();
-    showNotify("SALE RECORDED");
-}
-
 async function makeWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmount').value);
     const limit = parseFloat(document.getElementById('withdrawableLimit').innerText.replace('K ', ''));
@@ -400,7 +419,6 @@ async function makeWithdrawal() {
     } else { showNotify("INVALID AMOUNT", true); }
 }
 
-// REST OF LOGIC (Restock, PayDebt, Personal Budget, Background)
 async function restockItem(id) {
     const item = businessData.find(x => x.id === id);
     const res = await openCustomModal(`Restock ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cost K'}]);

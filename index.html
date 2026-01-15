@@ -354,21 +354,27 @@ function toggleArchives() {
 
 function renderArchiveList() {
     const container = document.getElementById('archiveList');
+    const bulk = document.getElementById('bulkBtn');
     if (!archiveVault || archiveVault.length === 0) {
         container.innerHTML = "<p style='opacity:0.5; font-size:0.7rem;'>No archived years found.</p>";
+        bulk.style.display = 'none';
         return;
     }
-    container.innerHTML = archiveVault.slice().reverse().map((v, idx) => `
+    bulk.style.display = 'block';
+    container.innerHTML = archiveVault.slice().reverse().map((v, idx) => {
+        const actualIdx = archiveVault.length - 1 - idx;
+        return `
         <div class="archive-item">
             <div>
                 <b style="color:var(--neon-blue)">${v.year}</b><br>
                 <small>PROFIT: K${v.summary.netYearProfit.toFixed(2)} | REV: K${v.summary.totalRev.toFixed(2)}</small>
             </div>
             <div class="action-cell">
-                <button onclick='downloadTextReport(${JSON.stringify(v)})' style="background:none; border:none; color:var(--success); font-size:1rem; cursor:pointer;"><i class="fas fa-file-download"></i></button>
-                <button onclick="deleteArchive(${archiveVault.length - 1 - idx})" style="background:none; border:none; color:var(--danger); font-size:1rem; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                <button onclick="downloadTextReport(${actualIdx})" style="background:none; border:none; color:var(--success); font-size:1rem; cursor:pointer;"><i class="fas fa-file-download"></i></button>
+                <button onclick="deleteArchive(${actualIdx})" style="background:none; border:none; color:var(--danger); font-size:1rem; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
             </div>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 function exportBulkHistory() {
@@ -437,7 +443,8 @@ async function deleteArchive(idx) {
     }
 }
 
-function downloadTextReport(v) {
+function downloadTextReport(idx) {
+    const v = archiveVault[idx];
     const content = `KLPB REPORT - ${v.year}\n==========================\nRevenue: K${v.summary.totalRev.toFixed(2)}\nCapital: K${v.summary.totalCap.toFixed(2)}\nProfit: K${v.summary.netYearProfit.toFixed(2)}\n\nGenerated: ${new Date().toLocaleString()}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');

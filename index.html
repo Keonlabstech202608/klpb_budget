@@ -105,7 +105,10 @@
         <h2 style="color: var(--neon-blue);">KLPB ENGINE</h2>
         <input type="email" id="authEmail" placeholder="Email">
         <input type="password" id="authPass" placeholder="Password">
-        <button onclick="loginUser()" class="btn-main">LOGIN</button>
+        <div style="display:flex; gap:10px;">
+            <button onclick="loginUser()" class="btn-main">LOGIN</button>
+            <button onclick="signupUser()" class="btn-main" style="background:var(--neon-blue)">SIGN UP</button>
+        </div>
     </div>
 </div>
 
@@ -199,6 +202,12 @@
                     PAST YEAR ARCHIVES <i id="archiveIcon" class="fas fa-chevron-down"></i>
                 </button>
                 <div id="archiveList" style="display:none; margin-top:15px;"></div>
+                
+                <div id="comparisonArea" style="margin-top:20px; display:none; border-top: 1px solid var(--border-glow); padding-top:15px;">
+                    <h4 style="font-size:0.7rem; color:var(--neon-blue); margin-bottom:10px;">MULTI-YEAR COMPARISON</h4>
+                    <div style="overflow-x:auto;"><table id="compareTable" style="font-size:0.65rem;"><thead><tr><th>YEAR</th><th>REV</th><th>PROF</th><th>GROWTH %</th></tr></thead><tbody></tbody></table></div>
+                </div>
+
                 <button onclick="exportBulkHistory()" id="bulkBtn" style="display:none; width:100%; background:var(--neon-blue); color:#000; border:none; padding:10px; font-weight:bold; border-radius:4px; margin-top:10px; cursor:pointer;">EXPORT ALL TIME DATA <i class="fas fa-file-export"></i></button>
             </div>
         </section>
@@ -213,7 +222,6 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], withdrawals = [], modalResolve, userBg = null, userBgType = 'video', lastLoginPass = '';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-// Notification System
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
     const icons = isError ? ["🚨", "⚠️"] : ["✨", "✅", "💰", "💎"];
@@ -222,7 +230,6 @@ function showNotify(msg, isError = false) {
     setTimeout(() => { el.style.display = 'none'; }, 3500);
 }
 
-// Modal Logic
 function openCustomModal(title, inputs) {
     const modal = document.getElementById('customModal');
     document.getElementById('modalTitle').innerText = title;
@@ -243,7 +250,16 @@ function openCustomModal(title, inputs) {
 }
 function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
 
-// Auth
+async function signupUser() {
+    const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
+    const { data, error } = await supabaseClient.auth.signUp({ email, password: pass });
+    if(error) showNotify(error.message, true);
+    else { 
+        lastLoginPass = pass;
+        showNotify("ACCOUNT CREATED! LOGGING IN..."); 
+    }
+}
+
 async function loginUser() {
     const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
@@ -261,7 +277,6 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// Data Sync
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
@@ -298,18 +313,15 @@ function renderAll() {
     const search = document.getElementById('stockSearch').value.toLowerCase();
     const dSearch = document.getElementById('debtSearch').value.toLowerCase();
 
-    // STOCK TABLE
     document.querySelector("#bTable tbody").innerHTML = businessData
     .filter(x => x.month === m && x.name.toLowerCase().includes(search))
     .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>Price: K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0; padding:2px; height:32px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
 
-    // PERSONAL LEDGER
     const pCurrent = personalLedger.filter(x => x.month === m);
     document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
     document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
     document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); border:none; background:none;">×</button></td></tr>`).join('');
 
-    // DEBTORS
     const totalD = debtors.reduce((s, x) => s + x.balance, 0);
     const debtHeader = document.getElementById('debtSummaryHeader');
     if(debtors.length > 0) {
@@ -321,14 +333,12 @@ function renderAll() {
     .filter(d => d.name.toLowerCase().includes(dSearch))
     .map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button><button class="action-btn" onclick="sendReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button></div></td></tr>`).join('');
 
-    // MONTHLY REPORT TABLE
     document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, idx) => {
         const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
         const mRev = businessData.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
         return `<tr><td>${name}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:${(mRev-mCap)>=0?'var(--success)':'var(--danger)'}">K${(mRev-mCap).toFixed(2)}</td></tr>`;
     }).join('');
 
-    // TOP BAR METRICS
     const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const tWith = withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
@@ -340,7 +350,8 @@ function renderAll() {
     document.getElementById('withdrawableLimit').innerText = `K ${netProfit.toFixed(2)}`;
 }
 
-// ARCHIVE & EXPORT LOGIC
+// --- NEW ARCHIVE FEATURES ---
+
 function toggleArchives() {
     const list = document.getElementById('archiveList');
     const icon = document.getElementById('archiveIcon');
@@ -360,39 +371,82 @@ function toggleArchives() {
 function renderArchiveList() {
     const container = document.getElementById('archiveList');
     const bulk = document.getElementById('bulkBtn');
+    const compArea = document.getElementById('comparisonArea');
+    
     if (!archiveVault || archiveVault.length === 0) {
         container.innerHTML = "<p style='opacity:0.5; font-size:0.7rem;'>No archived years found.</p>";
         bulk.style.display = 'none';
+        compArea.style.display = 'none';
         return;
     }
+    
     bulk.style.display = 'block';
+    compArea.style.display = 'block';
+    
+    // Multi-year Comparison Logic
+    const compBody = document.querySelector("#compareTable tbody");
+    compBody.innerHTML = archiveVault.map((v, i) => {
+        const prevProf = i > 0 ? archiveVault[i-1].summary.netYearProfit : v.summary.netYearProfit;
+        const growth = i > 0 ? (((v.summary.netYearProfit - prevProf) / Math.abs(prevProf)) * 100).toFixed(1) : "0.0";
+        return `<tr><td>${v.year}</td><td>K${v.summary.totalRev.toFixed(0)}</td><td>K${v.summary.netYearProfit.toFixed(0)}</td><td style="color:${growth >= 0 ? 'var(--success)' : 'var(--danger)'}">${growth}%</td></tr>`;
+    }).join('');
+
     container.innerHTML = archiveVault.slice().reverse().map((v, idx) => {
         const actualIdx = archiveVault.length - 1 - idx;
+        const isLocked = v.locked || false;
         return `
         <div class="archive-item">
             <div>
-                <b style="color:var(--neon-blue)">${v.year}</b><br>
-                <small>PROFIT: K${v.summary.netYearProfit.toFixed(2)} | REV: K${v.summary.totalRev.toFixed(2)}</small>
+                <b style="color:var(--neon-blue)">${v.year} ${isLocked ? '🔒' : ''}</b><br>
+                <small>PROFIT: K${v.summary.netYearProfit.toFixed(2)}</small>
             </div>
             <div class="action-cell">
-                <button onclick="downloadTextReport(${actualIdx})" style="background:none; border:none; color:var(--success); font-size:1rem; cursor:pointer;"><i class="fas fa-file-download"></i></button>
-                <button onclick="deleteArchive(${actualIdx})" style="background:none; border:none; color:var(--danger); font-size:1rem; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+                <button onclick="viewArchiveDash(${actualIdx})" title="View Dash" style="background:none; border:none; color:var(--neon-blue); cursor:pointer;"><i class="fas fa-chart-line"></i></button>
+                <button onclick="exportArchiveCSV(${actualIdx})" title="Export CSV" style="background:none; border:none; color:var(--success); cursor:pointer;"><i class="fas fa-file-csv"></i></button>
+                <button onclick="toggleLock(${actualIdx})" title="Toggle Lock" style="background:none; border:none; color:var(--warning); cursor:pointer;"><i class="fas fa-${isLocked ? 'unlock' : 'lock'}"></i></button>
+                <button onclick="deleteArchive(${actualIdx})" style="background:none; border:none; color:var(--danger); cursor:pointer; opacity:${isLocked ? '0.2' : '1'}" ${isLocked ? 'disabled' : ''}><i class="fas fa-trash-alt"></i></button>
             </div>
         </div>`;
     }).join('');
+}
+
+function viewArchiveDash(idx) {
+    const v = archiveVault[idx];
+    const s = v.summary;
+    alert(`DASHBOARD: ${v.year}\n================\nRevenue: K${s.totalRev.toFixed(2)}\nCapital: K${s.totalCap.toFixed(2)}\nPayouts: K${s.totalWithdrawals.toFixed(2)}\nNet Profit: K${s.netYearProfit.toFixed(2)}\n\nPersonal Income: K${s.totalPersInc.toFixed(2)}\nPersonal Expense: K${s.totalPersExp.toFixed(2)}`);
+}
+
+function exportArchiveCSV(idx) {
+    const v = archiveVault[idx];
+    const s = v.summary;
+    let csv = "Metric,Value\n";
+    csv += `Year,${v.year}\nTotal Revenue,${s.totalRev}\nTotal Capital,${s.totalCap}\nNet Profit,${s.netYearProfit}\nTotal Withdrawals,${s.totalWithdrawals}\nPers Income,${s.totalPersInc}\nPers Expense,${s.totalPersExp}`;
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `KLPB_Archive_${v.year}.csv`; a.click();
+    showNotify("CSV EXPORTED!");
+}
+
+async function toggleLock(idx) {
+    archiveVault[idx].locked = !archiveVault[idx].locked;
+    await syncData();
+    renderArchiveList();
+    showNotify(archiveVault[idx].locked ? "LOCKED 🔒" : "UNLOCKED 🔓");
 }
 
 async function archiveYear() {
     const res = await openCustomModal("Save & Archive Year", [{ id: 'y', type: 'text', placeholder: 'Year (e.g. 2025)' }]);
     if (!res || !res.y) return;
     
-    // Capture Snapshot FIRST
     const totalCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const totalRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const totalWithdrawals = withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
 
     const snapshot = {
         year: res.y,
+        locked: false,
         summary: {
             totalCap, totalRev, totalWithdrawals,
             netYearProfit: totalRev - totalCap - totalWithdrawals,
@@ -401,10 +455,7 @@ async function archiveYear() {
         }
     };
 
-    // Store to Vault
     archiveVault.push(snapshot);
-    
-    // Reset Data
     businessData = []; stockHistory = []; debtors = []; personalLedger = []; withdrawals = [];
     
     await syncData(); 
@@ -415,20 +466,14 @@ async function archiveYear() {
 
 function exportBulkHistory() {
     if(!archiveVault || archiveVault.length === 0) return showNotify("NOTHING TO EXPORT", true);
-    
     let totalRev = 0, totalProfit = 0;
     let content = "KLPB MASTER BUSINESS HISTORY\n================================\n\n";
-    
     archiveVault.forEach(v => {
-        content += `YEAR: ${v.year}\n-----------------\n`;
-        content += `Revenue: K${v.summary.totalRev.toFixed(2)}\n`;
-        content += `Profit:  K${v.summary.netYearProfit.toFixed(2)}\n\n`;
+        content += `YEAR: ${v.year}\n-----------------\nRevenue: K${v.summary.totalRev.toFixed(2)}\nProfit: K${v.summary.netYearProfit.toFixed(2)}\n\n`;
         totalRev += v.summary.totalRev;
         totalProfit += v.summary.netYearProfit;
     });
-    
-    content += `LIFETIME TOTAL REVENUE: K${totalRev.toFixed(2)}\nLIFETIME TOTAL PROFIT: K${totalProfit.toFixed(2)}`;
-
+    content += `LIFETIME REVENUE: K${totalRev.toFixed(2)}\nLIFETIME PROFIT: K${totalProfit.toFixed(2)}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -436,16 +481,8 @@ function exportBulkHistory() {
     showNotify("MASTER REPORT GENERATED!");
 }
 
-function downloadTextReport(idx) {
-    const v = archiveVault[idx];
-    const content = `KLPB REPORT - ${v.year}\n==========================\nRevenue: K${v.summary.totalRev.toFixed(2)}\nCapital: K${v.summary.totalCap.toFixed(2)}\nProfit: K${v.summary.netYearProfit.toFixed(2)}\nGenerated: ${new Date().toLocaleString()}`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Report_${v.year}.txt`; a.click();
-}
-
 async function deleteArchive(idx) {
+    if(archiveVault[idx].locked) return;
     if(confirm("Permanently delete this archive?")) {
         archiveVault.splice(idx, 1);
         await syncData(); 
@@ -530,7 +567,6 @@ function sendReminder(id) {
     window.open(`https://wa.me/${d.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi '+d.name+', friendly reminder about K'+d.balance.toFixed(2)+' for '+d.product+'. Thanks!')}`, '_blank');
 }
 
-// Background Handling
 function handleBg(input) {
     const file = input.files[0]; const reader = new FileReader();
     reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };
@@ -549,4 +585,3 @@ function openTab(evt, t) {
 </script>
 </body>
 </html>
-

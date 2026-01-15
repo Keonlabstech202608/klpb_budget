@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KLPB - Business Engine v3.7.2</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000b1a">
+    <title>KLPB - Business Engine v3.7.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,29 +16,46 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.6); 
+            --notif-purple: rgba(191, 0, 255, 0.45); 
         }
 
-        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: var(--deep-blue); }
-        #video-bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
-        #video-bg-container video, #video-bg-container img { min-width: 100%; min-height: 100%; width: auto; height: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: cover; }
+        #video-bg-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; overflow: hidden; background-color: var(--deep-blue);
+        }
+        #video-bg-container video, #video-bg-container img {
+            min-width: 100%; min-height: 100%; width: auto; height: auto;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
 
-        /* Notification: Translucent Purple, Centered */
         #customNotification {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--notif-purple); color: white; padding: 25px 50px;
-            border-radius: 15px; backdrop-filter: blur(15px); border: 1px solid rgba(255, 255, 255, 0.2);
-            z-index: 30000; display: none; text-align: center; font-weight: bold;
-            box-shadow: 0 0 30px rgba(191, 0, 255, 0.4);
+            position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+            background: var(--notif-purple); color: white; padding: 22px 40px;
+            border-radius: 20px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 30000;
+            display: none; text-align: center; font-weight: bold;
+            box-shadow: 0 10px 40px 0 rgba(191, 0, 255, 0.4);
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes bounceIn { 
+            0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
         }
 
-        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
+        #customModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 20000; backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; padding: 20px;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
         .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 10px; width: 300px; text-align: center; }
-        #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 50000; display: flex; align-items: center; justify-content: center; }
+        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
         
-        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; }
-        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-        .tab-btn.active { background: var(--neon-blue); color: #000; }
+        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; scrollbar-width: none; }
+        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .tab-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
@@ -48,10 +68,20 @@
         input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 10px; width: 100%; margin: 6px 0; border-radius: 4px; box-sizing: border-box; }
         .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        .action-btn { background: rgba(0,242,255,0.1); border: 1px solid var(--neon-blue); color: var(--neon-blue); padding: 5px 8px; border-radius: 4px; cursor: pointer; }
+        
+        .action-cell { display: flex; gap: 5px; justify-content: flex-end; align-items: center; }
+        .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+        .archive-box { border: 1px solid var(--warning); padding: 15px; margin-top: 15px; background: rgba(255, 170, 0, 0.1); border-radius: 8px; }
+        .archive-item { border-bottom: 1px solid rgba(0, 242, 255, 0.1); padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .debt-alert { background: var(--notif-purple); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+
+        /* Audit Style */
+        .audit-list { font-size: 0.65rem; text-align: left; max-height: 250px; overflow-y: auto; margin-top: 10px; border-top: 1px solid var(--border-glow); }
+        .audit-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(0, 242, 255, 0.05); }
     </style>
 </head>
 <body>
@@ -63,33 +93,46 @@
 
 <div id="customNotification"></div>
 
+<div id="customModal">
+    <div class="auth-card" style="width:100%; max-width:320px;">
+        <h3 id="modalTitle"></h3>
+        <div id="modalInputs"></div>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button id="modalConfirm" class="btn-main">CONFIRM</button>
+            <button onclick="closeCustomModal()" class="btn-main" style="background:var(--danger); color:white;">CANCEL</button>
+        </div>
+    </div>
+</div>
+
 <div id="authOverlay">
     <div class="auth-card">
         <h2 style="color: var(--neon-blue);">KLPB ENGINE</h2>
         <input type="email" id="authEmail" placeholder="Email">
         <input type="password" id="authPass" placeholder="Password">
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button onclick="loginUser()" class="btn-main">LOGIN</button>
-            <button onclick="signupUser()" class="btn-main" style="background:var(--neon-blue)">SIGN UP</button>
-        </div>
+        <button onclick="loginUser()" class="btn-main">LOGIN</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
+            <input type="file" id="bgUpload" accept="image/*,video/*" style="display:none;" onchange="handleBg(this)">
+            <button onclick="document.getElementById('bgUpload').click()" style="background:var(--neon-blue); border:none; padding:4px 8px; cursor:pointer; font-size:0.6rem; border-radius:3px;">BG</button>
+        </div>
         <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
     </div>
 
-    <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; border:1px solid var(--border-glow);">
-        <select id="globalMonth" onchange="renderAll()"></select>
+    <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
+        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">MONTH:</label>
+        <select id="globalMonth" style="margin:0; height:35px;" onchange="renderAll()"></select>
     </div>
 
     <div class="metric-grid">
         <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
         <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
         <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
-        <div class="metric-box">PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+        <div class="metric-box">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
     <div class="tabs">
@@ -103,43 +146,65 @@
     <div id="business" class="tab-content active">
         <section>
             <input type="text" id="bName" placeholder="Item Name">
-            <input type="number" id="bBuy" placeholder="Cost K">
-            <input type="number" id="bSell" placeholder="Sell K">
-            <input type="number" id="bStock" placeholder="Qty">
-            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK</button>
-            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM</th><th>CAP</th><th>QTY</th><th>SALE</th></tr></thead><tbody></tbody></table></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <input type="number" id="bBuy" placeholder="Cap K">
+                <input type="number" id="bSell" placeholder="Sell K">
+                <input type="number" id="bStock" placeholder="Qty">
+            </div>
+            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK ITEM</button>
+            <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="debtors" class="tab-content">
         <section>
-            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>ITEM</th><th>BAL</th><th>ACTION</th></tr></thead><tbody></tbody></table></div>
+            <div id="debtSummaryHeader" class="debt-alert" style="display:none;">
+                <h4 style="margin:0; color:var(--neon-blue); font-size:0.8rem;"><i class="fas fa-bell"></i> DEBT ALERT</h4>
+                <p id="debtSummaryText" style="margin:5px 0 0 0; font-size:0.75rem;"></p>
+            </div>
+            <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()" style="margin-bottom:10px;">
+            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="withdraw" class="tab-content">
         <section style="text-align:center;">
-            <h1 id="withdrawableLimit">K 0.00</h1>
-            <input type="number" id="wAmount" placeholder="Amount K">
-            <button onclick="makeWithdrawal()" class="btn-main" style="background:var(--danger); color:white;">WITHDRAW</button>
+            <h4 style="color:var(--neon-blue); margin-top:0;">AVAILABLE FOR PAYOUT</h4>
+            <h1 id="withdrawableLimit" style="margin:10px 0; font-size:2.5rem;">K 0.00</h1>
+            <input type="number" id="wAmount" placeholder="Amount to withdraw K">
+            <button onclick="makeWithdrawal()" class="btn-main" style="background:var(--danger); color:white; margin-top:10px;">CONFIRM PAYOUT</button>
         </section>
     </div>
 
     <div id="personal" class="tab-content">
         <section>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
+                <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
+            </div>
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount K">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-            <button onclick="addPersonal()" class="btn-main">LOG</button>
-            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th></tr></thead><tbody></tbody></table></div>
+            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
+            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="summary" class="tab-content">
         <section>
+            <h3 style="margin-top:0; color:var(--neon-blue); font-size:0.9rem;">MONTHLY PERFORMANCE</h3>
             <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
-            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE YEAR</button>
-            <div id="archiveList" style="margin-top:15px;"></div>
+            
+            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & RESET FOR NEW YEAR</button>
+
+            <div class="archive-box">
+                <button onclick="toggleArchives()" style="width:100%; background:none; border:none; color:var(--neon-blue); font-weight:bold; cursor:pointer; text-align:left; display:flex; justify-content:space-between; align-items:center;">
+                    PAST YEAR ARCHIVES <i id="archiveIcon" class="fas fa-chevron-down"></i>
+                </button>
+                <div id="archiveList" style="display:none; margin-top:15px;"></div>
+                <button onclick="exportBulkHistory()" id="bulkBtn" style="display:none; width:100%; background:var(--neon-blue); color:#000; border:none; padding:10px; font-weight:bold; border-radius:4px; margin-top:10px; cursor:pointer;">EXPORT ALL TIME DATA <i class="fas fa-file-export"></i></button>
+            </div>
         </section>
     </div>
 </div>
@@ -149,26 +214,45 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], withdrawals = [];
+let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], withdrawals = [], modalResolve, userBg = null, userBgType = 'video', lastLoginPass = '';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
+// Notification System
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    el.innerHTML = `<div>${msg}</div>`;
+    const icons = isError ? ["🚨", "⚠️"] : ["✨", "✅", "💰", "💎"];
+    el.innerHTML = `<div style="font-size:2rem; margin-bottom:8px;">${icons[Math.floor(Math.random()*icons.length)]}</div><div>${msg}</div>`;
     el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 3000);
+    setTimeout(() => { el.style.display = 'none'; }, 3500);
 }
 
-// --- AUTH ---
+// Modal Logic
+function openCustomModal(title, inputs) {
+    const modal = document.getElementById('customModal');
+    document.getElementById('modalTitle').innerText = title;
+    const container = document.getElementById('modalInputs'); container.innerHTML = '';
+    inputs.forEach(inp => {
+        const el = document.createElement('input'); 
+        el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
+        container.appendChild(el);
+    });
+    modal.style.display = 'flex';
+    return new Promise(resolve => {
+        modalResolve = resolve;
+        document.getElementById('modalConfirm').onclick = () => {
+            const res = {}; inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
+            closeCustomModal(); resolve(res);
+        };
+    });
+}
+function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+
+// Auth
 async function loginUser() {
     const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
     if(error) showNotify("LOGIN FAILED", true);
-}
-async function signupUser() {
-    const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
-    const { error } = await supabaseClient.auth.signUp({ email, password: pass });
-    if(error) showNotify(error.message, true); else showNotify("Check Email!");
+    else { lastLoginPass = pass; showNotify("SYSTEM ONLINE! 🚀"); }
 }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
@@ -181,93 +265,14 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// --- CORE FUNCTIONS ---
-function addBusiness() {
-    const name = document.getElementById('bName').value, buy = parseFloat(document.getElementById('bBuy').value), sell = parseFloat(document.getElementById('bSell').value), qty = parseInt(document.getElementById('bStock').value);
-    const month = parseInt(document.getElementById('globalMonth').value);
-    if(!name || isNaN(buy)) return;
-    businessData.push({ id: Date.now(), name, buyPrice: buy, sellPrice: sell, currentStock: qty, totalSalesRevenue: 0, month });
-    stockHistory.push({ cost: buy * qty, month });
-    syncData(); renderAll();
-}
-
-function handleSale(id, isDebt) {
-    const item = businessData.find(x => x.id === id);
-    if(!item || item.currentStock <= 0) return showNotify("OUT OF STOCK", true);
-    item.currentStock--;
-    if(isDebt) {
-        const name = prompt("Debtor Name:");
-        debtors.push({ name, item: item.name, balance: item.sellPrice });
-    } else {
-        item.totalSalesRevenue += item.sellPrice;
-    }
-    syncData(); renderAll();
-}
-
-function addPersonal() {
-    const desc = document.getElementById('pDesc').value, amt = parseFloat(document.getElementById('pAmt').value), type = document.getElementById('pType').value;
-    if(!desc || isNaN(amt)) return;
-    personalLedger.push({ desc, amt, type });
-    syncData(); renderAll();
-}
-
-function clearDebt(idx) {
-    const d = debtors[idx];
-    const item = businessData.find(x => x.name === d.item);
-    if(item) item.totalSalesRevenue += d.balance;
-    debtors.splice(idx, 1);
-    syncData(); renderAll();
-}
-
-function makeWithdrawal() {
-    const amt = parseFloat(document.getElementById('wAmount').value);
-    withdrawals.push({ amount: amt });
-    syncData(); renderAll();
-}
-
-// --- RENDER & SYNC ---
-function renderAll() {
-    const m = parseInt(document.getElementById('globalMonth').value);
-    
-    // Stock
-    document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === m).map(x => `
-        <tr><td>${x.name}</td><td>K${x.buyPrice}</td><td>${x.currentStock}</td>
-        <td><button onclick="handleSale(${x.id}, false)" class="action-btn">Cash</button>
-        <button onclick="handleSale(${x.id}, true)" class="action-btn">Debt</button></td></tr>`).join('');
-
-    // Debtors
-    document.querySelector("#debtTable tbody").innerHTML = debtors.map((d, i) => `
-        <tr><td>${d.name}</td><td>${d.item}</td><td>K${d.balance}</td>
-        <td><button onclick="clearDebt(${i})" class="action-btn">Clear</button></td></tr>`).join('');
-
-    // Personal
-    document.querySelector("#pTable tbody").innerHTML = personalLedger.map(p => `
-        <tr><td>${p.desc}</td><td>K${p.amt}</td><td>${p.type}</td></tr>`).join('');
-
-    // Totals
-    const tCap = stockHistory.reduce((s, x) => s + x.cost, 0);
-    const tRev = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
-    const tWith = withdrawals.reduce((s, x) => s + x.amount, 0);
-    const net = tRev - tCap - tWith;
-
-    document.getElementById('statCap').innerText = `K ${tCap}`;
-    document.getElementById('statRev').innerText = `K ${tRev}`;
-    document.getElementById('statProfit').innerText = `K ${net}`;
-    document.getElementById('statDebt').innerText = `K ${debtors.reduce((s,x)=>s+x.balance,0)}`;
-    document.getElementById('withdrawableLimit').innerText = `K ${net}`;
-
-    // Reports
-    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, i) => {
-        const mc = stockHistory.filter(x => x.month === i).reduce((s,x)=>s+x.cost, 0);
-        const mr = businessData.filter(x => x.month === i).reduce((s,x)=>s+x.totalSalesRevenue, 0);
-        return `<tr><td>${name}</td><td>K${mc}</td><td>K${mr}</td><td>K${mr-mc}</td></tr>`;
-    }).join('');
-}
-
+// Data Sync
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
     await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, withdrawals, archiveVault } 
+        user_id: user.id, 
+        payload: { businessData, stockHistory, archiveVault, personalLedger, debtors, withdrawals, userBg, userBgType }, 
+        updated_at: new Date().toISOString() 
     });
 }
 
@@ -276,15 +281,279 @@ async function loadData(userId) {
     if (data?.payload) {
         const p = data.payload;
         businessData = p.businessData || []; stockHistory = p.stockHistory || [];
+        archiveVault = p.archiveVault || []; personalLedger = p.personalLedger || [];
         debtors = p.debtors || []; withdrawals = p.withdrawals || [];
-        personalLedger = p.personalLedger || []; archiveVault = p.archiveVault || [];
+        userBg = p.userBg; userBgType = p.userBgType || 'video';
+        if(userBg) applyBg(userBg, userBgType);
+        initMonths(); 
+        renderAll();
+        renderArchiveList();
     }
-    initMonths(); renderAll();
 }
 
 function initMonths() {
-    document.getElementById('globalMonth').innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-    document.getElementById('globalMonth').value = new Date().getMonth();
+    const mSelect = document.getElementById('globalMonth');
+    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+    mSelect.value = new Date().getMonth();
+}
+
+function renderAll() {
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const search = document.getElementById('stockSearch').value.toLowerCase();
+    const dSearch = document.getElementById('debtSearch').value.toLowerCase();
+
+    // STOCK TABLE
+    document.querySelector("#bTable tbody").innerHTML = businessData
+    .filter(x => x.month === m && x.name.toLowerCase().includes(search))
+    .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>Price: K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0; padding:2px; height:32px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="viewHistory(${x.id})" style="background:var(--notif-purple)"><i class="fas fa-history"></i></button><button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
+
+    // PERSONAL LEDGER
+    const pCurrent = personalLedger.filter(x => x.month === m);
+    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); border:none; background:none;">×</button></td></tr>`).join('');
+
+    // DEBTORS
+    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
+    const debtHeader = document.getElementById('debtSummaryHeader');
+    if(debtors.length > 0) {
+        debtHeader.style.display = 'block';
+        document.getElementById('debtSummaryText').innerText = `You have K${totalD.toFixed(2)} to collect.`;
+    } else { debtHeader.style.display = 'none'; }
+
+    document.querySelector("#debtTable tbody").innerHTML = debtors
+    .filter(d => d.name.toLowerCase().includes(dSearch))
+    .map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button><button class="action-btn" onclick="sendReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button></div></td></tr>`).join('');
+
+    // MONTHLY REPORT TABLE
+    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, idx) => {
+        const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+        const mRev = businessData.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+        return `<tr><td>${name}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:${(mRev-mCap)>=0?'var(--success)':'var(--danger)'}">K${(mRev-mCap).toFixed(2)}</td></tr>`;
+    }).join('');
+
+    // TOP BAR METRICS
+    const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+    const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    const tWith = withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+    const netProfit = tRev - tCap - tWith;
+    document.getElementById('statCap').innerText = `K ${tCap.toFixed(2)}`;
+    document.getElementById('statRev').innerText = `K ${tRev.toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${netProfit.toFixed(2)}`;
+    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
+    document.getElementById('withdrawableLimit').innerText = `K ${netProfit.toFixed(2)}`;
+}
+
+// Business Functions
+async function handleSale(id, isDebt) {
+    const qtyInput = document.getElementById(`q_${id}`);
+    const qty = parseInt(qtyInput.value);
+    const item = businessData.find(x => x.id === id);
+    if (item.currentStock < qty) return showNotify("LOW STOCK!", true);
+    
+    const total = item.unitSellPrice * qty;
+    
+    // Record History Trace
+    item.history = item.history || [];
+    item.history.unshift({ date: new Date().toLocaleString(), qty: qty, type: isDebt ? 'DEBT' : 'CASH', total: total });
+
+    if (isDebt) {
+        const res = await openCustomModal("Debtor", [{ id: 'n', type: 'text', placeholder: 'Name' }, { id: 'p', type: 'text', placeholder: 'Phone' }]);
+        if(!res.n) return;
+        debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: total, originalId: id });
+    } else { item.totalSalesRevenue += total; }
+    
+    item.currentStock -= qty; qtyInput.value = 1; syncData(); renderAll(); showNotify("DONE! 💰");
+}
+
+async function viewHistory(id) {
+    const item = businessData.find(x => x.id === id);
+    const logs = item.history || [];
+    const historyHtml = logs.length > 0 
+        ? logs.map(h => `<div class="audit-item"><span>${h.date}</span> <span>${h.qty} pcs (${h.type})</span> <span style="color:var(--success)">K${h.total}</span></div>`).join('')
+        : "<p style='opacity:0.5'>No sales logs found.</p>";
+    
+    await openCustomModal(`${item.name} Activity`, []);
+    document.getElementById('modalInputs').innerHTML = `<div class="audit-list">${historyHtml}</div>`;
+}
+
+function addBusiness() {
+    const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value);
+    if(n && c) {
+        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, history: [] });
+        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m });
+        syncData(); renderAll(); showNotify("ADDED! 📦");
+    }
+}
+
+async function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const res = await openCustomModal(`Restock ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cost K'}]);
+    if(res.q && res.c) {
+        item.currentStock += parseInt(res.q);
+        item.totalCapitalInvested += parseFloat(res.c);
+        stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: item.month });
+        
+        // Add restock to history too
+        item.history = item.history || [];
+        item.history.unshift({ date: new Date().toLocaleString(), qty: res.q, type: 'RESTOCK', total: `-${res.c}` });
+
+        syncData(); renderAll();
+    }
+}
+
+async function payDebt(id) {
+    const d = debtors.find(x => x.id === id);
+    const res = await openCustomModal(`Pay: ${d.name}`, [{ id: 'a', type: 'number', placeholder: `Bal: K${d.balance}` }]);
+    if (res.a) {
+        const amt = parseFloat(res.a); d.balance -= amt;
+        const item = businessData.find(x => x.id === d.originalId);
+        if (item) {
+            item.totalSalesRevenue += amt;
+            item.history.unshift({ date: new Date().toLocaleString(), qty: 'Debt Pay', type: d.name, total: amt });
+        }
+        if (d.balance <= 0) debtors = debtors.filter(x => x.id !== id);
+        syncData(); renderAll(); showNotify("PAID! ✅");
+    }
+}
+
+// Rest of original logic...
+function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value);
+    if(d && a) { 
+        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m }); 
+        syncData(); renderAll(); showNotify("LOGGED! ✅"); 
+    }
+}
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
+
+async function makeWithdrawal() {
+    const amt = parseFloat(document.getElementById('wAmount').value);
+    const limit = parseFloat(document.getElementById('withdrawableLimit').innerText.replace('K ', ''));
+    if (amt > 0 && amt <= limit) {
+        const res = await openCustomModal("Secret Code", [{ id: 'code', type: 'password', placeholder: 'Enter Password' }]);
+        if (res.code === lastLoginPass) {
+            withdrawals.push({ id: Date.now(), amount: amt });
+            personalLedger.push({ id: Date.now()+1, desc: "Business Payout", amt: amt, type: 'income', month: parseInt(document.getElementById('globalMonth').value) });
+            document.getElementById('wAmount').value = '';
+            await syncData(); renderAll(); showNotify("PAYOUT DONE! 💸");
+        } else { showNotify("WRONG CODE!", true); }
+    } else { showNotify("INVALID AMOUNT!", true); }
+}
+
+function sendReminder(id) {
+    const d = debtors.find(x => x.id === id);
+    if(!d.phone) return showNotify("NO PHONE!", true);
+    window.open(`https://wa.me/${d.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi '+d.name+', friendly reminder about K'+d.balance.toFixed(2)+' for '+d.product+'. Thanks!')}`, '_blank');
+}
+
+// ARCHIVE LOGIC
+function toggleArchives() {
+    const list = document.getElementById('archiveList');
+    const icon = document.getElementById('archiveIcon');
+    const bulk = document.getElementById('bulkBtn');
+    if(list.style.display === 'none') {
+        list.style.display = 'block'; 
+        bulk.style.display = 'block';
+        icon.className = "fas fa-chevron-up";
+        renderArchiveList(); 
+    } else {
+        list.style.display = 'none'; 
+        bulk.style.display = 'none';
+        icon.className = "fas fa-chevron-down";
+    }
+}
+
+function renderArchiveList() {
+    const container = document.getElementById('archiveList');
+    const bulk = document.getElementById('bulkBtn');
+    if (!archiveVault || archiveVault.length === 0) {
+        container.innerHTML = "<p style='opacity:0.5; font-size:0.7rem;'>No archived years found.</p>";
+        bulk.style.display = 'none';
+        return;
+    }
+    bulk.style.display = 'block';
+    container.innerHTML = archiveVault.slice().reverse().map((v, idx) => {
+        const actualIdx = archiveVault.length - 1 - idx;
+        return `
+        <div class="archive-item">
+            <div>
+                <b style="color:var(--neon-blue)">${v.year}</b><br>
+                <small>PROFIT: K${v.summary.netYearProfit.toFixed(2)} | REV: K${v.summary.totalRev.toFixed(2)}</small>
+            </div>
+            <div class="action-cell">
+                <button onclick="downloadTextReport(${actualIdx})" style="background:none; border:none; color:var(--success); font-size:1rem; cursor:pointer;"><i class="fas fa-file-download"></i></button>
+                <button onclick="deleteArchive(${actualIdx})" style="background:none; border:none; color:var(--danger); font-size:1rem; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+async function archiveYear() {
+    const res = await openCustomModal("Save & Archive Year", [{ id: 'y', type: 'text', placeholder: 'Year (e.g. 2025)' }]);
+    if (!res || !res.y) return;
+    const totalCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+    const totalRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    const totalWithdrawals = withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+    const snapshot = {
+        year: res.y,
+        summary: {
+            totalCap, totalRev, totalWithdrawals,
+            netYearProfit: totalRev - totalCap - totalWithdrawals,
+            totalPersInc: personalLedger.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0),
+            totalPersExp: personalLedger.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0)
+        }
+    };
+    archiveVault.push(snapshot);
+    businessData = []; stockHistory = []; debtors = []; personalLedger = []; withdrawals = [];
+    await syncData(); renderAll(); renderArchiveList(); showNotify("YEAR ARCHIVED! 💎");
+}
+
+function exportBulkHistory() {
+    if(!archiveVault || archiveVault.length === 0) return showNotify("NOTHING TO EXPORT", true);
+    let totalRev = 0, totalProfit = 0;
+    let content = "KLPB MASTER BUSINESS HISTORY\n================================\n\n";
+    archiveVault.forEach(v => {
+        content += `YEAR: ${v.year}\n-----------------\n`;
+        content += `Revenue: K${v.summary.totalRev.toFixed(2)}\n`;
+        content += `Profit:  K${v.summary.netYearProfit.toFixed(2)}\n\n`;
+        totalRev += v.summary.totalRev;
+        totalProfit += v.summary.netYearProfit;
+    });
+    content += `LIFETIME TOTAL REVENUE: K${totalRev.toFixed(2)}\nLIFETIME TOTAL PROFIT: K${totalProfit.toFixed(2)}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `KLPB_Master_History.txt`; a.click();
+    showNotify("MASTER REPORT GENERATED!");
+}
+
+function downloadTextReport(idx) {
+    const v = archiveVault[idx];
+    const content = `KLPB REPORT - ${v.year}\n==========================\nRevenue: K${v.summary.totalRev.toFixed(2)}\nCapital: K${v.summary.totalCap.toFixed(2)}\nProfit: K${v.summary.netYearProfit.toFixed(2)}\nGenerated: ${new Date().toLocaleString()}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Report_${v.year}.txt`; a.click();
+}
+
+async function deleteArchive(idx) {
+    if(confirm("Permanently delete this archive?")) {
+        archiveVault.splice(idx, 1);
+        await syncData(); renderArchiveList(); showNotify("ARCHIVE DELETED! 🗑️");
+    }
+}
+
+// Background Handling
+function handleBg(input) {
+    const file = input.files[0]; const reader = new FileReader();
+    reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };
+    reader.readAsDataURL(file);
+}
+function applyBg(src, type) {
+    const v = document.getElementById('bgVideo'), i = document.getElementById('bgImage');
+    if (type === 'video') { v.src = src; v.style.display = 'block'; i.style.display = 'none'; v.play(); }
+    else { i.src = src; i.style.display = 'block'; v.style.display = 'none'; }
 }
 
 function openTab(evt, t) {

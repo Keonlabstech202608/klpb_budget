@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.1.0</title>
+    <title>KLPB - Business Engine v4.3.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,10 +16,9 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.75); 
+            --notif-purple: rgba(191, 0, 255, 0.7); 
         }
 
-        /* Video Backgrounds */
         #video-bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; overflow: hidden; background-color: var(--deep-blue);
@@ -30,11 +29,11 @@
             object-fit: cover;
         }
 
-        /* Notifications (Personalized Style) */
+        /* Personalized Purple Notifications - Non-intrusive */
         #customNotification {
             position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 15px 30px;
-            border-radius: 12px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 12px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
             border: 1px solid rgba(255, 255, 255, 0.2); z-index: 30000;
             display: none; text-align: center; font-weight: bold;
             box-shadow: 0 8px 32px 0 rgba(191, 0, 255, 0.3);
@@ -44,56 +43,41 @@
 
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 20000; backdrop-filter: blur(8px);
+            background: rgba(0, 0, 0, 0.9); z-index: 20000; backdrop-filter: blur(10px);
             align-items: center; justify-content: center; padding: 20px;
         }
 
-        /* Auth UI */
-        #authOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; align-items: center; justify-content: center; z-index: 10000;
-        }
-        .auth-card { 
-            background: var(--panel-bg); border: 1px solid var(--border-glow); 
-            padding: 35px; border-radius: 20px; width: 320px; text-align: center;
-            box-shadow: 0 0 30px rgba(0, 242, 255, 0.2); backdrop-filter: blur(15px);
-        }
-        .pass-container { position: relative; width: 100%; }
-        .toggle-pass { 
-            position: absolute; right: 12px; top: 18px; color: var(--neon-blue); 
-            cursor: pointer; font-size: 0.9rem; 
-        }
-
         body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 10px; width: 300px; text-align: center; box-shadow: 0 0 20px rgba(0, 242, 255, 0.2); }
         .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
         
-        input, select { 
-            background: rgba(191, 0, 255, 0.1); border: 1px solid var(--border-glow); 
-            color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 8px; 
-            box-sizing: border-box; outline: none; transition: 0.3s;
-        }
-        input:focus { border-color: var(--neon-blue); box-shadow: 0 0 10px var(--border-glow); }
-        .btn-main { background: var(--success); color: #000; padding: 14px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1rem; }
-        
         .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; scrollbar-width: none; }
-        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; transition: 0.3s; }
         .tab-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 12px; margin-bottom: 15px; }
+        
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 8px; margin-bottom: 15px; backdrop-filter: blur(5px); }
+        .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .metric-box { border: 1px solid var(--border-glow); padding: 12px; border-radius: 6px; text-align: center; background: rgba(0,0,0,0.6); }
+        .metric-val { display: block; font-size: 1rem; font-weight: bold; color: var(--neon-blue); margin-top: 4px; }
+
+        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 6px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--neon-blue); }
+        .btn-main { background: var(--success); color: #000; padding: 14px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; font-size: 0.9rem; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
-        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
-        td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        .action-cell { display: flex; gap: 5px; justify-content: flex-end; align-items: center;}
-        .action-btn { border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #000; }
+        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; text-transform: uppercase; }
+        td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.05); }
+        .action-cell { display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+        .action-btn { border: none; width: 34px; height: 34px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
 <div id="video-bg-container">
-    <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-flying-through-a-star-field-in-outer-space-26732-large.mp4"></video>
+    <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4"></video>
     <img id="bgImage" style="display:none;">
 </div>
 
@@ -101,7 +85,7 @@
 
 <div id="customModal">
     <div class="auth-card" style="width:100%; max-width:320px;">
-        <h3 id="modalTitle"></h3>
+        <h3 id="modalTitle" style="color:var(--neon-blue)"></h3>
         <div id="modalInputs"></div>
         <div style="display:flex; gap:10px; margin-top:15px;">
             <button id="modalConfirm" class="btn-main">CONFIRM</button>
@@ -112,45 +96,33 @@
 
 <div id="authOverlay">
     <div class="auth-card">
-        <h1 style="color: var(--neon-blue); margin-bottom: 5px; font-size: 1.5rem;">KLPB ENGINE</h1>
-        <p id="authSubtitle" style="font-size: 0.7rem; color: var(--success); margin-bottom: 20px;">SYSTEM STATUS: ONLINE</p>
-        
-        <input type="email" id="authEmail" placeholder="Galaxy Email">
-        
-        <div class="pass-container">
-            <input type="password" id="authPass" placeholder="Security Key">
-            <i class="fas fa-eye toggle-pass" onclick="togglePass('authPass')"></i>
-        </div>
-
-        <button id="authBtn" onclick="handleAuth()" class="btn-main" style="margin-top: 10px;">ENTER STATION</button>
-        
-        <div style="margin-top: 20px; font-size: 0.8rem;">
-            <span id="authToggleText">New pilot?</span> 
-            <a href="javascript:void(0)" onclick="toggleAuthMode()" id="authLink" style="color: var(--neon-blue); text-decoration: none; font-weight: bold;">Sign Up</a>
-        </div>
+        <h2 style="color: var(--neon-blue); letter-spacing: 2px;">KLPB ENGINE</h2>
+        <input type="email" id="authEmail" placeholder="Pilot Email">
+        <input type="password" id="authPass" placeholder="Security Key">
+        <button onclick="loginUser()" class="btn-main">ENTER STATION</button>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display:flex; gap:10px; align-items:center;">
-            <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
+            <span id="userDisplay" style="font-size:0.6rem; color:var(--success); font-weight:bold;"></span>
             <input type="file" id="bgUpload" accept="image/*,video/*" style="display:none;" onchange="handleBg(this)">
-            <button onclick="document.getElementById('bgUpload').click()" style="background:var(--neon-blue); border:none; padding:4px 8px; cursor:pointer; font-size:0.6rem; border-radius:3px;">CHANGE BG</button>
+            <button onclick="document.getElementById('bgUpload').click()" style="background:var(--neon-blue); border:none; padding:4px 8px; cursor:pointer; font-size:0.6rem; border-radius:3px; color:#000; font-weight:bold;">CHANGE BG</button>
         </div>
-        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
+        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem; font-weight:bold;">LOGOUT</button>
     </div>
 
-    <div style="background: rgba(191, 0, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
-        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">ORBIT MONTH:</label>
-        <select id="globalMonth" style="margin:0; height:35px;" onchange="renderAll()"></select>
+    <div style="background: rgba(191, 0, 255, 0.15); padding: 12px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 12px; border:1px solid var(--notif-purple);">
+        <label style="font-size:0.75rem; color:var(--text-main); font-weight:bold; letter-spacing: 1px;">ACTIVE ORBIT:</label>
+        <select id="globalMonth" style="margin:0; height:35px; border-color:var(--notif-purple);" onchange="renderAll()"></select>
     </div>
 
-    <div class="metric-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-        <div style="background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border-glow);">CAPITAL<span id="statCap" style="display: block; color: var(--neon-blue); font-weight: bold;">K 0</span></div>
-        <div style="background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border-glow);">REVENUE<span id="statRev" style="display: block; color: var(--neon-blue); font-weight: bold;">K 0</span></div>
-        <div style="background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border-glow);">DEBT<span id="statDebt" style="display: block; color: var(--warning); font-weight: bold;">K 0</span></div>
-        <div style="background: rgba(0,0,0,0.6); padding: 10px; border-radius: 8px; text-align: center; border: 1px solid var(--border-glow);">PROFIT<span id="statProfit" style="display: block; color: var(--success); font-weight: bold;">K 0</span></div>
+    <div class="metric-grid">
+        <div class="metric-box">BUSINESS CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
+        <div class="metric-box">TOTAL REVENUE<span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box">DEBT BALANCE<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
+        <div class="metric-box">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
     <div class="tabs">
@@ -158,47 +130,76 @@
         <button class="tab-btn" onclick="openTab(event, 'debtors')">Debtors</button>
         <button class="tab-btn" onclick="openTab(event, 'ledger')">Ledger</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')" style="color:var(--success)">Withdraw Profit</button>
         <button class="tab-btn" onclick="openTab(event, 'summary')">Reports</button>
     </div>
 
-    <div id="business" class="tab-content active"><section>
-        <input type="text" id="bName" placeholder="Item Name">
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;"><input type="number" id="bBuy" placeholder="Cap K"><input type="number" id="bSell" placeholder="Sell K"><input type="number" id="bStock" placeholder="Qty"></div>
-        <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK</button>
-        <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
-        <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">ACTIONS</th></tr></thead><tbody></tbody></table></div>
-    </section></div>
+    <div id="business" class="tab-content active">
+        <section>
+            <input type="text" id="bName" placeholder="Item Name">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <input type="number" id="bBuy" placeholder="Capital K">
+                <input type="number" id="bSell" placeholder="Sell Price K">
+                <input type="number" id="bStock" placeholder="Qty">
+            </div>
+            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">DEPLOY STOCK</button>
+            <input type="text" id="stockSearch" placeholder="🔍 Filter inventory..." onkeyup="renderAll()" style="margin-top:10px;">
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>STOCK</th><th style="text-align:right">ACTIONS</th></tr></thead><tbody></tbody></table></div>
+        </section>
+    </div>
 
-    <div id="debtors" class="tab-content"><section>
-        <input type="text" id="debtSearch" placeholder="🔍 Search debtors..." onkeyup="renderAll()">
-        <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
-    </section></div>
+    <div id="debtors" class="tab-content">
+        <section>
+            <input type="text" id="debtSearch" placeholder="🔍 Search debtors..." onkeyup="renderAll()">
+            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
+        </section>
+    </div>
 
-    <div id="ledger" class="tab-content"><section>
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-            <h4 style="color:var(--neon-blue); margin:0;">STATION LOGS</h4>
-            <button onclick="downloadLedger()" style="background:var(--success); padding:5px 10px; border-radius:4px; font-weight:bold; font-size:0.6rem; cursor:pointer; border:none;">DOWNLOAD TXT</button>
-        </div>
-        <input type="text" id="ledgerSearch" placeholder="🔍 Filter logs..." onkeyup="renderAll()">
-        <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
-    </section></div>
+    <div id="ledger" class="tab-content">
+        <section>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="color:var(--neon-blue); margin:0; letter-spacing:1px;">TRANSACTION LOGS</h4>
+                <button onclick="downloadLedger()" style="background:var(--success); padding:6px 12px; border-radius:4px; font-weight:bold; font-size:0.65rem; cursor:pointer; border:none; color:#000;">DOWNLOAD TXT</button>
+            </div>
+            <input type="text" id="ledgerSearch" placeholder="🔍 Search logs..." onkeyup="renderAll()">
+            <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
+        </section>
+    </div>
 
-    <div id="personal" class="tab-content"><section>
-        <input type="text" id="pDesc" placeholder="Expense/Income Description">
-        <input type="number" id="pAmt" placeholder="Amount K">
-        <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-        <div style="display:flex; gap:10px; margin-top:10px;">
+    <div id="personal" class="tab-content">
+        <section>
+            <h4 style="color:var(--neon-blue); margin-top:0;">DAILY OPERATIONAL EXPENSES</h4>
+            <input type="text" id="pDesc" placeholder="e.g., Transportation, Airtime">
+            <input type="number" id="pAmt" placeholder="Amount K">
+            <select id="pType"><option value="expense">BUSINESS EXPENSE</option><option value="income">OTHER INCOME</option></select>
             <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
-            <button onclick="handleWithdraw()" class="btn-main" style="background:var(--danger); color:white;">WITHDRAW</button>
-        </div>
-        <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
-    </section></div>
+            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>DEL</th></tr></thead><tbody></tbody></table></div>
+        </section>
+    </div>
 
-    <div id="summary" class="tab-content"><section>
-        <h3 style="color:var(--neon-blue); font-size:0.9rem;">ANNUAL SUMMARY</h3>
-        <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
-        <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE YEAR</button>
-    </section></div>
+    <div id="withdraw" class="tab-content">
+        <section style="border: 2px solid var(--success); background: rgba(0, 255, 136, 0.05);">
+            <h3 style="color:var(--success); margin-top:0;"><i class="fas fa-hand-holding-usd"></i> PROFIT WITHDRAWAL</h3>
+            <p style="font-size:0.75rem; color:var(--text-main); line-height:1.4;">Move business profits to your personal account. This will be logged as a profit payout and removed from business liquid capital.</p>
+            
+            <div style="background:rgba(0,0,0,0.4); padding:15px; border-radius:8px; margin-bottom:15px;">
+                <span style="font-size:0.7rem; color:var(--neon-blue);">AVAILABLE PROFIT FOR ORBIT:</span>
+                <div id="withdrawableProfit" style="font-size:1.5rem; font-weight:bold; color:var(--success);">K 0.00</div>
+            </div>
+
+            <input type="text" id="wDesc" placeholder="What are you using this profit for?">
+            <input type="number" id="wAmt" placeholder="Withdrawal Amount K">
+            <button onclick="handleWithdraw()" class="btn-main" style="background:var(--success); color:#000; margin-top:10px; font-size:1rem;">AUTHORIZE & TRANSFER</button>
+        </section>
+    </div>
+
+    <div id="summary" class="tab-content">
+        <section>
+            <h3 style="color:var(--neon-blue); font-size:0.9rem; letter-spacing:1px;">ANNUAL PERFORMANCE SUMMARY</h3>
+            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>NET PROFIT</th></tr></thead><tbody></tbody></table></div>
+            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px; color:#000;">ARCHIVE FULL YEAR</button>
+        </section>
+    </div>
 </div>
 
 <script>
@@ -206,37 +207,44 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let isLoginMode = true;
 let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], globalLedger = [], userBg = null, userBgType = 'video';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-// --- AUTH LOGIC ---
-function toggleAuthMode() {
-    isLoginMode = !isLoginMode;
-    document.getElementById('authBtn').innerText = isLoginMode ? "ENTER STATION" : "CREATE ACCOUNT";
-    document.getElementById('authLink').innerText = isLoginMode ? "Sign Up" : "Login";
-    document.getElementById('authToggleText').innerText = isLoginMode ? "New pilot?" : "Already a member?";
+// --- UI HELPERS ---
+function showNotify(msg, isError = false) {
+    const el = document.getElementById('customNotification');
+    el.innerHTML = `<div>${isError ? "🚨" : "✨"}</div><div>${msg}</div>`;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3500);
 }
 
-function togglePass(id) {
-    const el = document.getElementById(id);
-    el.type = el.type === "password" ? "text" : "password";
+function openCustomModal(title, inputs) {
+    const modal = document.getElementById('customModal');
+    document.getElementById('modalTitle').innerText = title;
+    const container = document.getElementById('modalInputs'); container.innerHTML = '';
+    inputs.forEach(inp => {
+        const el = document.createElement('input'); 
+        el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
+        container.appendChild(el);
+    });
+    modal.style.display = 'flex';
+    return new Promise(resolve => {
+        document.getElementById('modalConfirm').onclick = () => {
+            const res = {}; 
+            inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
+            closeCustomModal(); 
+            resolve(res);
+        };
+    });
 }
+function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
 
-async function handleAuth() {
+// --- AUTH ---
+async function loginUser() {
     const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
-    if(!email || !pass) return showNotify("CREDENTIALS REQUIRED", true);
-
-    if (isLoginMode) {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-        if(error) showNotify("LOGIN FAILED: " + error.message, true);
-    } else {
-        const { error } = await supabaseClient.auth.signUp({ email, password: pass });
-        if(error) showNotify("SIGN UP FAILED: " + error.message, true);
-        else showNotify("ACCOUNT CREATED! PLEASE LOGIN.");
-    }
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+    if(error) showNotify("INVALID SECURITY KEY", true); else showNotify("PILOT AUTHENTICATED");
 }
-
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -248,14 +256,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// --- CORE APP FUNCTIONS ---
-function showNotify(msg, isError = false) {
-    const el = document.getElementById('customNotification');
-    el.innerHTML = `<div>${isError ? "🚨" : "✨"}</div><div>${msg}</div>`;
-    el.style.display = 'block';
-    setTimeout(() => { el.style.display = 'none'; }, 3500);
-}
-
+// --- CORE DATA LOGIC ---
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
@@ -291,151 +292,129 @@ function renderAll() {
     const lSearch = document.getElementById('ledgerSearch').value.toLowerCase();
     const dSearch = document.getElementById('debtSearch').value.toLowerCase();
 
-    // STOCK TABLE
+    // Inventory Table
     document.querySelector("#bTable tbody").innerHTML = businessData
     .filter(x => x.month === m && x.name.toLowerCase().includes(search))
-    .map(x => `<tr>
-        <td><b>${x.name}</b></td>
-        <td>K${x.totalCapitalInvested}</td>
-        <td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td>
-        <td>
-            <div class="action-cell">
-                <input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0;">
-                <button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)" title="Sale"><i class="fas fa-dollar-sign"></i></button>
-                <button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue)" title="Restock"><i class="fas fa-plus"></i></button>
-                <button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)" title="Debt"><i class="fas fa-user-clock"></i></button>
-            </div>
-        </td>
-    </tr>`).join('');
+    .map(x => `<tr><td><b>${x.name}</b><br><small>Sell: K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)" title="Sale"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue)" title="Restock"><i class="fas fa-plus"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)" title="Debt Sale"><i class="fas fa-user-clock"></i></button></div></td></tr>`).join('');
 
-    // LEDGER TABLE
-    document.querySelector("#ledgerTable tbody").innerHTML = (globalLedger || [])
+    // Ledger
+    document.querySelector("#ledgerTable tbody").innerHTML = globalLedger
     .filter(l => l.month === m && (l.desc.toLowerCase().includes(lSearch) || l.type.toLowerCase().includes(lSearch)))
     .slice().reverse()
     .map(l => `<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td style="color:${['SALE','INCOME','DEBT_PAY'].includes(l.type)?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`).join('');
 
-    // DEBTORS
+    // Debtors
     const totalD = debtors.reduce((s, x) => s + x.balance, 0);
-    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(dSearch)).map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button><button class="action-btn" onclick="sendReminder('${d.phone}', '${d.name}', ${d.balance}, '${d.product}')" style="background:#25D366;"><i class="fab fa-whatsapp"></i></button></div></td></tr>`).join('');
+    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(dSearch)).map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`).join('');
 
-    // BUDGET TABLE
-    document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(p => p.month === m).map(p => `<tr><td>${p.desc}</td><td>K${p.amt}</td><td>${p.type}</td><td><button onclick="removeBudget(${p.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">&times;</button></td></tr>`).join('');
+    // Budget Table
+    document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(p => p.month === m).map(p => `<tr><td>${p.desc}</td><td>K${p.amt}</td><td>${p.type}</td><td><button onclick="delP(${p.id})" style="color:var(--danger); background:none; border:none; cursor:pointer;">&times;</button></td></tr>`).join('');
 
-    // REPORTS
+    // Calculation Logic for Report Table
     document.querySelector("#ySummaryTable tbody").innerHTML = months.map((monthName, idx) => {
-        const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-        const mRev = globalLedger.filter(x => x.month === idx && x.type === 'SALE').reduce((s, x) => s + x.amt, 0);
-        return `<tr><td>${monthName}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:var(--success)">K${(mRev - mCap).toFixed(2)}</td></tr>`;
+        const mCap = globalLedger.filter(x => x.month === idx && x.type === 'CAPITAL').reduce((s, x) => s + x.amt, 0);
+        const mRev = globalLedger.filter(x => x.month === idx && (x.type === 'SALE' || x.type === 'DEBT_PAY')).reduce((s, x) => s + x.amt, 0);
+        const mExp = globalLedger.filter(x => x.month === idx && (x.type === 'EXPENSE' || x.type === 'WITHDRAW')).reduce((s, x) => s + x.amt, 0);
+        const netProfit = mRev - (mCap + mExp);
+        return `<tr><td>${monthName}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:${netProfit >=0 ? 'var(--success)' : 'var(--danger)'}">K${netProfit.toFixed(2)}</td></tr>`;
     }).join('');
 
-    // METRICS
-    const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-    const tRev = globalLedger.filter(x => x.type === 'SALE').reduce((s, x) => s + x.amt, 0);
+    // Main Metrics
+    const tCap = globalLedger.filter(x => x.type === 'CAPITAL').reduce((s, x) => s + x.amt, 0);
+    const tRev = globalLedger.filter(x => (x.type === 'SALE' || x.type === 'DEBT_PAY')).reduce((s, x) => s + x.amt, 0);
+    const tExp = globalLedger.filter(x => (x.type === 'EXPENSE' || x.type === 'WITHDRAW')).reduce((s, x) => s + x.amt, 0);
+    const currentProfit = tRev - (tCap + tExp);
+
     document.getElementById('statCap').innerText = `K ${tCap.toFixed(2)}`;
     document.getElementById('statRev').innerText = `K ${tRev.toFixed(2)}`;
-    document.getElementById('statProfit').innerText = `K ${(tRev - tCap).toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${currentProfit.toFixed(2)}`;
     document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
+    document.getElementById('withdrawableProfit').innerText = `K ${currentProfit.toFixed(2)}`;
 }
 
-// --- CORE LOGIC HANDLERS ---
-async function handleSale(id, isDebt) {
-    const qtyInput = document.getElementById(`q_${id}`);
-    const qty = parseInt(qtyInput.value);
-    const item = businessData.find(x => x.id === id);
-    if (item.currentStock < qty) return showNotify("OUT OF STOCK!", true);
-    const total = item.unitSellPrice * qty;
-    const m = parseInt(document.getElementById('globalMonth').value);
-
-    if (isDebt) {
-        const res = await openCustomModal("DEBTOR INFO", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
-        if(res && res.n) {
-            debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: total, originalId: id });
-            logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m);
-            item.currentStock -= qty;
-        } else return;
-    } else {
-        item.totalSalesRevenue += total;
-        item.currentStock -= qty;
-        logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m);
-    }
-    syncData(); renderAll(); showNotify("SAVED!");
-}
-
-async function restockItem(id) {
-    const item = businessData.find(x => x.id === id);
-    const qtyToAdd = parseInt(document.getElementById(`q_${id}`).value);
-    
-    const res = await openCustomModal(`RESTOCK: ${item.name}`, [
-        {id:'cost', type:'number', placeholder:'Additional Capital Cost K'}
-    ]);
-
-    if (res && res.cost !== "") {
-        const addCost = parseFloat(res.cost);
-        item.currentStock += qtyToAdd;
-        item.totalCapitalInvested += addCost;
-        
-        const m = parseInt(document.getElementById('globalMonth').value);
-        stockHistory.push({ id: Date.now(), name: item.name, qty: qtyToAdd, cost: addCost, month: m });
-        logToLedger(`Restock: ${item.name} (+${qtyToAdd})`, 'CAPITAL', addCost, m);
-        
-        syncData(); renderAll();
-        showNotify("STOCK UPDATED");
-    }
-}
-
+// --- HEIR WITHDRAW LOGIC ---
 async function handleWithdraw() {
-    const amt = parseFloat(document.getElementById('pAmt').value);
-    const desc = document.getElementById('pDesc').value;
-    if (!amt || !desc) return showNotify("NEED AMOUNT & DESC", true);
+    const amt = parseFloat(document.getElementById('wAmt').value);
+    const desc = document.getElementById('wDesc').value;
+    if (!amt || !desc) return showNotify("AMOUNT & DESCRIPTION REQUIRED", true);
 
-    const res = await openCustomModal("SECURITY CHECK", [
-        {id:'pass', type:'password', placeholder:'Enter Security Key'}
-    ]);
-
+    const res = await openCustomModal("CONFIRM PROFIT WITHDRAWAL", [{id:'pass', type:'password', placeholder:'Enter Security Key to Authorize'}]);
+    
+    // Security Verification
     const { data: { user } } = await supabaseClient.auth.getUser();
     const { error } = await supabaseClient.auth.signInWithPassword({ email: user.email, password: res.pass });
 
     if (!error) {
         const m = parseInt(document.getElementById('globalMonth').value);
-        personalLedger.push({ id: Date.now(), desc: `Withdraw: ${desc}`, amt, type: 'expense', month: m });
-        logToLedger(`Withdrawal: ${desc}`, 'WITHDRAW', amt, m);
-        syncData(); renderAll();
-        showNotify("WITHDRAWAL SECURED");
+        // Log to Ledger as WITHDRAW (which reduces business profit)
+        logToLedger(`HEIR WITHDRAWAL: ${desc}`, 'WITHDRAW', amt, m);
+        
+        document.getElementById('wAmt').value = ''; 
+        document.getElementById('wDesc').value = '';
+        syncData(); 
+        renderAll();
+        showNotify("PROFIT WITHDRAWN TO PERSONAL ACCOUNT");
     } else {
-        showNotify("INVALID SECURITY KEY", true);
+        showNotify("AUTHORIZATION DENIED: WRONG KEY", true);
     }
 }
 
-function archiveYear() {
-    if (!confirm("ARCHIVE ENTIRE YEAR? This moves current data to Vault and clears the boards.")) return;
-
-    const yearlySnapshot = {
-        id: Date.now(),
-        year: new Date().getFullYear(),
-        businessData, stockHistory, personalLedger, globalLedger, debtors
-    };
-
-    archiveVault.push(yearlySnapshot);
-    
-    // Clear Workspace
-    businessData = []; stockHistory = []; personalLedger = []; globalLedger = []; debtors = [];
-    
-    syncData(); renderAll();
-    showNotify("ANNUAL DATA ARCHIVED");
-}
-
-// --- UTILS ---
+// --- LOGIC HANDLERS ---
 function logToLedger(desc, type, amt, month) {
     globalLedger.push({ date: new Date().toLocaleDateString(), desc, type, amt, month });
+}
+
+async function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const qtyToAdd = parseInt(document.getElementById(`q_${id}`).value);
+    const res = await openCustomModal(`RESTOCK: ${item.name}`, [{id:'cost', type:'number', placeholder:'New Stock Capital Cost K'}]);
+    if (res && res.cost) {
+        const m = parseInt(document.getElementById('globalMonth').value);
+        item.currentStock += qtyToAdd;
+        item.totalCapitalInvested += parseFloat(res.cost);
+        logToLedger(`Restock: ${item.name} (+${qtyToAdd})`, 'CAPITAL', parseFloat(res.cost), m);
+        syncData(); renderAll(); showNotify("INVENTORY REPLENISHED");
+    }
+}
+
+async function handleSale(id, isDebt) {
+    const qtyInput = document.getElementById(`q_${id}`);
+    const qty = parseInt(qtyInput.value);
+    const item = businessData.find(x => x.id === id);
+    if (item.currentStock < qty) return showNotify("INSUFFICIENT STOCK", true);
+    
+    const total = item.unitSellPrice * qty;
+    const m = parseInt(document.getElementById('globalMonth').value);
+
+    if (isDebt) {
+        const res = await openCustomModal("NEW DEBTOR", [{id:'n', type:'text', placeholder:'Debtor Name'}, {id:'p', type:'text', placeholder:'Phone Number'}]);
+        if(res && res.n) {
+            debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: total });
+            logToLedger(`Debt Sale: ${item.name} to ${res.n}`, 'DEBT', total, m);
+            item.currentStock -= qty;
+        }
+    } else {
+        item.currentStock -= qty;
+        logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m);
+    }
+    syncData(); renderAll(); showNotify("TRANSACTION LOGGED");
+}
+
+function payDebt(id) {
+    const dIdx = debtors.findIndex(x => x.id === id);
+    const d = debtors[dIdx];
+    const m = parseInt(document.getElementById('globalMonth').value);
+    logToLedger(`Debt Repayment: ${d.name}`, 'DEBT_PAY', d.balance, m);
+    debtors.splice(dIdx, 1);
+    syncData(); renderAll(); showNotify("DEBT SETTLED");
 }
 
 function addBusiness() {
     const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value);
     if(n && c) {
-        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m });
-        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m });
-        logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m);
-        syncData(); renderAll(); showNotify("ADDED!");
+        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, month: m });
+        logToLedger(`Initial Stock: ${n}`, 'CAPITAL', c, m);
+        syncData(); renderAll(); showNotify("STOCK INITIALIZED");
     }
 }
 
@@ -443,30 +422,12 @@ function addPersonal() {
     const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value);
     if(d && a) {
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m });
-        logToLedger(d, t.toUpperCase(), a, m);
-        syncData(); renderAll(); showNotify("LOGGED");
+        logToLedger(`Exp: ${d}`, 'EXPENSE', a, m);
+        syncData(); renderAll(); showNotify("EXPENSE RECORDED");
     }
 }
 
-function payDebt(id) {
-    const dIdx = debtors.findIndex(x => x.id === id);
-    const d = debtors[dIdx];
-    const m = parseInt(document.getElementById('globalMonth').value);
-    logToLedger(`Debt Pay: ${d.name}`, 'DEBT_PAY', d.balance, m);
-    debtors.splice(dIdx, 1);
-    syncData(); renderAll(); showNotify("DEBT CLEARED");
-}
-
-function downloadLedger() {
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const data = globalLedger.filter(l => l.month === m);
-    let content = `KLPB LEDGER - ${months[m]}\n==========================\n\n`;
-    data.forEach(l => content += `${l.date} | ${l.type} | ${l.desc} | K${l.amt}\n`);
-    const blob = new Blob([content], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `Ledger_${months[m]}.txt`; a.click();
-}
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
 
 function handleBg(input) {
     const file = input.files[0]; const reader = new FileReader();
@@ -485,31 +446,15 @@ function openTab(evt, t) {
     document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
 }
 
-function openCustomModal(title, inputs) {
-    const modal = document.getElementById('customModal');
-    document.getElementById('modalTitle').innerText = title;
-    const container = document.getElementById('modalInputs'); container.innerHTML = '';
-    inputs.forEach(inp => {
-        const el = document.createElement('input'); 
-        el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
-        container.appendChild(el);
-    });
-    modal.style.display = 'flex';
-    return new Promise(resolve => {
-        document.getElementById('modalConfirm').onclick = () => {
-            const res = {}; 
-            inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
-            closeCustomModal(); 
-            resolve(res);
-        };
-    });
-}
-
-function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
-
-function sendReminder(p, n, b, pr) {
-    const msg = encodeURIComponent(`Hi ${n}, this is a reminder regarding your balance of K${b} for the ${pr}.`);
-    window.open(`https://wa.me/${p}?text=${msg}`);
+function downloadLedger() {
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const data = globalLedger.filter(l => l.month === m);
+    let content = `KLPB STATION LOG - ${months[m]}\n==========================\n\n`;
+    data.forEach(l => content += `${l.date} | ${l.type} | ${l.desc} | K${l.amt}\n`);
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `KLPB_Log_${months[m]}.txt`; a.click();
 }
 </script>
 </body>

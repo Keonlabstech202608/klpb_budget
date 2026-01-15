@@ -206,194 +206,347 @@
 </div>
 
 <script>
-/* ===========================
-   EXISTING GLOBALS (UNCHANGED)
-=========================== */
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [],
-    stockHistory = [],
-    archiveVault = [],
-    personalLedger = [],
-    debtors = [],
-    withdrawals = [],
-    modalResolve,
-    userBg = null,
-    userBgType = 'video',
-    lastLoginPass = '';
+let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], withdrawals = [], modalResolve, userBg = null, userBgType = 'video', lastLoginPass = '';
+const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-const months = ["JANUARY","FEBRUARY","MARCH","APRIL","MAY","JUNE","JULY","AUGUST","SEPTEMBER","OCTOBER","NOVEMBER","DECEMBER"];
-
-/* ===========================
-   ARCHIVE VIEW STATE (NEW)
-=========================== */
-let viewingArchive = null;
-
-/* ===========================
-   ARCHIVE FUNCTIONS (FIXED)
-=========================== */
-
-/* Archive full snapshot */
-async function archiveYear() {
-    const res = await openCustomModal("Save & Archive Year", [
-        { id: 'y', type: 'text', placeholder: 'Year (e.g. 2025)' }
-    ]);
-    if (!res?.y) return;
-
-    const snapshot = {
-        year: res.y,
-        archivedAt: new Date().toISOString(),
-
-        /* FULL DATA SNAPSHOT */
-        data: {
-            businessData: structuredClone(businessData),
-            stockHistory: structuredClone(stockHistory),
-            personalLedger: structuredClone(personalLedger),
-            debtors: structuredClone(debtors),
-            withdrawals: structuredClone(withdrawals)
-        },
-
-        /* SUMMARY (unchanged logic) */
-        summary: (() => {
-            const totalCap = stockHistory.reduce((s,x)=>s+(+x.cost||0),0);
-            const totalRev = businessData.reduce((s,x)=>s+(+x.totalSalesRevenue||0),0);
-            const totalWith = withdrawals.reduce((s,x)=>s+(+x.amount||0),0);
-            return {
-                totalCap,
-                totalRev,
-                totalWithdrawals: totalWith,
-                netYearProfit: totalRev - totalCap - totalWith
-            };
-        })()
-    };
-
-    archiveVault.push(snapshot);
-
-    /* RESET ACTIVE DATA (UNCHANGED BEHAVIOR) */
-    businessData = [];
-    stockHistory = [];
-    personalLedger = [];
-    debtors = [];
-    withdrawals = [];
-
-    await syncData();
-    renderAll();
-    renderArchiveList();
-    showNotify("YEAR ARCHIVED SUCCESSFULLY");
+// Notification System
+function showNotify(msg, isError = false) {
+    const el = document.getElementById('customNotification');
+    const icons = isError ? ["🚨", "⚠️"] : ["✨", "✅", "💰", "💎"];
+    el.innerHTML = `<div style="font-size:2rem; margin-bottom:8px;">${icons[Math.floor(Math.random()*icons.length)]}</div><div>${msg}</div>`;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3500);
 }
 
-/* Render archive list */
-function renderArchiveList() {
-    const box = document.getElementById('archiveList');
-    const bulk = document.getElementById('bulkBtn');
+// Modal Logic
+function openCustomModal(title, inputs) {
+    const modal = document.getElementById('customModal');
+    document.getElementById('modalTitle').innerText = title;
+    const container = document.getElementById('modalInputs'); container.innerHTML = '';
+    inputs.forEach(inp => {
+        const el = document.createElement('input'); 
+        el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
+        container.appendChild(el);
+    });
+    modal.style.display = 'flex';
+    return new Promise(resolve => {
+        modalResolve = resolve;
+        document.getElementById('modalConfirm').onclick = () => {
+            const res = {}; inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
+            closeCustomModal(); resolve(res);
+        };
+    });
+}
+function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
 
-    if (!archiveVault.length) {
-        box.innerHTML = "<p style='opacity:.6;font-size:.7rem'>No archives</p>";
+// Auth
+async function loginUser() {
+    const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+    if(error) showNotify("LOGIN FAILED", true);
+    else { lastLoginPass = pass; showNotify("SYSTEM ONLINE! 🚀"); }
+}
+async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('userDisplay').innerText = session.user.email;
+        loadData(session.user.id);
+    }
+});
+
+// Data Sync
+async function syncData() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
+    await supabaseClient.from('user_budgets').upsert({ 
+        user_id: user.id, 
+        payload: { businessData, stockHistory, archiveVault, personalLedger, debtors, withdrawals, userBg, userBgType }, 
+        updated_at: new Date().toISOString() 
+    });
+}
+
+async function loadData(userId) {
+    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
+    if (data?.payload) {
+        const p = data.payload;
+        businessData = p.businessData || []; stockHistory = p.stockHistory || [];
+        archiveVault = p.archiveVault || []; personalLedger = p.personalLedger || [];
+        debtors = p.debtors || []; withdrawals = p.withdrawals || [];
+        userBg = p.userBg; userBgType = p.userBgType || 'video';
+        if(userBg) applyBg(userBg, userBgType);
+        initMonths(); 
+        renderAll();
+        renderArchiveList();
+    }
+}
+
+function initMonths() {
+    const mSelect = document.getElementById('globalMonth');
+    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+    mSelect.value = new Date().getMonth();
+}
+
+function renderAll() {
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const search = document.getElementById('stockSearch').value.toLowerCase();
+    const dSearch = document.getElementById('debtSearch').value.toLowerCase();
+
+    // STOCK TABLE
+    document.querySelector("#bTable tbody").innerHTML = businessData
+    .filter(x => x.month === m && x.name.toLowerCase().includes(search))
+    .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>Price: K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0; padding:2px; height:32px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
+
+    // PERSONAL LEDGER
+    const pCurrent = personalLedger.filter(x => x.month === m);
+    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); border:none; background:none;">×</button></td></tr>`).join('');
+
+    // DEBTORS
+    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
+    const debtHeader = document.getElementById('debtSummaryHeader');
+    if(debtors.length > 0) {
+        debtHeader.style.display = 'block';
+        document.getElementById('debtSummaryText').innerText = `You have K${totalD.toFixed(2)} to collect.`;
+    } else { debtHeader.style.display = 'none'; }
+
+    document.querySelector("#debtTable tbody").innerHTML = debtors
+    .filter(d => d.name.toLowerCase().includes(dSearch))
+    .map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button><button class="action-btn" onclick="sendReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button></div></td></tr>`).join('');
+
+    // MONTHLY REPORT TABLE
+    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, idx) => {
+        const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+        const mRev = businessData.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+        return `<tr><td>${name}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:${(mRev-mCap)>=0?'var(--success)':'var(--danger)'}">K${(mRev-mCap).toFixed(2)}</td></tr>`;
+    }).join('');
+
+    // TOP BAR METRICS
+    const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+    const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    const tWith = withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
+    const netProfit = tRev - tCap - tWith;
+    document.getElementById('statCap').innerText = `K ${tCap.toFixed(2)}`;
+    document.getElementById('statRev').innerText = `K ${tRev.toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${netProfit.toFixed(2)}`;
+    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
+    document.getElementById('withdrawableLimit').innerText = `K ${netProfit.toFixed(2)}`;
+}
+
+// ARCHIVE & EXPORT LOGIC
+function toggleArchives() {
+    const list = document.getElementById('archiveList');
+    const icon = document.getElementById('archiveIcon');
+    const bulk = document.getElementById('bulkBtn');
+    if(list.style.display === 'none') {
+        list.style.display = 'block'; 
+        bulk.style.display = 'block';
+        icon.className = "fas fa-chevron-up";
+        renderArchiveList(); 
+    } else {
+        list.style.display = 'none'; 
+        bulk.style.display = 'none';
+        icon.className = "fas fa-chevron-down";
+    }
+}
+
+function renderArchiveList() {
+    const container = document.getElementById('archiveList');
+    const bulk = document.getElementById('bulkBtn');
+    if (!archiveVault || archiveVault.length === 0) {
+        container.innerHTML = "<p style='opacity:0.5; font-size:0.7rem;'>No archived years found.</p>";
         bulk.style.display = 'none';
         return;
     }
-
     bulk.style.display = 'block';
-
-    box.innerHTML = archiveVault.slice().reverse().map((a,i)=>{
-        const idx = archiveVault.length-1-i;
+    container.innerHTML = archiveVault.slice().reverse().map((v, idx) => {
+        const actualIdx = archiveVault.length - 1 - idx;
         return `
         <div class="archive-item">
             <div>
-                <b style="color:var(--neon-blue)">${a.year}</b><br>
-                <small>
-                    PROFIT: K${a.summary.netYearProfit.toFixed(2)}
-                </small>
+                <b style="color:var(--neon-blue)">${v.year}</b><br>
+                <small>PROFIT: K${v.summary.netYearProfit.toFixed(2)} | REV: K${v.summary.totalRev.toFixed(2)}</small>
             </div>
             <div class="action-cell">
-                <button onclick="viewArchive(${idx})"
-                    style="background:none;border:none;color:var(--neon-blue)">
-                    <i class="fas fa-eye"></i>
-                </button>
-                <button onclick="restoreArchive(${idx})"
-                    style="background:none;border:none;color:var(--success)">
-                    <i class="fas fa-rotate-left"></i>
-                </button>
-                <button onclick="deleteArchive(${idx})"
-                    style="background:none;border:none;color:var(--danger)">
-                    <i class="fas fa-trash"></i>
-                </button>
+                <button onclick="downloadTextReport(${actualIdx})" style="background:none; border:none; color:var(--success); font-size:1rem; cursor:pointer;"><i class="fas fa-file-download"></i></button>
+                <button onclick="deleteArchive(${actualIdx})" style="background:none; border:none; color:var(--danger); font-size:1rem; cursor:pointer;"><i class="fas fa-trash-alt"></i></button>
             </div>
         </div>`;
     }).join('');
 }
 
-/* View archive (READ-ONLY) */
-function viewArchive(idx) {
-    const a = archiveVault[idx];
-    viewingArchive = idx;
+async function archiveYear() {
+    const res = await openCustomModal("Save & Archive Year", [{ id: 'y', type: 'text', placeholder: 'Year (e.g. 2025)' }]);
+    if (!res || !res.y) return;
+    
+    // Capture Snapshot FIRST
+    const totalCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+    const totalRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    const totalWithdrawals = withdrawals.reduce((s, x) => s + (parseFloat(x.amount) || 0), 0);
 
-    businessData = structuredClone(a.data.businessData);
-    stockHistory = structuredClone(a.data.stockHistory);
-    personalLedger = structuredClone(a.data.personalLedger);
-    debtors = structuredClone(a.data.debtors);
-    withdrawals = structuredClone(a.data.withdrawals);
+    const snapshot = {
+        year: res.y,
+        summary: {
+            totalCap, totalRev, totalWithdrawals,
+            netYearProfit: totalRev - totalCap - totalWithdrawals,
+            totalPersInc: personalLedger.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0),
+            totalPersExp: personalLedger.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0)
+        }
+    };
 
+    // Store to Vault
+    archiveVault.push(snapshot);
+    
+    // Reset Data
+    businessData = []; stockHistory = []; debtors = []; personalLedger = []; withdrawals = [];
+    
+    await syncData(); 
     renderAll();
-    showNotify(`VIEWING ARCHIVE: ${a.year}`);
-}
-
-/* Restore archive (make it active year) */
-async function restoreArchive(idx) {
-    if (!confirm("Restore this archive as current year?")) return;
-    const a = archiveVault[idx];
-
-    businessData = structuredClone(a.data.businessData);
-    stockHistory = structuredClone(a.data.stockHistory);
-    personalLedger = structuredClone(a.data.personalLedger);
-    debtors = structuredClone(a.data.debtors);
-    withdrawals = structuredClone(a.data.withdrawals);
-
-    viewingArchive = null;
-    await syncData();
-    renderAll();
-    showNotify("ARCHIVE RESTORED");
-}
-
-/* Delete archive */
-async function deleteArchive(idx) {
-    if (!confirm("Permanently delete this archive?")) return;
-    archiveVault.splice(idx,1);
-    await syncData();
     renderArchiveList();
-    showNotify("ARCHIVE DELETED");
+    showNotify("YEAR ARCHIVED! 💎");
 }
 
-/* ===========================
-   EXPORT (UNCHANGED)
-=========================== */
 function exportBulkHistory() {
-    if (!archiveVault.length) return showNotify("NOTHING TO EXPORT",true);
-
-    let txt = "KLPB MASTER HISTORY\n\n";
-    archiveVault.forEach(a=>{
-        txt+=`YEAR ${a.year}\n`;
-        txt+=`Revenue: K${a.summary.totalRev.toFixed(2)}\n`;
-        txt+=`Profit: K${a.summary.netYearProfit.toFixed(2)}\n\n`;
+    if(!archiveVault || archiveVault.length === 0) return showNotify("NOTHING TO EXPORT", true);
+    
+    let totalRev = 0, totalProfit = 0;
+    let content = "KLPB MASTER BUSINESS HISTORY\n================================\n\n";
+    
+    archiveVault.forEach(v => {
+        content += `YEAR: ${v.year}\n-----------------\n`;
+        content += `Revenue: K${v.summary.totalRev.toFixed(2)}\n`;
+        content += `Profit:  K${v.summary.netYearProfit.toFixed(2)}\n\n`;
+        totalRev += v.summary.totalRev;
+        totalProfit += v.summary.netYearProfit;
     });
+    
+    content += `LIFETIME TOTAL REVENUE: K${totalRev.toFixed(2)}\nLIFETIME TOTAL PROFIT: K${totalProfit.toFixed(2)}`;
 
-    const b = new Blob([txt],{type:'text/plain'});
+    const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
-    a.href = URL.createObjectURL(b);
-    a.download = "KLPB_FULL_HISTORY.txt";
-    a.click();
+    a.href = URL.createObjectURL(blob);
+    a.download = `KLPB_Master_History.txt`; a.click();
+    showNotify("MASTER REPORT GENERATED!");
 }
 
-/* ===========================
-   EVERYTHING ELSE
-   (AUTH, BUSINESS, DEBT,
-    PERSONAL, WITHDRAW, UI)
-   REMAINS 100% UNCHANGED
-=========================== */
-</script>
+function downloadTextReport(idx) {
+    const v = archiveVault[idx];
+    const content = `KLPB REPORT - ${v.year}\n==========================\nRevenue: K${v.summary.totalRev.toFixed(2)}\nCapital: K${v.summary.totalCap.toFixed(2)}\nProfit: K${v.summary.netYearProfit.toFixed(2)}\nGenerated: ${new Date().toLocaleString()}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Report_${v.year}.txt`; a.click();
+}
 
+async function deleteArchive(idx) {
+    if(confirm("Permanently delete this archive?")) {
+        archiveVault.splice(idx, 1);
+        await syncData(); 
+        renderArchiveList();
+        showNotify("ARCHIVE DELETED! 🗑️");
+    }
+}
+
+// Business Functions
+async function handleSale(id, isDebt) {
+    const qtyInput = document.getElementById(`q_${id}`);
+    const qty = parseInt(qtyInput.value);
+    const item = businessData.find(x => x.id === id);
+    if (item.currentStock < qty) return showNotify("LOW STOCK!", true);
+    const total = item.unitSellPrice * qty;
+    if (isDebt) {
+        const res = await openCustomModal("Debtor", [{ id: 'n', type: 'text', placeholder: 'Name' }, { id: 'p', type: 'text', placeholder: 'Phone' }]);
+        if(!res.n) return;
+        debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: total, originalId: id });
+    } else { item.totalSalesRevenue += total; }
+    item.currentStock -= qty; qtyInput.value = 1; syncData(); renderAll(); showNotify("DONE! 💰");
+}
+
+function addBusiness() {
+    const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value);
+    if(n && c) {
+        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m });
+        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m });
+        syncData(); renderAll(); showNotify("ADDED! 📦");
+    }
+}
+
+async function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const res = await openCustomModal(`Restock ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cost K'}]);
+    if(res.q && res.c) {
+        item.currentStock += parseInt(res.q);
+        item.totalCapitalInvested += parseFloat(res.c);
+        stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: item.month });
+        syncData(); renderAll();
+    }
+}
+
+async function payDebt(id) {
+    const d = debtors.find(x => x.id === id);
+    const res = await openCustomModal(`Pay: ${d.name}`, [{ id: 'a', type: 'number', placeholder: `Bal: K${d.balance}` }]);
+    if (res.a) {
+        const amt = parseFloat(res.a); d.balance -= amt;
+        const item = businessData.find(x => x.id === d.originalId);
+        if (item) item.totalSalesRevenue += amt;
+        if (d.balance <= 0) debtors = debtors.filter(x => x.id !== id);
+        syncData(); renderAll(); showNotify("PAID! ✅");
+    }
+}
+
+function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value);
+    if(d && a) { 
+        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m }); 
+        syncData(); renderAll(); showNotify("LOGGED! ✅"); 
+    }
+}
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
+
+async function makeWithdrawal() {
+    const amt = parseFloat(document.getElementById('wAmount').value);
+    const limit = parseFloat(document.getElementById('withdrawableLimit').innerText.replace('K ', ''));
+    if (amt > 0 && amt <= limit) {
+        const res = await openCustomModal("Secret Code", [{ id: 'code', type: 'password', placeholder: 'Enter Password' }]);
+        if (res.code === lastLoginPass) {
+            withdrawals.push({ id: Date.now(), amount: amt });
+            personalLedger.push({ id: Date.now()+1, desc: "Business Payout", amt: amt, type: 'income', month: parseInt(document.getElementById('globalMonth').value) });
+            document.getElementById('wAmount').value = '';
+            await syncData(); renderAll(); showNotify("PAYOUT DONE! 💸");
+        } else { showNotify("WRONG CODE!", true); }
+    } else { showNotify("INVALID AMOUNT!", true); }
+}
+
+function sendReminder(id) {
+    const d = debtors.find(x => x.id === id);
+    if(!d.phone) return showNotify("NO PHONE!", true);
+    window.open(`https://wa.me/${d.phone.replace(/\D/g,'')}?text=${encodeURIComponent('Hi '+d.name+', friendly reminder about K'+d.balance.toFixed(2)+' for '+d.product+'. Thanks!')}`, '_blank');
+}
+
+// Background Handling
+function handleBg(input) {
+    const file = input.files[0]; const reader = new FileReader();
+    reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };
+    reader.readAsDataURL(file);
+}
+function applyBg(src, type) {
+    const v = document.getElementById('bgVideo'), i = document.getElementById('bgImage');
+    if (type === 'video') { v.src = src; v.style.display = 'block'; i.style.display = 'none'; v.play(); }
+    else { i.src = src; i.style.display = 'block'; v.style.display = 'none'; }
+}
+
+function openTab(evt, t) {
+    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
+    document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
+}
+</script>
 </body>
 </html>
 

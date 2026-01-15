@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v3.4.3</title>
+    <title>KLPB - Business Engine v3.5.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -75,9 +75,10 @@
         .action-cell { display: flex; gap: 5px; justify-content: flex-end; align-items: center; }
         .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        .vault-card { border: 1px solid var(--warning); padding: 15px; margin-bottom: 15px; background: rgba(255, 170, 0, 0.1); border-radius: 12px; position: relative; }
-        .vault-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; border-top: 1px solid rgba(255,255,255,0.1); padding-top:10px; }
-        .del-vault { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--danger); cursor: pointer; }
+        /* Unified Archive Styles */
+        .archive-box { border: 1px solid var(--warning); padding: 15px; margin-top: 15px; background: rgba(255, 170, 0, 0.05); border-radius: 8px; }
+        .archive-item { border-bottom: 1px solid rgba(0, 242, 255, 0.1); padding: 10px 0; display: flex; justify-content: space-between; align-items: center; }
+        .debt-alert { background: var(--notif-purple); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -137,7 +138,6 @@
         <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
         <button class="tab-btn" onclick="openTab(event, 'summary')">Reports</button>
-        <button class="tab-btn" onclick="openTab(event, 'vault')">Vault</button>
     </div>
 
     <div id="business" class="tab-content active">
@@ -156,7 +156,11 @@
 
     <div id="debtors" class="tab-content">
         <section>
-            <input type="text" id="debtSearch" placeholder="🔍 Search phone or name..." onkeyup="renderAll()" style="margin-bottom:10px;">
+            <div id="debtSummaryHeader" class="debt-alert" style="display:none;">
+                <h4 style="margin:0; color:var(--neon-blue); font-size:0.8rem;"><i class="fas fa-bell"></i> ATTENTION</h4>
+                <p id="debtSummaryText" style="margin:5px 0 0 0; font-size:0.75rem;"></p>
+            </div>
+            <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()" style="margin-bottom:10px;">
             <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
@@ -186,16 +190,17 @@
 
     <div id="summary" class="tab-content">
         <section>
-            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>PERS. INC</th><th>PERS. EXP</th></tr></thead><tbody></tbody></table></div>
-            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & SYNC TO VAULT</button>
-        </section>
-    </div>
+            <h3 style="margin-top:0; color:var(--neon-blue); font-size:0.9rem;">MONTHLY PERFORMANCE</h3>
+            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
+            
+            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & RESET FOR NEW YEAR</button>
 
-    <div id="vault" class="tab-content">
-        <section>
-            <h2 style="font-size:1rem; color:var(--warning); margin:0;">VAULT ARCHIVES</h2>
-            <hr style="border:0; border-top:1px solid var(--border-glow); margin:15px 0;">
-            <div id="vaultContainer"></div>
+            <div class="archive-box">
+                <button onclick="toggleArchives()" style="width:100%; background:none; border:none; color:var(--neon-blue); font-weight:bold; cursor:pointer; text-align:left; display:flex; justify-content:space-between;">
+                    PAST YEAR ARCHIVES <i id="archiveIcon" class="fas fa-chevron-down"></i>
+                </button>
+                <div id="archiveList" style="display:none; margin-top:15px;"></div>
+            </div>
         </section>
     </div>
 </div>
@@ -211,7 +216,7 @@ const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", 
 // LIVELY NOTIFICATIONS
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    const icons = isError ? ["🚨", "❌", "⚠️", "⛔"] : ["🔥", "✨", "✅", "💰", "🚀", "💎"];
+    const icons = isError ? ["🚨", "⚠️", "⛔"] : ["✨", "✅", "💰", "🚀", "💎", "🔥"];
     const icon = icons[Math.floor(Math.random() * icons.length)];
     el.innerHTML = `<div style="font-size:2rem; margin-bottom:8px;">${icon}</div><div>${msg}</div>`;
     el.style.display = 'block';
@@ -242,7 +247,7 @@ async function loginUser() {
     const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
     if(error) showNotify("LOGIN FAILED", true);
-    else { lastLoginPass = pass; showNotify("WELCOME BACK BOSS! ✨"); }
+    else { lastLoginPass = pass; showNotify("SYSTEM ONLINE! 🚀"); }
 }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
@@ -275,6 +280,7 @@ async function loadData(userId) {
         userBg = p.userBg; userBgType = p.userBgType || 'video';
         if(userBg) applyBg(userBg, userBgType);
         initMonths(); renderAll();
+        if(debtors.length > 0) showNotify(`REMINDER: You have ${debtors.length} active debts!`, false);
     }
 }
 
@@ -301,6 +307,13 @@ function renderAll() {
     document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); border:none; background:none;">×</button></td></tr>`).join('');
 
     // DEBTORS
+    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
+    const debtHeader = document.getElementById('debtSummaryHeader');
+    if(debtors.length > 0) {
+        debtHeader.style.display = 'block';
+        document.getElementById('debtSummaryText').innerText = `You have K${totalD.toFixed(2)} to collect from ${debtors.length} people.`;
+    } else { debtHeader.style.display = 'none'; }
+
     document.querySelector("#debtTable tbody").innerHTML = debtors
     .filter(d => d.name.toLowerCase().includes(dSearch) || (d.phone && d.phone.includes(dSearch)))
     .map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td>
@@ -310,13 +323,12 @@ function renderAll() {
         </div>
     </td></tr>`).join('');
 
-    // REPORTS
+    // REPORTS (Integrated Profit calculation)
     document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, idx) => {
         const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
         const mRev = businessData.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
-        const mInc = personalLedger.filter(x => x.month === idx && x.type === 'income').reduce((s, x) => s + x.amt, 0);
-        const mExp = personalLedger.filter(x => x.month === idx && x.type === 'expense').reduce((s, x) => s + x.amt, 0);
-        return `<tr><td>${name}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:var(--success)">K${mInc.toFixed(2)}</td><td style="color:var(--danger)">K${mExp.toFixed(2)}</td></tr>`;
+        const mProfit = mRev - mCap;
+        return `<tr><td>${name}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:${mProfit >=0 ? 'var(--success)' : 'var(--danger)'}">K${mProfit.toFixed(2)}</td></tr>`;
     }).join('');
 
     // TOTALS
@@ -327,38 +339,42 @@ function renderAll() {
     document.getElementById('statCap').innerText = `K ${tCap.toFixed(2)}`;
     document.getElementById('statRev').innerText = `K ${tRev.toFixed(2)}`;
     document.getElementById('statProfit').innerText = `K ${netProfit.toFixed(2)}`;
-    document.getElementById('statDebt').innerText = `K ${debtors.reduce((s, x) => s + x.balance, 0).toFixed(2)}`;
+    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
     document.getElementById('withdrawableLimit').innerText = `K ${netProfit.toFixed(2)}`;
 
-    renderVault();
+    renderArchiveList();
 }
 
-function renderVault() {
-    const vc = document.getElementById('vaultContainer');
-    if (!archiveVault || archiveVault.length === 0) { vc.innerHTML = "<p style='opacity:0.5; text-align:center;'>Vault is empty</p>"; return; }
-    vc.innerHTML = archiveVault.slice().reverse().map((v, idx) => `
-        <div class="vault-card">
-            <button class="del-vault" onclick="deleteVault(${archiveVault.length - 1 - idx})"><i class="fas fa-trash"></i></button>
-            <h3 style="margin:0; color:var(--neon-blue)">YEAR: ${v.year}</h3>
-            <div class="vault-grid">
-                <div><small>REV</small><br>K${v.summary.totalRev.toFixed(2)}</div>
-                <div><small>PROFIT</small><br><b style="color:var(--success)">K${v.summary.netYearProfit.toFixed(2)}</b></div>
-                <div><small>P.INC</small><br>K${v.summary.totalPersInc.toFixed(2)}</div>
-                <div><small>P.EXP</small><br>K${v.summary.totalPersExp.toFixed(2)}</div>
+function toggleArchives() {
+    const list = document.getElementById('archiveList');
+    const icon = document.getElementById('archiveIcon');
+    if(list.style.display === 'none') {
+        list.style.display = 'block';
+        icon.className = "fas fa-chevron-up";
+    } else {
+        list.style.display = 'none';
+        icon.className = "fas fa-chevron-down";
+    }
+}
+
+function renderArchiveList() {
+    const container = document.getElementById('archiveList');
+    if (!archiveVault || archiveVault.length === 0) { container.innerHTML = "<p style='opacity:0.5;'>No saved years yet.</p>"; return; }
+    container.innerHTML = archiveVault.slice().reverse().map((v, idx) => `
+        <div class="archive-item">
+            <div>
+                <b style="color:var(--neon-blue)">${v.year}</b><br>
+                <small>Profit: K${v.summary.netYearProfit.toFixed(2)} | Rev: K${v.summary.totalRev.toFixed(2)}</small>
             </div>
-            <button onclick='downloadTextReport(${JSON.stringify(v)})' class="btn-main" style="padding:5px; font-size:0.6rem; background:var(--neon-blue); margin-top:5px;">DOWNLOAD REPORT</button>
+            <div class="action-cell">
+                <button onclick='downloadTextReport(${JSON.stringify(v)})' style="background:none; border:none; color:var(--success);"><i class="fas fa-download"></i></button>
+                <button onclick="deleteArchive(${archiveVault.length - 1 - idx})" style="background:none; border:none; color:var(--danger);"><i class="fas fa-trash"></i></button>
+            </div>
         </div>`).join('');
 }
 
-function sendReminder(id) {
-    const d = debtors.find(x => x.id === id);
-    if(!d.phone) return showNotify("NO PHONE NUMBER FOUND!", true);
-    const msg = encodeURIComponent(`Hi ${d.name}, this is a friendly reminder regarding your balance of K${d.balance.toFixed(2)} for the ${d.product}. Please let me know when you can settle it. Thank you!`);
-    window.open(`https://wa.me/${d.phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
-}
-
 async function archiveYear() {
-    const res = await openCustomModal("Archive Year", [{ id: 'y', type: 'text', placeholder: 'Year Label' }]);
+    const res = await openCustomModal("Save & Reset Year", [{ id: 'y', type: 'text', placeholder: 'Year Label (e.g. 2025)' }]);
     if (!res || !res.y) return;
     
     const totalCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
@@ -380,11 +396,19 @@ async function archiveYear() {
     
     await syncData(); 
     renderAll();
-    showNotify("YEAR ARCHIVED & SYNCED! 💎");
+    showNotify("YEAR SAVED TO ARCHIVES! 💎");
+}
+
+async function deleteArchive(idx) {
+    if(confirm("Permanently delete this saved year?")) {
+        archiveVault.splice(idx, 1);
+        await syncData(); renderAll();
+        showNotify("ARCHIVE DELETED! 🗑️");
+    }
 }
 
 function downloadTextReport(v) {
-    const content = `KLPB BUSINESS REPORT - ${v.year}\n==========================\n\nBUSINESS SUMMARY:\nTotal Capital: K${v.summary.totalCap.toFixed(2)}\nTotal Revenue: K${v.summary.totalRev.toFixed(2)}\nNet Business Profit: K${v.summary.netYearProfit.toFixed(2)}\n\nPERSONAL SUMMARY:\nTotal Income: K${v.summary.totalPersInc.toFixed(2)}\nTotal Expenses: K${v.summary.totalPersExp.toFixed(2)}\n\nGenerated on: ${new Date().toLocaleString()}`;
+    const content = `KLPB REPORT - ${v.year}\n==========================\nRevenue: K${v.summary.totalRev.toFixed(2)}\nCapital: K${v.summary.totalCap.toFixed(2)}\nProfit: K${v.summary.netYearProfit.toFixed(2)}\nPersonal Inc: K${v.summary.totalPersInc.toFixed(2)}\nPersonal Exp: K${v.summary.totalPersExp.toFixed(2)}\n\nGenerated: ${new Date().toLocaleString()}`;
     const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -392,19 +416,26 @@ function downloadTextReport(v) {
     a.click();
 }
 
+function sendReminder(id) {
+    const d = debtors.find(x => x.id === id);
+    if(!d.phone) return showNotify("NO PHONE NUMBER!", true);
+    const msg = encodeURIComponent(`Hi ${d.name}, reminder about the balance of K${d.balance.toFixed(2)} for ${d.product}. Thanks!`);
+    window.open(`https://wa.me/${d.phone.replace(/\D/g,'')}?text=${msg}`, '_blank');
+}
+
 async function makeWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmount').value);
     const limit = parseFloat(document.getElementById('withdrawableLimit').innerText.replace('K ', ''));
     if (amt > 0 && amt <= limit) {
-        const res = await openCustomModal("Confirm Secret", [{ id: 'code', type: 'password', placeholder: 'Enter Password' }]);
+        const res = await openCustomModal("Secret Code", [{ id: 'code', type: 'password', placeholder: 'Enter Password' }]);
         if (res.code === lastLoginPass) {
             const m = parseInt(document.getElementById('globalMonth').value);
             withdrawals.push({ id: Date.now(), amount: amt });
             personalLedger.push({ id: Date.now()+1, desc: "Business Payout", amt: amt, type: 'income', month: m });
             document.getElementById('wAmount').value = '';
             await syncData(); renderAll();
-            showNotify("PAYOUT SUCCESSFUL! 💸✨");
-        } else { showNotify("WRONG SECRET CODE!", true); }
+            showNotify("PAYOUT SUCCESSFUL! 💸");
+        } else { showNotify("WRONG CODE!", true); }
     } else { showNotify("INVALID AMOUNT!", true); }
 }
 
@@ -421,7 +452,7 @@ async function handleSale(id, isDebt) {
         showNotify("DEBT RECORDED! 📝");
     } else { 
         item.totalSalesRevenue += total; 
-        showNotify("SALE COMPLETED! 💰✅");
+        showNotify("SALE COMPLETED! 💰");
     }
     item.currentStock -= qty;
     qtyInput.value = 1;
@@ -445,7 +476,7 @@ async function restockItem(id) {
         item.currentStock += parseInt(res.q);
         item.totalCapitalInvested += parseFloat(res.c);
         stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: item.month });
-        syncData(); renderAll(); showNotify("RESTOCKED! 🚚✨");
+        syncData(); renderAll(); showNotify("RESTOCKED! 🚚");
     }
 }
 
@@ -458,7 +489,7 @@ async function payDebt(id) {
         const item = businessData.find(x => x.id === d.originalId);
         if (item) item.totalSalesRevenue += amt;
         if (d.balance <= 0) debtors = debtors.filter(x => x.id !== id);
-        syncData(); renderAll(); showNotify("PAYMENT RECEIVED! 💳✅");
+        syncData(); renderAll(); showNotify("PAYMENT RECEIVED! ✅");
     }
 }
 
@@ -467,17 +498,11 @@ function addPersonal() {
     if(d && a) { 
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m }); 
         document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
-        syncData(); renderAll(); showNotify("LOGGED! ✅🚀"); 
+        syncData(); renderAll(); showNotify("LOGGED! ✅"); 
     }
 }
 function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
-async function deleteVault(idx) {
-    if(confirm("Permanently delete this archive?")) {
-        archiveVault.splice(idx, 1);
-        await syncData(); renderAll();
-        showNotify("ARCHIVE REMOVED! 🗑️");
-    }
-}
+
 function handleBg(input) {
     const file = input.files[0]; const reader = new FileReader();
     reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };

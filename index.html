@@ -4,74 +4,66 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <title>KLPB - Business Engine v3.7.4</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000b1a">
+    <title>KLPB - Business Engine v3.7.3</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
-            --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.9);
+            --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.7); 
+            /* Personalization: Translucent Bright Purple */
+            --notif-purple: rgba(191, 0, 255, 0.6); 
         }
 
-        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: var(--deep-blue); overflow-x: hidden; }
-        #video-bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: var(--deep-blue); -webkit-tap-highlight-color: transparent; }
+        
+        #video-bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; overflow: hidden; }
         #video-bg-container video, #video-bg-container img { min-width: 100%; min-height: 100%; width: auto; height: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); object-fit: cover; }
 
-        /* Notification: Centered Purple & Translucent */
+        /* Personalized Notification: Purple, Centered, No Edge Pop-out */
         #customNotification {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            background: var(--notif-purple); color: white; padding: 30px;
-            border-radius: 20px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 99999;
-            display: none; text-align: center; font-weight: bold; min-width: 200px;
-            box-shadow: 0 0 50px rgba(191, 0, 255, 0.6);
+            background: var(--notif-purple); color: white; padding: 25px 50px;
+            border-radius: 15px; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 30000;
+            display: none; text-align: center; font-weight: bold;
+            box-shadow: 0 0 40px rgba(191, 0, 255, 0.5);
         }
 
-        /* Modal / Popup Styling */
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 88888; backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.85); z-index: 20000; backdrop-filter: blur(8px);
             align-items: center; justify-content: center; padding: 20px;
         }
 
-        .modal-card { 
-            background: var(--panel-bg); border: 2px solid var(--neon-blue); 
-            padding: 25px; border-radius: 15px; width: 100%; max-width: 350px; 
-            text-align: center; box-shadow: 0 0 30px var(--border-glow);
-        }
-
-        /* Styled Inputs for Modals */
-        .modal-card input {
-            background: rgba(0, 242, 255, 0.05) !important;
-            border: 1px solid var(--neon-blue) !important;
-            color: var(--neon-blue) !important;
-            padding: 12px; margin: 10px 0; border-radius: 8px; width: 100%;
-            box-sizing: border-box; font-weight: bold;
-        }
-
-        .modal-card input::placeholder { color: rgba(0, 242, 255, 0.5); }
-
-        /* Main UI Elements */
-        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; }
-        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; }
-        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-size: 0.7rem; text-transform: uppercase; }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 10px; width: 300px; text-align: center; }
+        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
+        
+        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; scrollbar-width: none; }
+        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
         .tab-btn.active { background: var(--neon-blue); color: #000; }
         
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .metric-box { background: rgba(0,0,0,0.5); border: 1px solid var(--border-glow); padding: 10px; border-radius: 8px; text-align: center; }
-        .metric-val { display: block; color: var(--neon-blue); font-weight: bold; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 8px; margin-bottom: 15px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        .metric-box { border: 1px solid var(--border-glow); padding: 10px; border-radius: 6px; text-align: center; background: rgba(0,0,0,0.6); }
+        .metric-val { display: block; font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); }
 
-        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; }
+        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 10px; width: 100%; margin: 6px 0; border-radius: 4px; box-sizing: border-box; }
+        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { color: var(--neon-blue); padding: 10px; border-bottom: 2px solid var(--border-glow); text-align: left; }
-        td { padding: 10px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        .action-btn { width: 30px; height: 30px; border: none; border-radius: 4px; cursor: pointer; margin-left: 2px; }
+        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
+        td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
+        .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
+        .action-btn { width: 32px; height: 32px; border: none; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #000; }
     </style>
 </head>
 <body>
@@ -84,18 +76,18 @@
 <div id="customNotification"></div>
 
 <div id="customModal">
-    <div class="modal-card">
-        <h3 id="modalTitle" style="color:var(--neon-blue); margin-top:0;"></h3>
+    <div class="auth-card" style="width:100%; max-width:320px;">
+        <h3 id="modalTitle"></h3>
         <div id="modalInputs"></div>
-        <div style="display:flex; gap:10px; margin-top:20px;">
+        <div style="display:flex; gap:10px; margin-top:15px;">
             <button id="modalConfirm" class="btn-main">CONFIRM</button>
             <button onclick="closeCustomModal()" class="btn-main" style="background:var(--danger); color:white;">CANCEL</button>
         </div>
     </div>
 </div>
 
-<div id="authOverlay" style="position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:99999; display:flex; align-items:center; justify-content:center;">
-    <div class="modal-card">
+<div id="authOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:50000; display:flex; align-items:center; justify-content:center;">
+    <div class="auth-card">
         <h2 style="color: var(--neon-blue);">KLPB ENGINE</h2>
         <input type="email" id="authEmail" placeholder="Email">
         <input type="password" id="authPass" placeholder="Password">
@@ -105,57 +97,61 @@
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <span id="userDisplay" style="font-size:0.7rem; color:var(--success);"></span>
-        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 12px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
+        <div style="display:flex; gap:10px; align-items:center;">
+            <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
+            <input type="file" id="bgUpload" accept="image/*,video/*" style="display:none;" onchange="handleBg(this)">
+            <button onclick="document.getElementById('bgUpload').click()" style="background:var(--neon-blue); border:none; padding:4px 8px; cursor:pointer; font-size:0.6rem; border-radius:3px;">BG</button>
+        </div>
+        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
     </div>
 
-    <section style="display:flex; align-items:center; gap:10px;">
-        <label style="font-size:0.8rem;">PERIOD:</label>
-        <select id="globalMonth" onchange="renderAll()" style="background:none; border:1px solid var(--neon-blue); color:white; padding:5px; flex:1;"></select>
-    </section>
+    <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
+        <label style="font-size:0.7rem; color:var(--neon-blue);">PERIOD:</label>
+        <select id="globalMonth" onchange="renderAll()"></select>
+    </div>
 
     <div class="metric-grid">
         <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
         <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
         <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
-        <div class="metric-box">PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+        <div class="metric-box">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'business')">Stock</button>
         <button class="tab-btn" onclick="openTab(event, 'debtors')">Debtors</button>
-        <button class="tab-btn" onclick="openTab(event, 'withdraw')">Payout</button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
         <button class="tab-btn" onclick="openTab(event, 'summary')">Reports</button>
     </div>
 
     <div id="business" class="tab-content active">
         <section>
-            <input type="text" id="bName" placeholder="Item Name" style="background:rgba(0,0,0,0.3); border:1px solid var(--border-glow); color:white; padding:10px; width:100%; margin-bottom:5px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:5px;">
-                <input type="number" id="bBuy" placeholder="Cost K">
+            <input type="text" id="bName" placeholder="Item Name">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <input type="number" id="bBuy" placeholder="Cap K">
                 <input type="number" id="bSell" placeholder="Sell K">
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
-            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD TO STOCK</button>
-            <input type="text" id="stockSearch" placeholder="🔍 Search stock..." onkeyup="renderAll()" style="margin-top:15px; background:rgba(0,242,255,0.05); border:1px solid var(--border-glow); color:white; padding:8px; width:100%;">
-            <div style="overflow-x:auto; margin-top:10px;"><table id="bTable"><thead><tr><th>ITEM</th><th>CAP</th><th>QTY</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
+            <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK</button>
+            <input type="text" id="stockSearch" placeholder="🔍 Search..." onkeyup="renderAll()" style="margin-top:10px;">
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM</th><th>CAP</th><th>QTY</th><th style="text-align:right">ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="debtors" class="tab-content">
         <section>
-            <input type="text" id="debtSearch" placeholder="🔍 Search debtors..." onkeyup="renderAll()" style="background:rgba(0,242,255,0.05); border:1px solid var(--border-glow); color:white; padding:8px; width:100%;">
-            <div style="overflow-x:auto; margin-top:10px;"><table id="debtTable"><thead><tr><th>NAME</th><th>ITEM</th><th>BAL</th><th>X</th></tr></thead><tbody></tbody></table></div>
+            <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()">
+            <div style="overflow-x:auto; margin-top:10px;"><table id="debtTable"><thead><tr><th>NAME</th><th>ITEM</th><th>BAL</th><th>ACTION</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="withdraw" class="tab-content">
         <section style="text-align:center;">
-            <h4 style="color:var(--neon-blue)">WITHDRAWABLE</h4>
-            <h1 id="withdrawableLimit" style="font-size:3rem; margin:10px 0;">K 0.00</h1>
-            <input type="number" id="wAmount" placeholder="Amount to withdraw K" style="text-align:center; padding:15px; font-size:1.2rem;">
-            <button onclick="makeWithdrawal()" class="btn-main" style="background:var(--danger); color:white; margin-top:15px;">CONFIRM PAYOUT</button>
+            <h4>AVAILABLE PAYOUT</h4>
+            <h1 id="withdrawableLimit" style="color:var(--success)">K 0.00</h1>
+            <input type="number" id="wAmount" placeholder="Amount K">
+            <button onclick="makeWithdrawal()" class="btn-main" style="background:var(--danger); color:white;">WITHDRAW</button>
         </section>
     </div>
 
@@ -163,16 +159,17 @@
         <section>
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount K">
-            <select id="pType" style="width:100%; padding:10px; background:rgba(0,0,0,0.5); color:white; border:1px solid var(--border-glow);"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-            <button onclick="addPersonal()" class="btn-main" style="margin-top:10px;">LOG ENTRY</button>
-            <div style="overflow-x:auto; margin-top:15px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th></th></tr></thead><tbody></tbody></table></div>
+            <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
+            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
+            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th></th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="summary" class="tab-content">
         <section>
-            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAP</th><th>REV</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
-            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & RESET YEAR</button>
+            <h3>ANNUAL PERFORMANCE</h3>
+            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
+            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE YEAR</button>
             <div id="archiveList" style="margin-top:15px;"></div>
         </section>
     </div>
@@ -183,17 +180,18 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], personalLedger = [], debtors = [], withdrawals = [], archiveVault = [], lastLoginPass = '';
+let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], withdrawals = [], lastLoginPass = '', userBg = null, userBgType = 'video', modalResolve;
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
+// Notification System (Purple Personalization)
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    el.innerHTML = `<div style="font-size:1.5rem; margin-bottom:5px;">${isError ? "🚨" : "✨"}</div>${msg}`;
+    el.innerHTML = `<div>${isError ? "🚨" : "✅"}</div><div>${msg}</div>`;
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
-// Custom Styled Modal Logic
+// Modal System
 function openCustomModal(title, inputs) {
     const modal = document.getElementById('customModal');
     document.getElementById('modalTitle').innerText = title;
@@ -205,6 +203,7 @@ function openCustomModal(title, inputs) {
     });
     modal.style.display = 'flex';
     return new Promise(resolve => {
+        modalResolve = resolve;
         document.getElementById('modalConfirm').onclick = () => {
             const res = {}; inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
             closeCustomModal(); resolve(res);
@@ -213,11 +212,11 @@ function openCustomModal(title, inputs) {
 }
 function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
 
-// Auth
+// Auth Logic
 async function loginUser() {
     const email = document.getElementById('authEmail').value, pass = document.getElementById('authPass').value;
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
-    if(error) showNotify("ACCESS DENIED", true); else { lastLoginPass = pass; showNotify("SYSTEM ONLINE"); }
+    if(error) showNotify("LOGIN FAILED", true); else { lastLoginPass = pass; }
 }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
@@ -230,12 +229,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// Data & Sync
+// Data Sync
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
     await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, withdrawals, archiveVault } 
+        user_id: user.id, payload: { businessData, stockHistory, archiveVault, personalLedger, debtors, withdrawals, userBg, userBgType }
     });
 }
 
@@ -244,94 +243,114 @@ async function loadData(userId) {
     if (data?.payload) {
         const p = data.payload;
         businessData = p.businessData || []; stockHistory = p.stockHistory || [];
+        archiveVault = p.archiveVault || []; personalLedger = p.personalLedger || [];
         debtors = p.debtors || []; withdrawals = p.withdrawals || [];
-        personalLedger = p.personalLedger || []; archiveVault = p.archiveVault || [];
+        userBg = p.userBg; userBgType = p.userBgType || 'video';
+        if(userBg) applyBg(userBg, userBgType);
     }
     initMonths(); renderAll();
 }
 
-// Logic Functions
+// Business Functions
 function addBusiness() {
     const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value);
     if(!n || isNaN(c)) return;
     businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m });
-    stockHistory.push({ cost: c, month: m });
-    syncData(); renderAll(); showNotify("STOCK UPDATED");
+    stockHistory.push({ id: Date.now(), cost: c, month: m });
+    syncData(); renderAll(); showNotify("STOCK ADDED");
 }
 
 async function handleSale(id, isDebt) {
-    const qtyInput = document.getElementById(`q_${id}`);
-    const qty = parseInt(qtyInput.value) || 1;
+    const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
-    if (item.currentStock < qty) return showNotify("NOT ENOUGH STOCK", true);
+    if (item.currentStock < qty) return showNotify("LOW STOCK", true);
     
     if (isDebt) {
-        const res = await openCustomModal("DEBT LOG", [{id:'n', type:'text', placeholder:'Debtor Name'}, {id:'p', type:'text', placeholder:'WhatsApp Number'}]);
+        const res = await openCustomModal("Debt Details", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
         if(!res.n) return;
         debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: item.unitSellPrice * qty, originalId: id });
-    } else { item.totalSalesRevenue += (item.unitSellPrice * qty); }
+    } else { 
+        item.totalSalesRevenue += (item.unitSellPrice * qty); 
+    }
     item.currentStock -= qty; syncData(); renderAll(); showNotify("SALE RECORDED");
+}
+
+async function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const res = await openCustomModal(`Restock ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cost K'}]);
+    if(res.q && res.c) {
+        item.currentStock += parseInt(res.q);
+        item.totalCapitalInvested += parseFloat(res.c);
+        stockHistory.push({ id: Date.now(), cost: parseFloat(res.c), month: item.month });
+        syncData(); renderAll(); showNotify("RESTOCKED");
+    }
 }
 
 async function payDebt(id) {
     const d = debtors.find(x => x.id === id);
-    const res = await openCustomModal(`PAYMENT: ${d.name}`, [{id:'a', type:'number', placeholder:`Balance: K${d.balance}`}]);
+    const res = await openCustomModal(`Pay Debt: ${d.name}`, [{id:'a', type:'number', placeholder:`Bal: K${d.balance}`}]);
     if(res.a) {
         const amt = parseFloat(res.a); d.balance -= amt;
         const item = businessData.find(x => x.id === d.originalId);
         if(item) item.totalSalesRevenue += amt;
         if(d.balance <= 0) debtors = debtors.filter(x => x.id !== id);
-        syncData(); renderAll(); showNotify("ACCOUNT UPDATED");
+        syncData(); renderAll(); showNotify("PAYMENT RECEIVED");
     }
+}
+
+function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value);
+    if(d && a) { personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m }); syncData(); renderAll(); }
 }
 
 async function makeWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmount').value);
     const limit = parseFloat(document.getElementById('withdrawableLimit').innerText.replace('K ', ''));
-    if(amt > limit || amt <= 0) return showNotify("INSUFFICIENT FUNDS", true);
+    if(amt > limit || amt <= 0) return showNotify("INVALID AMOUNT", true);
     
-    const res = await openCustomModal("SECURITY", [{id:'pw', type:'password', placeholder:'Enter Secret Code'}]);
-    if(res.pw === lastLoginPass) {
+    const res = await openCustomModal("Security", [{id:'pass', type:'password', placeholder:'Secret Code'}]);
+    if(res.pass === lastLoginPass) {
         withdrawals.push({ amount: amt });
         personalLedger.push({ id: Date.now(), desc: "Business Payout", amt: amt, type: 'income', month: parseInt(document.getElementById('globalMonth').value) });
         syncData(); renderAll(); showNotify("PAYOUT SUCCESS");
     } else { showNotify("WRONG CODE", true); }
 }
 
+// Rendering Logic
 function renderAll() {
     const m = parseInt(document.getElementById('globalMonth').value);
-    const sTerm = document.getElementById('stockSearch').value.toLowerCase();
-    const dTerm = document.getElementById('debtSearch').value.toLowerCase();
+    const s = document.getElementById('stockSearch').value.toLowerCase();
+    const ds = document.getElementById('debtSearch').value.toLowerCase();
 
     // Tables
-    document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === m && x.name.toLowerCase().includes(sTerm)).map(x => `
+    document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === m && x.name.toLowerCase().includes(s)).map(x => `
         <tr><td><b>${x.name}</b></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock < 5 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td>
-        <td class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; background:none; border:1px solid var(--neon-blue); color:white;"><button onclick="handleSale(${x.id}, false)" class="action-btn" style="background:var(--success)"><i class="fas fa-check"></i></button><button onclick="handleSale(${x.id}, true)" class="action-btn" style="background:var(--warning)"><i class="fas fa-clock"></i></button></td></tr>`).join('');
+        <td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0;"><button onclick="handleSale(${x.id}, false)" class="action-btn" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button onclick="handleSale(${x.id}, true)" class="action-btn" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button onclick="restockItem(${x.id})" class="action-btn" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
 
-    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(x => x.name.toLowerCase().includes(dTerm)).map(d => `
+    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(x => x.name.toLowerCase().includes(ds)).map(d => `
         <tr><td>${d.name}</td><td>${d.product}</td><td>K${d.balance}</td>
-        <td class="action-cell"><button onclick="payDebt(${d.id})" class="action-btn" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button onclick="window.open('https://wa.me/${d.phone}?text=Reminder: K${d.balance}')" class="action-btn" style="background:#25D366"><i class="fab fa-whatsapp"></i></button></td></tr>`).join('');
+        <td><div class="action-cell"><button onclick="payDebt(${d.id})" class="action-btn" style="background:var(--success)"><i class="fas fa-check"></i></button><button onclick="window.open('https://wa.me/${d.phone}?text=Reminder: K${d.balance}')" class="action-btn" style="background:#25D366"><i class="fab fa-whatsapp"></i></button></div></td></tr>`).join('');
 
-    document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(x => x.month === m).map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="personalLedger=personalLedger.filter(i=>i.id!==${x.id});syncData();renderAll();" style="color:var(--danger); border:none; background:none;">×</button></td></tr>`).join('');
+    document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(x => x.month === m).map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="personalLedger=personalLedger.filter(i=>i.id!==${x.id});syncData();renderAll();" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
 
-    // Annual Performance Logic
+    // Logic: Annual Reports
     document.querySelector("#ySummaryTable tbody").innerHTML = months.map((name, i) => {
-        const mc = stockHistory.filter(x => x.month === i).reduce((s, x) => s + x.cost, 0);
-        const mr = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
-        return `<tr><td>${name}</td><td>K${mc}</td><td>K${mr}</td><td style="color:${mr-mc>=0?'var(--success)':'var(--danger)'}">K${mr-mc}</td></tr>`;
+        const cap = stockHistory.filter(x => x.month === i).reduce((s, x) => s + x.cost, 0);
+        const rev = businessData.filter(x => x.month === i).reduce((s, x) => s + x.totalSalesRevenue, 0);
+        return `<tr><td>${name}</td><td>K${cap}</td><td>K${rev}</td><td style="color:${rev-cap >= 0 ? 'var(--success)' : 'var(--danger)'}">K${rev-cap}</td></tr>`;
     }).join('');
 
-    // Global Stats
+    // Global Metrics
     const tCap = stockHistory.reduce((s, x) => s + x.cost, 0);
     const tRev = businessData.reduce((s, x) => s + x.totalSalesRevenue, 0);
     const tWith = withdrawals.reduce((s, x) => s + x.amount, 0);
-    const net = tRev - tCap - tWith;
+    const totalDebt = debtors.reduce((s, x) => s + x.balance, 0);
     
     document.getElementById('statCap').innerText = `K ${tCap}`;
     document.getElementById('statRev').innerText = `K ${tRev}`;
-    document.getElementById('statDebt').innerText = `K ${debtors.reduce((s,x)=>s+x.balance,0)}`;
-    document.getElementById('statProfit').innerText = `K ${net}`;
-    document.getElementById('withdrawableLimit').innerText = `K ${net}`;
+    document.getElementById('statDebt').innerText = `K ${totalDebt}`;
+    document.getElementById('statProfit').innerText = `K ${tRev - tCap - tWith}`;
+    document.getElementById('withdrawableLimit').innerText = `K ${tRev - tCap - tWith}`;
 }
 
 function initMonths() {
@@ -342,6 +361,18 @@ function initMonths() {
 function openTab(evt, t) {
     document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
     document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
+}
+
+function handleBg(input) {
+    const file = input.files[0]; const reader = new FileReader();
+    reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };
+    reader.readAsDataURL(file);
+}
+
+function applyBg(src, type) {
+    const v = document.getElementById('bgVideo'), i = document.getElementById('bgImage');
+    if (type === 'video') { v.src = src; v.style.display = 'block'; i.style.display = 'none'; v.play(); }
+    else { i.src = src; i.style.display = 'block'; v.style.display = 'none'; }
 }
 </script>
 </body>

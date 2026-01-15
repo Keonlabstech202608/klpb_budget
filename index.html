@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.0.0</title>
+    <title>KLPB - Business Engine v4.1.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,7 +16,7 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.65); 
+            --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
         /* Video Backgrounds */
@@ -30,17 +30,17 @@
             object-fit: cover;
         }
 
-        /* Notifications & Modals */
+        /* Notifications (Personalized Style) */
         #customNotification {
-            position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            background: var(--notif-purple); color: white; padding: 22px 40px;
-            border-radius: 20px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 30000;
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--notif-purple); color: white; padding: 15px 30px;
+            border-radius: 12px; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 30000;
             display: none; text-align: center; font-weight: bold;
-            box-shadow: 0 10px 40px 0 rgba(191, 0, 255, 0.4);
-            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 8px 32px 0 rgba(191, 0, 255, 0.3);
+            animation: slideIn 0.4s ease-out;
         }
-        @keyframes bounceIn { 0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        @keyframes slideIn { from { top: -50px; opacity: 0; } to { top: 30px; opacity: 1; } }
 
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -86,8 +86,8 @@
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
-        .action-btn { border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .action-cell { display: flex; gap: 5px; justify-content: flex-end; align-items: center;}
+        .action-btn { border: none; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #000; }
     </style>
 </head>
 <body>
@@ -113,7 +113,7 @@
 <div id="authOverlay">
     <div class="auth-card">
         <h1 style="color: var(--neon-blue); margin-bottom: 5px; font-size: 1.5rem;">KLPB ENGINE</h1>
-        <p id="authSubtitle" style="font-size: 0.7rem; color: var(--success); margin-bottom: 20px;">SYSTEM STATUS: OFFLINE</p>
+        <p id="authSubtitle" style="font-size: 0.7rem; color: var(--success); margin-bottom: 20px;">SYSTEM STATUS: ONLINE</p>
         
         <input type="email" id="authEmail" placeholder="Galaxy Email">
         
@@ -166,7 +166,7 @@
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;"><input type="number" id="bBuy" placeholder="Cap K"><input type="number" id="bSell" placeholder="Sell K"><input type="number" id="bStock" placeholder="Qty"></div>
         <button onclick="addBusiness()" class="btn-main" style="margin-top:10px;">ADD STOCK</button>
         <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
-        <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">SALE</th></tr></thead><tbody></tbody></table></div>
+        <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">ACTIONS</th></tr></thead><tbody></tbody></table></div>
     </section></div>
 
     <div id="debtors" class="tab-content"><section>
@@ -187,7 +187,10 @@
         <input type="text" id="pDesc" placeholder="Expense/Income Description">
         <input type="number" id="pAmt" placeholder="Amount K">
         <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-        <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
+        <div style="display:flex; gap:10px; margin-top:10px;">
+            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
+            <button onclick="handleWithdraw()" class="btn-main" style="background:var(--danger); color:white;">WITHDRAW</button>
+        </div>
         <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
     </section></div>
 
@@ -291,30 +294,53 @@ function renderAll() {
     // STOCK TABLE
     document.querySelector("#bTable tbody").innerHTML = businessData
     .filter(x => x.month === m && x.name.toLowerCase().includes(search))
-    .map(x => `<tr><td><b>${x.name}</b></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button></div></td></tr>`).join('');
+    .map(x => `<tr>
+        <td><b>${x.name}</b></td>
+        <td>K${x.totalCapitalInvested}</td>
+        <td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td>
+        <td>
+            <div class="action-cell">
+                <input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0;">
+                <button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)" title="Sale"><i class="fas fa-dollar-sign"></i></button>
+                <button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue)" title="Restock"><i class="fas fa-plus"></i></button>
+                <button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)" title="Debt"><i class="fas fa-user-clock"></i></button>
+            </div>
+        </td>
+    </tr>`).join('');
 
     // LEDGER TABLE
     document.querySelector("#ledgerTable tbody").innerHTML = (globalLedger || [])
     .filter(l => l.month === m && (l.desc.toLowerCase().includes(lSearch) || l.type.toLowerCase().includes(lSearch)))
     .slice().reverse()
-    .map(l => `<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td style="color:${l.type==='SALE'||l.type==='INCOME'?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`).join('');
+    .map(l => `<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td style="color:${['SALE','INCOME','DEBT_PAY'].includes(l.type)?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`).join('');
 
     // DEBTORS
     const totalD = debtors.reduce((s, x) => s + x.balance, 0);
     document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(dSearch)).map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button><button class="action-btn" onclick="sendReminder('${d.phone}', '${d.name}', ${d.balance}, '${d.product}')" style="background:#25D366;"><i class="fab fa-whatsapp"></i></button></div></td></tr>`).join('');
 
+    // BUDGET TABLE
+    document.querySelector("#pTable tbody").innerHTML = personalLedger.filter(p => p.month === m).map(p => `<tr><td>${p.desc}</td><td>K${p.amt}</td><td>${p.type}</td><td><button onclick="removeBudget(${p.id})" style="background:none; border:none; color:var(--danger); cursor:pointer;">&times;</button></td></tr>`).join('');
+
+    // REPORTS
+    document.querySelector("#ySummaryTable tbody").innerHTML = months.map((monthName, idx) => {
+        const mCap = stockHistory.filter(x => x.month === idx).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+        const mRev = globalLedger.filter(x => x.month === idx && x.type === 'SALE').reduce((s, x) => s + x.amt, 0);
+        return `<tr><td>${monthName}</td><td>K${mCap.toFixed(2)}</td><td>K${mRev.toFixed(2)}</td><td style="color:var(--success)">K${(mRev - mCap).toFixed(2)}</td></tr>`;
+    }).join('');
+
     // METRICS
     const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-    const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    const tRev = globalLedger.filter(x => x.type === 'SALE').reduce((s, x) => s + x.amt, 0);
     document.getElementById('statCap').innerText = `K ${tCap.toFixed(2)}`;
     document.getElementById('statRev').innerText = `K ${tRev.toFixed(2)}`;
     document.getElementById('statProfit').innerText = `K ${(tRev - tCap).toFixed(2)}`;
     document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
 }
 
-// All other functions (handleSale, addBusiness, downloadLedger, etc.) from v3.9.0 are included here
+// --- CORE LOGIC HANDLERS ---
 async function handleSale(id, isDebt) {
-    const qty = parseInt(document.getElementById(`q_${id}`).value);
+    const qtyInput = document.getElementById(`q_${id}`);
+    const qty = parseInt(qtyInput.value);
     const item = businessData.find(x => x.id === id);
     if (item.currentStock < qty) return showNotify("OUT OF STOCK!", true);
     const total = item.unitSellPrice * qty;
@@ -335,6 +361,70 @@ async function handleSale(id, isDebt) {
     syncData(); renderAll(); showNotify("SAVED!");
 }
 
+async function restockItem(id) {
+    const item = businessData.find(x => x.id === id);
+    const qtyToAdd = parseInt(document.getElementById(`q_${id}`).value);
+    
+    const res = await openCustomModal(`RESTOCK: ${item.name}`, [
+        {id:'cost', type:'number', placeholder:'Additional Capital Cost K'}
+    ]);
+
+    if (res && res.cost !== "") {
+        const addCost = parseFloat(res.cost);
+        item.currentStock += qtyToAdd;
+        item.totalCapitalInvested += addCost;
+        
+        const m = parseInt(document.getElementById('globalMonth').value);
+        stockHistory.push({ id: Date.now(), name: item.name, qty: qtyToAdd, cost: addCost, month: m });
+        logToLedger(`Restock: ${item.name} (+${qtyToAdd})`, 'CAPITAL', addCost, m);
+        
+        syncData(); renderAll();
+        showNotify("STOCK UPDATED");
+    }
+}
+
+async function handleWithdraw() {
+    const amt = parseFloat(document.getElementById('pAmt').value);
+    const desc = document.getElementById('pDesc').value;
+    if (!amt || !desc) return showNotify("NEED AMOUNT & DESC", true);
+
+    const res = await openCustomModal("SECURITY CHECK", [
+        {id:'pass', type:'password', placeholder:'Enter Security Key'}
+    ]);
+
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: user.email, password: res.pass });
+
+    if (!error) {
+        const m = parseInt(document.getElementById('globalMonth').value);
+        personalLedger.push({ id: Date.now(), desc: `Withdraw: ${desc}`, amt, type: 'expense', month: m });
+        logToLedger(`Withdrawal: ${desc}`, 'WITHDRAW', amt, m);
+        syncData(); renderAll();
+        showNotify("WITHDRAWAL SECURED");
+    } else {
+        showNotify("INVALID SECURITY KEY", true);
+    }
+}
+
+function archiveYear() {
+    if (!confirm("ARCHIVE ENTIRE YEAR? This moves current data to Vault and clears the boards.")) return;
+
+    const yearlySnapshot = {
+        id: Date.now(),
+        year: new Date().getFullYear(),
+        businessData, stockHistory, personalLedger, globalLedger, debtors
+    };
+
+    archiveVault.push(yearlySnapshot);
+    
+    // Clear Workspace
+    businessData = []; stockHistory = []; personalLedger = []; globalLedger = []; debtors = [];
+    
+    syncData(); renderAll();
+    showNotify("ANNUAL DATA ARCHIVED");
+}
+
+// --- UTILS ---
 function logToLedger(desc, type, amt, month) {
     globalLedger.push({ date: new Date().toLocaleDateString(), desc, type, amt, month });
 }
@@ -347,6 +437,24 @@ function addBusiness() {
         logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m);
         syncData(); renderAll(); showNotify("ADDED!");
     }
+}
+
+function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value);
+    if(d && a) {
+        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m });
+        logToLedger(d, t.toUpperCase(), a, m);
+        syncData(); renderAll(); showNotify("LOGGED");
+    }
+}
+
+function payDebt(id) {
+    const dIdx = debtors.findIndex(x => x.id === id);
+    const d = debtors[dIdx];
+    const m = parseInt(document.getElementById('globalMonth').value);
+    logToLedger(`Debt Pay: ${d.name}`, 'DEBT_PAY', d.balance, m);
+    debtors.splice(dIdx, 1);
+    syncData(); renderAll(); showNotify("DEBT CLEARED");
 }
 
 function downloadLedger() {
@@ -365,15 +473,18 @@ function handleBg(input) {
     reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };
     reader.readAsDataURL(file);
 }
+
 function applyBg(src, type) {
     const v = document.getElementById('bgVideo'), i = document.getElementById('bgImage');
     if (type === 'video') { v.src = src; v.style.display = 'block'; i.style.display = 'none'; v.play(); }
     else { i.src = src; i.style.display = 'block'; v.style.display = 'none'; }
 }
+
 function openTab(evt, t) {
     document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
     document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
 }
+
 function openCustomModal(title, inputs) {
     const modal = document.getElementById('customModal');
     document.getElementById('modalTitle').innerText = title;
@@ -385,14 +496,21 @@ function openCustomModal(title, inputs) {
     });
     modal.style.display = 'flex';
     return new Promise(resolve => {
-        modalResolve = resolve;
         document.getElementById('modalConfirm').onclick = () => {
-            const res = {}; inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
-            closeCustomModal(); resolve(res);
+            const res = {}; 
+            inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
+            closeCustomModal(); 
+            resolve(res);
         };
     });
 }
+
 function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+
+function sendReminder(p, n, b, pr) {
+    const msg = encodeURIComponent(`Hi ${n}, this is a reminder regarding your balance of K${b} for the ${pr}.`);
+    window.open(`https://wa.me/${p}?text=${msg}`);
+}
 </script>
 </body>
 </html>

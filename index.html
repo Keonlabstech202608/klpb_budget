@@ -23,13 +23,16 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; overflow: hidden; background-color: var(--deep-blue);
         }
-        #video-bg-container video {
-            min-width: 100%; min-height: 100%; width: auto; height: auto;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            object-fit: cover; filter: brightness(0.4) contrast(1.2);
-        }
 
-        /* Fixed Notification: Purple, translucent, no pop-out */
+        /* Zambian Business Context Backgrounds */
+        .bg-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0; transition: opacity 3s ease-in-out;
+            filter: brightness(0.35) contrast(1.1) saturate(0.7);
+        }
+        .bg-overlay.active { opacity: 1; }
+
         #customNotification {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 15px 30px;
@@ -47,11 +50,10 @@
 
         body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
         
-        /* Branding & Logo */
-        .brand-header { margin-bottom: 20px; }
-        .logo-icon { font-size: 3rem; color: var(--neon-blue); margin-bottom: 10px; display: block; text-shadow: 0 0 15px var(--neon-blue); }
-        .brand-name { font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; color: white; margin: 0; }
-        .brand-sub { font-size: 0.6rem; color: var(--neon-blue); opacity: 0.8; }
+        .brand-header { margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
+        .logo-img { width: 100px; height: 100px; border-radius: 50%; margin-bottom: 15px; border: 2px solid var(--neon-blue); box-shadow: 0 0 20px var(--border-glow); }
+        .brand-name { font-size: 1.4rem; font-weight: 800; letter-spacing: 2px; color: white; margin: 0; }
+        .brand-sub { font-size: 0.65rem; color: var(--neon-blue); opacity: 0.8; margin-top: 5px; }
 
         .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 15px; width: 320px; text-align: center; backdrop-filter: blur(10px); }
         .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
@@ -93,8 +95,7 @@
 <body>
 
 <div id="video-bg-container">
-    <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-background-of-a-digital-world-with-network-connections-23253-large.mp4"></video>
-</div>
+    <div class="bg-overlay active" style="background-image: url('https://images.unsplash.com/photo-1542601906990-b4d3fb75ec4e?auto=format&fit=crop&q=80&w=1600');"></div> <div class="bg-overlay" style="background-image: url('https://images.unsplash.com/photo-1534073737927-85f1df9605d2?auto=format&fit=crop&q=80&w=1600');"></div> <div class="bg-overlay" style="background-image: url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=1600');"></div> </div>
 
 <div id="customNotification"></div>
 
@@ -113,9 +114,9 @@
     
     <div class="auth-card" id="loginBox">
         <div class="brand-header">
-            <i class="fas fa-seedling logo-icon"></i>
-            <h1 class="brand-name">KEONLABS</h1>
-            <span class="brand-sub">PERSONAL BUDGET & GROWTH ENGINE</span>
+            <img src="https://i.ibb.co/L9Y05Yj/icon.jpg" class="logo-img" alt="KLPB Logo">
+            <h1 class="brand-name">KLPB</h1>
+            <span class="brand-sub">PERSONAL GROWTH BUDGET</span>
         </div>
         
         <input type="email" id="authEmail" placeholder="Email Address">
@@ -148,7 +149,7 @@
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display:flex; align-items:center; gap:8px;">
-            <i class="fas fa-seedling" style="color:var(--success); font-size:1.2rem;"></i>
+            <img src="https://i.ibb.co/L9Y05Yj/icon.jpg" style="width:25px; height:25px; border-radius:50%;">
             <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
         </div>
         <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">TERMINATE SESSION</button>
@@ -257,6 +258,16 @@
 </div>
 
 <script>
+// Background Switcher Logic
+let currentBgIndex = 0;
+const bgOverlays = document.querySelectorAll('.bg-overlay');
+function switchBg() {
+    bgOverlays[currentBgIndex].classList.remove('active');
+    currentBgIndex = (currentBgIndex + 1) % bgOverlays.length;
+    bgOverlays[currentBgIndex].classList.add('active');
+}
+setInterval(switchBg, 8000);
+
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -277,13 +288,27 @@ function initTimeline() {
     ySelect.value = new Date().getFullYear();
 }
 
-// Logic continues exactly as original...
-
 function setLedgerFilter(type, btn) {
     currentLedgerType = type;
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     renderAll();
+}
+
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
+    tablinks = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+
+function toggleAuthMode(mode) {
+    document.getElementById('loginBox').style.display = (mode === 'login') ? 'block' : 'none';
+    document.getElementById('signupBox').style.display = (mode === 'signup') ? 'block' : 'none';
+    document.getElementById('resetBox').style.display = (mode === 'reset') ? 'block' : 'none';
 }
 
 function isThisWeek(dateString) {
@@ -292,6 +317,10 @@ function isThisWeek(dateString) {
     const diffTime = Math.abs(today - recordDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays <= 7;
+}
+
+function logToLedger(desc, type, amt, month, year) {
+    globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month, year });
 }
 
 // --- CORE RENDER ---
@@ -445,6 +474,11 @@ function addPersonal() {
     }
 }
 
+function delP(id) {
+    personalLedger = personalLedger.filter(x => x.id !== id);
+    syncData(); renderAll();
+}
+
 function processWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     const note = document.getElementById('wNote').value || 'Withdraw';
@@ -454,7 +488,6 @@ function processWithdrawal() {
     syncData(); renderAll(); showNotify("TRANSFERRED");
 }
 
-// --- UPDATED AUTH FUNCTIONS ---
 async function handleAuth(type) {
     if(type === 'reset') {
         const email = document.getElementById('resetEmail').value;
@@ -467,6 +500,12 @@ async function handleAuth(type) {
     const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
     const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
     if(error) showNotify(error.message, true);
+}
+
+function logoutUser() {
+    supabaseClient.auth.signOut().then(() => {
+        location.reload();
+    });
 }
 
 async function syncData() {
@@ -519,21 +558,6 @@ function openCustomModal(title, inputs) {
 }
 function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
 
-// Updated for 3 modes: login, signup, reset
-function toggleAuthMode(mode) { 
-    document.getElementById('loginBox').style.display = mode === 'login' ? 'block' : 'none'; 
-    document.getElementById('signupBox').style.display = mode === 'signup' ? 'block' : 'none'; 
-    document.getElementById('resetBox').style.display = mode === 'reset' ? 'block' : 'none'; 
-}
-
-function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
-function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
-function delP(id) { 
-    personalLedger = personalLedger.filter(x => x.id !== id); 
-    globalLedger = globalLedger.filter(l => l.id !== id);
-    syncData(); renderAll(); 
-}
-async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 </script>
 </body>
 </html>

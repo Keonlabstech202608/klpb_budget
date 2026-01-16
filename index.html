@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.2.0</title>
+    <title>KLPB - Business Engine v4.5.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,7 +16,7 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.65); 
+            --notif-purple: rgba(191, 0, 255, 1); 
         }
 
         #video-bg-container {
@@ -29,20 +29,16 @@
             object-fit: cover;
         }
 
-        /* Notification: Translucent Bright Purple */
         #customNotification {
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            background: var(--notif-purple); color: white; padding: 22px 40px;
+            background: rgba(191, 0, 255, 0.65); color: white; padding: 22px 40px;
             border-radius: 20px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
             border: 1px solid rgba(255, 255, 255, 0.3); z-index: 40000;
             display: none; text-align: center; font-weight: bold;
             box-shadow: 0 10px 40px 0 rgba(191, 0, 255, 0.4);
             animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
-        @keyframes bounceIn { 
-            0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
-            100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
-        }
+        @keyframes bounceIn { 0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
 
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -69,17 +65,20 @@
         input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 10px; width: 100%; margin: 6px 0; border-radius: 4px; box-sizing: border-box; }
         .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
         
-        .link-text { color: var(--neon-blue); font-size: 0.75rem; cursor: pointer; margin-top: 15px; display: block; text-decoration: underline; }
-
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         
-        .action-cell { display: flex; gap: 5px; justify-content: flex-end; align-items: center; }
+        /* Demarcation Styles */
+        .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: var(--notif-purple) !important; font-weight: bold; text-align: center; }
+        .year-separator { background: linear-gradient(90deg, transparent, var(--notif-purple), transparent) !important; color: white !important; text-align: center; font-weight: bold; border:none; }
+
+        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; }
+        .filter-btn.active { background: var(--notif-purple); border-color: white; }
+
+        .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
         .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        
-        .archive-item { border-bottom: 1px solid var(--border-glow); padding: 15px 0; }
-        .debt-alert { background: var(--notif-purple); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .debt-alert { background: rgba(191, 0, 255, 0.2); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -105,43 +104,30 @@
 <div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
     <div class="auth-card" id="loginBox">
         <h2 style="color: var(--neon-blue); margin-bottom: 5px;">KLPB ENGINE</h2>
-        <p style="font-size: 0.7rem; opacity: 0.7; margin-bottom: 20px;">Business Management Suite</p>
-        
         <input type="email" id="authEmail" placeholder="Email Address">
-        <div class="input-group" style="position:relative;">
-            <input type="password" id="authPass" placeholder="Password">
-            <i class="fas fa-eye" onclick="togglePass('authPass', this)" style="position:absolute; right:10px; top:15px; color:var(--neon-blue); cursor:pointer;"></i>
-        </div>
+        <input type="password" id="authPass" placeholder="Password">
         <button onclick="handleAuth('login')" class="btn-main">LOGIN</button>
         <button onclick="toggleAuthMode(true)" class="btn-main" style="background:transparent; border:1px solid var(--success); color:var(--success);">CREATE NEW ACCOUNT</button>
-        <span class="link-text" onclick="forgotPassword()">Reset Password?</span>
     </div>
-
     <div class="auth-card" id="signupBox" style="display:none;">
         <h2 style="color: var(--success);">SIGN UP</h2>
         <input type="email" id="regEmail" placeholder="Email Address">
-        <div class="input-group" style="position:relative;">
-            <input type="password" id="regPass" placeholder="Create Password">
-            <i class="fas fa-eye" onclick="togglePass('regPass', this)" style="position:absolute; right:10px; top:15px; color:var(--neon-blue); cursor:pointer;"></i>
-        </div>
+        <input type="password" id="regPass" placeholder="Create Password">
         <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">REGISTER</button>
-        <span class="link-text" onclick="toggleAuthMode(false)">Already have an account? Login</span>
+        <span onclick="toggleAuthMode(false)" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
     </div>
 </div>
 
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div style="display:flex; gap:10px; align-items:center;">
-            <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
-            <input type="file" id="bgUpload" accept="image/*,video/*" style="display:none;" onchange="handleBg(this)">
-            <button onclick="document.getElementById('bgUpload').click()" style="background:var(--neon-blue); border:none; padding:4px 8px; cursor:pointer; font-size:0.6rem; border-radius:3px;">BG</button>
-        </div>
+        <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
         <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
     </div>
 
     <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
-        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">SYSTEM MONTH:</label>
-        <select id="globalMonth" style="margin:0; height:35px;" onchange="renderAll()"></select>
+        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">TIMELINE:</label>
+        <select id="globalMonth" style="margin:0; width:50%;" onchange="renderAll()"></select>
+        <select id="globalYear" style="margin:0; width:40%;" onchange="renderAll()"></select>
     </div>
 
     <div class="metric-grid">
@@ -157,7 +143,6 @@
         <button class="tab-btn" onclick="openTab(event, 'ledger')">Ledger</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
         <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')">Reports</button>
     </div>
 
     <div id="business" class="tab-content active">
@@ -170,21 +155,13 @@
             </div>
             <button onclick="addBusiness()" class="btn-main">ADD STOCK ITEM</button>
             <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
-            <div style="overflow-x:auto; margin-top:15px;">
-                <table id="bTable">
-                    <thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">SALE / RE</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">SALE / RE</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="debtors" class="tab-content">
         <section>
-            <div id="debtSummaryHeader" class="debt-alert" style="display:none;">
-                <h4 style="margin:0; color:var(--neon-blue); font-size:0.8rem;"><i class="fas fa-bell"></i> DEBT ALERT</h4>
-                <p id="debtSummaryText" style="margin:5px 0 0 0; font-size:0.75rem;"></p>
-            </div>
+            <div id="debtSummaryHeader" class="debt-alert" style="display:none;"><p id="debtSummaryText" style="margin:0; font-size:0.75rem;"></p></div>
             <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()">
             <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
@@ -192,9 +169,33 @@
 
     <div id="ledger" class="tab-content">
         <section>
-            <h4 style="color:var(--neon-blue); margin:0 0 10px 0;">ACTIVITY LOG</h4>
-            <input type="text" id="ledgerSearch" placeholder="🔍 Filter logs..." onkeyup="renderAll()">
-            <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
+            <h4 style="color:var(--neon-blue); margin:0 0 10px 0;">SMART LEDGER</h4>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+                <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
+                <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">INCOME</button>
+                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">EXPENSES</button>
+                <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">DEBTS</button>
+            </div>
+
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <select id="timeFilter" onchange="renderAll()" style="font-size: 0.7rem;">
+                    <option value="YEAR">THIS YEAR</option>
+                    <option value="MONTH">THIS MONTH</option>
+                    <option value="WEEK">THIS WEEK</option>
+                </select>
+                <input type="text" id="ledgerSearch" placeholder="🔍 Search logs..." onkeyup="renderAll()" style="margin:0;">
+            </div>
+
+            <div style="overflow-x:auto;">
+                <table id="ledgerTable">
+                    <thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
+                TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
+            </div>
         </section>
     </div>
 
@@ -214,26 +215,11 @@
 
     <div id="withdraw" class="tab-content">
         <section>
-            <h3 style="color:var(--neon-blue); margin-top:0;">PROFIT WITHDRAWAL</h3>
-            <p style="font-size:0.75rem; opacity:0.8;">Transfer business earnings into personal income.</p>
-            <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">
-                MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span>
-            </div>
-            <input type="number" id="wAmt" placeholder="Withdraw Amount K">
-            <input type="text" id="wNote" placeholder="Reason (e.g., Salary)">
-            <button onclick="processWithdrawal()" class="btn-main" style="background:var(--notif-purple); color:white;">TRANSFER TO BUDGET</button>
-        </section>
-    </div>
-
-    <div id="summary" class="tab-content">
-        <section>
-            <h3 style="margin-top:0; color:var(--neon-blue); font-size:0.9rem;">PERFORMANCE REPORTS</h3>
-            <div style="overflow-x:auto;"><table id="ySummaryTable"><thead><tr><th>MONTH</th><th>CAPITAL</th><th>REVENUE</th><th>PROFIT</th></tr></thead><tbody></tbody></table></div>
-            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & RESET FOR NEW YEAR</button>
-            <div style="margin-top:25px; border-top: 1px solid var(--border-glow); padding-top:15px;">
-                <h4 style="color:var(--neon-blue); margin-top:0;">PAST YEAR ARCHIVES</h4>
-                <div id="archiveList"></div>
-            </div>
+            <h3 style="color:var(--neon-blue); margin-top:0;">WITHDRAWAL</h3>
+            <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
+            <input type="number" id="wAmt" placeholder="Amount K">
+            <input type="text" id="wNote" placeholder="Reason">
+            <button onclick="processWithdrawal()" class="btn-main" style="background:rgba(191, 0, 255, 0.7); color:white;">TRANSFER TO BUDGET</button>
         </section>
     </div>
 </div>
@@ -243,55 +229,199 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], globalLedger = [], userBg = null, userBgType = 'video';
+let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [], currentLedgerType = 'ALL';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-// --- AUTH SYSTEM ---
-function toggleAuthMode(isSignup) {
-    document.getElementById('loginBox').style.display = isSignup ? 'none' : 'block';
-    document.getElementById('signupBox').style.display = isSignup ? 'block' : 'none';
+// --- INITIALIZATION ---
+function initTimeline() {
+    const mSelect = document.getElementById('globalMonth');
+    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+    mSelect.value = new Date().getMonth();
+
+    const ySelect = document.getElementById('globalYear');
+    let years = [];
+    for(let y=2024; y<=2030; y++) years.push(`<option value="${y}">YEAR ${y}</option>`);
+    ySelect.innerHTML = years.join('');
+    ySelect.value = new Date().getFullYear();
 }
 
-function togglePass(id, icon) {
-    const el = document.getElementById(id);
-    if(el.type === 'password') { el.type = 'text'; icon.classList.replace('fa-eye', 'fa-eye-slash'); }
-    else { el.type = 'password'; icon.classList.replace('fa-eye-slash', 'fa-eye'); }
+function setLedgerFilter(type, btn) {
+    currentLedgerType = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderAll();
 }
 
+function isThisWeek(dateString) {
+    const recordDate = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today - recordDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+}
+
+// --- CORE RENDER ---
+function renderAll() {
+    const activeMonth = parseInt(document.getElementById('globalMonth').value);
+    const activeYear = parseInt(document.getElementById('globalYear').value);
+    const timeFrame = document.getElementById('timeFilter').value;
+    const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
+    const ledSearch = document.getElementById('ledgerSearch').value.toLowerCase();
+    
+    // 1. STOCK
+    document.querySelector("#bTable tbody").innerHTML = businessData
+    .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
+    .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; padding:2px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
+
+    // 2. DEBTORS
+    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
+    document.getElementById('debtSummaryHeader').style.display = debtors.length ? 'block' : 'none';
+    document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} Total Outstanding.`;
+    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => `<tr><td>${d.name}</td><td>${d.phone}</td><td>${d.product}</td><td>K${d.balance}</td><td><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></td></tr>`).join('');
+
+    // 3. SMART LEDGER
+    let lastMonthSeen = null;
+    let lastYearSeen = null;
+    let ledgerHTML = "";
+    let filteredTotal = 0;
+
+    const sortedLedger = [...globalLedger].reverse().filter(l => {
+        const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
+        const searchMatch = l.desc.toLowerCase().includes(ledSearch);
+        let timeMatch = false;
+        if (timeFrame === 'YEAR') timeMatch = (l.year === activeYear);
+        if (timeFrame === 'MONTH') timeMatch = (l.year === activeYear && l.month === activeMonth);
+        if (timeFrame === 'WEEK') timeMatch = isThisWeek(l.date);
+        return typeMatch && searchMatch && timeMatch;
+    });
+
+    sortedLedger.forEach(l => {
+        if (l.year !== lastYearSeen) {
+            ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`;
+            lastYearSeen = l.year; lastMonthSeen = null;
+        }
+        if (l.month !== lastMonthSeen) {
+            ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`;
+            lastMonthSeen = l.month;
+        }
+        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${['SALE','INCOME','WITHDRAW'].includes(l.type)?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`;
+        filteredTotal += l.amt;
+    });
+    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
+    document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
+
+    // 4. BUDGET
+    const pCurrent = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
+    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
+
+    // 5. TOP STATS (Month Specific)
+    const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+    const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    document.getElementById('statCap').innerText = `K ${mCap.toFixed(2)}`;
+    document.getElementById('statRev').innerText = `K ${mRev.toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${(mRev - mCap).toFixed(2)}`;
+    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
+    document.getElementById('wdProfitStat').innerText = `K ${(mRev - mCap).toFixed(2)}`;
+}
+
+// --- BUSINESS LOGIC ---
+async function handleSale(id, isDebt) {
+    const qty = parseInt(document.getElementById(`q_${id}`).value);
+    const item = businessData.find(x => x.id === id);
+    if (item.currentStock < qty) return showNotify("LOW STOCK", true);
+    const total = item.unitSellPrice * qty;
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const y = parseInt(document.getElementById('globalYear').value);
+
+    if (isDebt) {
+        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
+        if(res && res.n) {
+            debtors.push({ id: Date.now(), name: res.n, phone: res.p || 'N/A', product: item.name, balance: total, originalId: id });
+            logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m, y);
+            item.currentStock -= qty;
+        } else return;
+    } else {
+        item.totalSalesRevenue += total;
+        item.currentStock -= qty;
+        logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
+    }
+    syncData(); renderAll(); showNotify("SAVED");
+}
+
+async function openRestock(id) {
+    const item = businessData.find(x => x.id === id);
+    const res = await openCustomModal(`RESTOCK: ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cap K'}]);
+    if(res && res.q && res.c) {
+        const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+        item.currentStock += parseInt(res.q);
+        item.totalCapitalInvested += parseFloat(res.c);
+        stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
+        logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
+        syncData(); renderAll(); showNotify("RESTOCKED");
+    }
+}
+
+function payDebt(id) {
+    const d = debtors.find(x => x.id === id);
+    const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    const item = businessData.find(x => x.id === d.originalId);
+    if(item) item.totalSalesRevenue += d.balance;
+    logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
+    debtors = debtors.filter(x => x.id !== id);
+    syncData(); renderAll(); showNotify("PAID");
+}
+
+function addBusiness() {
+    const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    if(n && c) {
+        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
+        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
+        logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
+        syncData(); renderAll(); showNotify("ADDED");
+    }
+}
+
+function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    if(d && a) {
+        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
+        syncData(); renderAll(); showNotify("LOGGED");
+    }
+}
+
+function processWithdrawal() {
+    const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    if(!amt || amt <= 0) return showNotify("Invalid amount", true);
+    personalLedger.push({ id: Date.now(), desc: `[WD] ${document.getElementById('wNote').value || 'Withdraw'}`, amt: amt, type: 'income', month: m, year: y });
+    logToLedger(`Withdrawal`, 'WITHDRAW', amt, m, y);
+    syncData(); renderAll(); showNotify("TRANSFERRED");
+}
+
+// --- AUTH & SYNC ---
 async function handleAuth(type) {
     const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
     const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
-    if(!email || !password) return showNotify("All fields required", true);
-
-    if(type === 'login') {
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if(error) showNotify("Login Failed: " + error.message, true); else showNotify("Online 🚀");
-    } else {
-        const { error } = await supabaseClient.auth.signUp({ email, password });
-        if(error) showNotify(error.message, true); else showNotify("Check email for link!");
-    }
+    const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
+    if(error) showNotify(error.message, true); else showNotify("Online 🚀");
 }
 
-// FIXED FORGOT PASSWORD
-async function forgotPassword() {
-    const email = document.getElementById('authEmail').value;
-    if(!email) return showNotify("Enter email first", true);
-    
-    showNotify("Sending reset link...");
-    
-    // Attempt reset. Note: Supabase needs a Redirect URL configured in the dashboard.
-    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.href,
-    });
-
-    if(error) {
-        showNotify("Error: " + error.message, true);
-    } else {
-        showNotify("Reset link sent! Check your inbox.");
-    }
+async function syncData() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
+    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, updated_at: new Date().toISOString() });
 }
 
-async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
+async function loadData(userId) {
+    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
+    if (data?.payload) {
+        const p = data.payload;
+        businessData = p.businessData || []; stockHistory = p.stockHistory || [];
+        personalLedger = p.personalLedger || []; debtors = p.debtors || []; globalLedger = p.globalLedger || [];
+    }
+    initTimeline(); renderAll();
+}
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
@@ -302,105 +432,7 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// --- CORE DATA & RESTOCK ---
-async function syncData() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if(!user) return;
-    await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, 
-        payload: { businessData, stockHistory, archiveVault, personalLedger, debtors, globalLedger, userBg, userBgType }, 
-        updated_at: new Date().toISOString() 
-    });
-}
-
-async function loadData(userId) {
-    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
-    if (data?.payload) {
-        const p = data.payload;
-        businessData = p.businessData || []; stockHistory = p.stockHistory || [];
-        archiveVault = p.archiveVault || []; personalLedger = p.personalLedger || [];
-        debtors = p.debtors || []; globalLedger = p.globalLedger || [];
-        userBg = p.userBg; userBgType = p.userBgType || 'video';
-        if(userBg) applyBg(userBg, userBgType);
-    }
-    initMonths(); renderAll(); renderArchiveList();
-}
-
-function renderAll() {
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const search = document.getElementById('stockSearch').value.toLowerCase();
-    
-    // STOCK TABLE WITH RESTOCK BUTTON
-    document.querySelector("#bTable tbody").innerHTML = businessData
-    .filter(x => x.month === m && x.name.toLowerCase().includes(search))
-    .map(x => `<tr>
-        <td><b style="color:var(--neon-blue)">${x.name}</b><br><small>Sell K${x.unitSellPrice}</small></td>
-        <td>K${x.totalCapitalInvested}</td>
-        <td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td>
-        <td>
-            <div class="action-cell">
-                <input type="number" id="q_${x.id}" value="1" style="width:35px; margin:0; padding:2px;">
-                <button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button>
-                <button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button>
-                <button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button>
-            </div>
-        </td>
-    </tr>`).join('');
-
-    // DEBTORS
-    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
-    const debtHeader = document.getElementById('debtSummaryHeader');
-    if(debtors.length > 0) { debtHeader.style.display = 'block'; document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} outstanding.`; } else { debtHeader.style.display = 'none'; }
-    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => `<tr><td>${d.name}</td><td>${d.phone || 'N/A'}</td><td>${d.product}</td><td>K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`).join('');
-
-    // LEDGER
-    document.querySelector("#ledgerTable tbody").innerHTML = globalLedger
-    .filter(l => l.month === m && (l.desc.toLowerCase().includes(document.getElementById('ledgerSearch').value.toLowerCase())))
-    .slice().reverse().map(l => `<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td style="color:${['SALE','INCOME','WITHDRAW'].includes(l.type)?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`).join('');
-
-    // BUDGET
-    const pCurrent = personalLedger.filter(x => x.month === m);
-    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
-    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
-    document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
-
-    // STATS
-    const mCap = stockHistory.filter(x => x.month === m).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-    const mRev = businessData.filter(x => x.month === m).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
-    document.getElementById('statCap').innerText = `K ${stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0).toFixed(2)}`;
-    document.getElementById('statRev').innerText = `K ${businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0).toFixed(2)}`;
-    document.getElementById('statProfit').innerText = `K ${(mRev - mCap).toFixed(2)}`;
-    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
-    document.getElementById('wdProfitStat').innerText = `K ${(mRev - mCap).toFixed(2)}`;
-}
-
-// RESTOCK LOGIC
-async function openRestock(id) {
-    const item = businessData.find(x => x.id === id);
-    const res = await openCustomModal(`RESTOCK: ${item.name}`, [{id:'q', type:'number', placeholder:'Add Qty'}, {id:'c', type:'number', placeholder:'Add Capital K'}]);
-    if(res && res.q && res.c) {
-        const m = parseInt(document.getElementById('globalMonth').value);
-        item.currentStock += parseInt(res.q);
-        item.totalCapitalInvested += parseFloat(res.c);
-        stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m });
-        logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m);
-        syncData(); renderAll(); showNotify("RESTOCKED");
-    }
-}
-
-// FASTER ARCHIVE
-async function archiveYear() {
-    const res = await openCustomModal("ARCHIVE YEAR", [{id:'y', type:'text', placeholder:'Year'}]);
-    if(res && res.y) {
-        const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-        const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
-        archiveVault.push({ year: res.y, summary: { cap: tCap, rev: tRev, profit: tRev - tCap }});
-        businessData = []; stockHistory = []; personalLedger = []; debtors = []; globalLedger = [];
-        await syncData(); renderAll(); renderArchiveList(); showNotify("ARCHIVED!");
-    }
-}
-
-// --- UTILS ---
+// --- UI UTILS ---
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
     el.innerHTML = `<div style="font-size:1.8rem; margin-bottom:5px;">${isError ? "⚠️" : "✔️"}</div><div>${msg}</div>`;
@@ -425,96 +457,11 @@ function openCustomModal(title, inputs) {
     });
 }
 function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
-
-function openTab(evt, t) {
-    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
-    document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active");
-}
-
-function logToLedger(desc, type, amt, month) {
-    globalLedger.push({ date: new Date().toLocaleDateString(), desc, type, amt, month });
-}
-
-function initMonths() {
-    const mSelect = document.getElementById('globalMonth');
-    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-    mSelect.value = new Date().getMonth();
-}
-
-function renderArchiveList() {
-    const container = document.getElementById('archiveList');
-    container.innerHTML = archiveVault.length ? archiveVault.map(v => `<div class="archive-item"><b style="color:var(--neon-blue)">YEAR ${v.year}</b> - PROFIT: K${v.summary.profit.toFixed(2)}</div>`).join('') : "<small>No records.</small>";
-}
-
-async function handleSale(id, isDebt) {
-    const qty = parseInt(document.getElementById(`q_${id}`).value);
-    const item = businessData.find(x => x.id === id);
-    if (item.currentStock < qty) return showNotify("LOW STOCK", true);
-    const total = item.unitSellPrice * qty;
-    const m = parseInt(document.getElementById('globalMonth').value);
-
-    if (isDebt) {
-        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
-        if(res && res.n) {
-            debtors.push({ id: Date.now(), name: res.n, phone: res.p, product: item.name, balance: total, originalId: id });
-            logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m);
-            item.currentStock -= qty;
-        } else return;
-    } else {
-        item.totalSalesRevenue += total;
-        item.currentStock -= qty;
-        logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m);
-    }
-    syncData(); renderAll(); showNotify("SAVED");
-}
-
-function payDebt(id) {
-    const d = debtors.find(x => x.id === id);
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const item = businessData.find(x => x.id === d.originalId);
-    if(item) item.totalSalesRevenue += d.balance;
-    logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m);
-    debtors = debtors.filter(x => x.id !== id);
-    syncData(); renderAll(); showNotify("PAID");
-}
-
-function processWithdrawal() {
-    const amt = parseFloat(document.getElementById('wAmt').value);
-    const m = parseInt(document.getElementById('globalMonth').value);
-    if(!amt || amt <= 0) return showNotify("Invalid amount", true);
-    personalLedger.push({ id: Date.now(), desc: `[WD] ${document.getElementById('wNote').value || 'Withdraw'}`, amt: amt, type: 'income', month: m });
-    logToLedger(`Withdrawal`, 'WITHDRAW', amt, m);
-    syncData(); renderAll(); showNotify("TRANSFERRED");
-}
-
-function addBusiness() {
-    const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value);
-    if(n && c) {
-        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m });
-        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m });
-        logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m);
-        syncData(); renderAll(); showNotify("ADDED");
-    }
-}
-
-function addPersonal() {
-    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value);
-    if(d && a) {
-        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m });
-        syncData(); renderAll(); showNotify("LOGGED");
-    }
-}
+function toggleAuthMode(isSignup) { document.getElementById('loginBox').style.display = isSignup ? 'none' : 'block'; document.getElementById('signupBox').style.display = isSignup ? 'block' : 'none'; }
+function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
+function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
 function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
-function handleBg(input) {
-    const file = input.files[0]; const reader = new FileReader();
-    reader.onload = (e) => { userBg = e.target.result; userBgType = file.type.startsWith('video/') ? 'video' : 'image'; applyBg(userBg, userBgType); syncData(); };
-    reader.readAsDataURL(file);
-}
-function applyBg(src, type) {
-    const v = document.getElementById('bgVideo'), i = document.getElementById('bgImage');
-    if (type === 'video') { v.src = src; v.style.display = 'block'; i.style.display = 'none'; v.play(); }
-    else { i.src = src; i.style.display = 'block'; v.style.display = 'none'; }
-}
+async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 </script>
 </body>
 </html>

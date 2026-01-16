@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.5.0</title>
+    <title>KLPB - Business Engine v4.6.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,29 +16,28 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 1); 
+            --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
         #video-bg-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; overflow: hidden; background-color: var(--deep-blue);
         }
-        #video-bg-container video, #video-bg-container img {
+        #video-bg-container video {
             min-width: 100%; min-height: 100%; width: auto; height: auto;
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             object-fit: cover;
         }
 
+        /* Fixed Notification based on user preference: Purple, translucent, no pop-out */
         #customNotification {
-            position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            background: rgba(191, 0, 255, 0.65); color: white; padding: 22px 40px;
-            border-radius: 20px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 40000;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--notif-purple); color: white; padding: 15px 30px;
+            border-radius: 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 40000;
             display: none; text-align: center; font-weight: bold;
-            box-shadow: 0 10px 40px 0 rgba(191, 0, 255, 0.4);
-            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
-        @keyframes bounceIn { 0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
 
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -69,10 +68,10 @@
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
         
-        .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: var(--notif-purple) !important; font-weight: bold; text-align: center; }
+        .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: #df80ff !important; font-weight: bold; text-align: center; }
         .year-separator { background: linear-gradient(90deg, transparent, var(--notif-purple), transparent) !important; color: white !important; text-align: center; font-weight: bold; border:none; }
 
-        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; }
+        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; min-width: 60px; }
         .filter-btn.active { background: var(--notif-purple); border-color: white; }
 
         .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
@@ -86,7 +85,6 @@
 
 <div id="video-bg-container">
     <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4"></video>
-    <img id="bgImage" style="display:none;">
 </div>
 
 <div id="customNotification"></div>
@@ -175,7 +173,8 @@
             <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
                 <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
                 <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">INCOME</button>
-                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">EXPENSES</button>
+                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">BIZ EXP</button>
+                <button class="filter-btn" onclick="setLedgerFilter('PERSONAL', this)">PERS EXP</button>
                 <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">DEBTS</button>
             </div>
 
@@ -195,7 +194,7 @@
                 </table>
             </div>
             <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
-                TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
+                NET TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
             </div>
         </section>
     </div>
@@ -206,7 +205,7 @@
                 <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
                 <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
             </div>
-            <input type="text" id="pDesc" placeholder="Description">
+            <input type="text" id="pDesc" placeholder="Description (e.g. Rent, Food)">
             <input type="number" id="pAmt" placeholder="Amount K">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
             <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
@@ -217,6 +216,7 @@
     <div id="withdraw" class="tab-content">
         <section>
             <h3 style="color:var(--neon-blue); margin-top:0;">WITHDRAWAL</h3>
+            <p style="font-size: 0.7rem; opacity: 0.8;">Move business profit to your personal budget.</p>
             <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
             <input type="number" id="wAmt" placeholder="Amount K">
             <input type="text" id="wNote" placeholder="Reason">
@@ -274,38 +274,22 @@ function renderAll() {
     .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
     .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; padding:2px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
 
-    // 2. DEBTORS logic updated for WhatsApp and Overdue Status
+    // 2. DEBTORS
     const totalD = debtors.reduce((s, x) => s + x.balance, 0);
     document.getElementById('debtSummaryHeader').style.display = debtors.length ? 'block' : 'none';
     document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} Total Outstanding.`;
     
     document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => {
-        // Calculate days old
         const debtDate = new Date(d.id);
         const today = new Date();
-        const diffTime = Math.abs(today - debtDate);
-        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor(Math.abs(today - debtDate) / (1000 * 60 * 60 * 24));
         const isOverdue = diffDays >= 5;
 
-        return `<tr>
-            <td>${d.name}</td>
-            <td><small>${d.phone}</small></td>
-            <td>${d.product}</td>
-            <td class="${isOverdue ? 'overdue-debt' : ''}">${isOverdue ? '⚠️ ' : ''}K${d.balance}</td>
-            <td>
-                <div class="action-cell">
-                    <button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button>
-                    <button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button>
-                </div>
-            </td>
-        </tr>`;
+        return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">${isOverdue ? '⚠️ ' : ''}K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
     }).join('');
 
-    // 3. SMART LEDGER
-    let lastMonthSeen = null;
-    let lastYearSeen = null;
-    let ledgerHTML = "";
-    let filteredTotal = 0;
+    // 3. SMART LEDGER (FIXED TO SHOW PERSONAL)
+    let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "", filteredTotal = 0;
 
     const sortedLedger = [...globalLedger].reverse().filter(l => {
         const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
@@ -326,8 +310,15 @@ function renderAll() {
             ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`;
             lastMonthSeen = l.month;
         }
-        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${['SALE','INCOME','WITHDRAW'].includes(l.type)?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`;
-        filteredTotal += l.amt;
+
+        const isPositive = ['SALE','INCOME','WITHDRAW'].includes(l.type);
+        const color = isPositive ? 'var(--success)' : 'var(--danger)';
+        const prefix = isPositive ? '+' : '-';
+
+        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${color}">${prefix}K${l.amt.toFixed(2)}</td></tr>`;
+        
+        if (isPositive) filteredTotal += l.amt;
+        else filteredTotal -= l.amt;
     });
     document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
     document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
@@ -338,7 +329,7 @@ function renderAll() {
     document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
     document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
 
-    // 5. TOP STATS (Month Specific)
+    // 5. TOP STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     document.getElementById('statCap').innerText = `K ${mCap.toFixed(2)}`;
@@ -348,28 +339,23 @@ function renderAll() {
     document.getElementById('wdProfitStat').innerText = `K ${(mRev - mCap).toFixed(2)}`;
 }
 
-// --- WHATSAPP REMINDER ---
+// --- LOGIC FUNCTIONS ---
 function sendWhatsAppReminder(id) {
     const d = debtors.find(x => x.id === id);
     if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
-    
-    const message = `Hello ${d.name}, this is a friendly reminder regarding your outstanding balance of K${d.balance} for ${d.product}. Please kindly settle as soon as possible. Thank you.`;
-    const cleanPhone = d.phone.replace(/\D/g, ''); // Remove non-numeric characters
-    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+    const message = `Hello ${d.name}, reminder for outstanding balance K${d.balance} for ${d.product}.`;
+    window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
 }
 
-// --- BUSINESS LOGIC ---
 async function handleSale(id, isDebt) {
-    const qtyInput = document.getElementById(`q_${id}`);
-    const qty = parseInt(qtyInput.value);
+    const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
     if (item.currentStock < qty) return showNotify("LOW STOCK", true);
     const total = item.unitSellPrice * qty;
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const y = parseInt(document.getElementById('globalYear').value);
+    const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
 
     if (isDebt) {
-        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone (eg. 260...)'}]);
+        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
         if(res && res.n) {
             debtors.push({ id: Date.now(), name: res.n, phone: res.p || 'N/A', product: item.name, balance: total, originalId: id });
             logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m, y);
@@ -416,28 +402,33 @@ function addBusiness() {
     }
 }
 
+// FIXED: Now logs personal expenses to the Global Ledger too
 function addPersonal() {
     const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     if(d && a) {
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
+        // Link to ledger
+        logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
+        document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
         syncData(); renderAll(); showNotify("LOGGED");
     }
 }
 
 function processWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    const note = document.getElementById('wNote').value || 'Withdraw';
     if(!amt || amt <= 0) return showNotify("Invalid amount", true);
-    personalLedger.push({ id: Date.now(), desc: `[WD] ${document.getElementById('wNote').value || 'Withdraw'}`, amt: amt, type: 'income', month: m, year: y });
-    logToLedger(`Withdrawal`, 'WITHDRAW', amt, m, y);
+    personalLedger.push({ id: Date.now(), desc: `[WD] ${note}`, amt: amt, type: 'income', month: m, year: y });
+    logToLedger(`Withdrawal: ${note}`, 'WITHDRAW', amt, m, y);
     syncData(); renderAll(); showNotify("TRANSFERRED");
 }
 
-// --- AUTH & SYNC ---
+// --- CORE UTILS ---
 async function handleAuth(type) {
     const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
     const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
     const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
-    if(error) showNotify(error.message, true); else showNotify("Online 🚀");
+    if(error) showNotify(error.message, true);
 }
 
 async function syncData() {
@@ -465,10 +456,9 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// --- UI UTILS ---
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    el.innerHTML = `<div style="font-size:1.8rem; margin-bottom:5px;">${isError ? "⚠️" : "✔️"}</div><div>${msg}</div>`;
+    el.innerHTML = `<div>${isError ? "⚠️" : "✔️"} ${msg}</div>`;
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
@@ -493,7 +483,12 @@ function closeCustomModal() { document.getElementById('customModal').style.displ
 function toggleAuthMode(isSignup) { document.getElementById('loginBox').style.display = isSignup ? 'none' : 'block'; document.getElementById('signupBox').style.display = isSignup ? 'block' : 'none'; }
 function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
 function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
-function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
+function delP(id) { 
+    personalLedger = personalLedger.filter(x => x.id !== id); 
+    // Also remove from global ledger to keep it clean
+    globalLedger = globalLedger.filter(l => l.id !== id);
+    syncData(); renderAll(); 
+}
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 </script>
 </body>

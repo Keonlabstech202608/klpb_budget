@@ -6,104 +6,131 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.7.0</title>
+    <title>KLPB - Business Engine v4.6.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
-            --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.9);
+            --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.88);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.7); 
+            --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
-        #video-bg-container {
+        /* Dynamic Background System */
+        #bg-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden; background-color: var(--deep-blue);
-        }
-        .bg-overlay {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: linear-gradient(rgba(0,11,26,0.7), rgba(0,11,26,0.9)), 
-                        url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=1920');
-            background-size: cover; background-position: center;
+            z-index: -1; 
+            background: linear-gradient(rgba(0, 11, 26, 0.8), rgba(0, 11, 26, 0.9)),
+                        url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?auto=format&fit=crop&q=80&w=1600'); /* Representing small scale growth */
+            background-size: cover;
+            background-position: center;
+            transition: background 0.5s ease;
         }
 
-        /* User Preference: Translucent Purple Notifications */
+        /* Logo Styling */
+        .app-logo {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 15px;
+            display: block;
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--neon-blue);
+        }
+
         #customNotification {
-            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-            background: var(--notif-purple); color: white; padding: 12px 30px;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: var(--notif-purple); color: white; padding: 15px 30px;
             border-radius: 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            z-index: 50000; display: none; text-align: center; border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 0 20px rgba(191, 0, 255, 0.4); font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 40000;
+            display: none; text-align: center; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        .logo-container { margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
-        .logo-img { width: 100px; height: 100px; border-radius: 50%; border: 2px solid var(--neon-blue); margin-bottom: 10px; }
-        .logo-text { font-size: 2.2rem; font-weight: 900; letter-spacing: -1px; margin: 0; background: linear-gradient(to right, var(--neon-blue), #bd00ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .logo-sub { font-size: 0.65rem; color: var(--text-main); opacity: 0.8; text-transform: uppercase; letter-spacing: 2px; }
+        #customModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 20000; backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; padding: 20px;
+        }
 
-        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: #000; overflow-x: hidden; }
-        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 40px 30px; border-radius: 15px; width: 320px; text-align: center; }
-        .container { max-width: 600px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
+        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: var(--deep-blue); }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 15px; width: 320px; text-align: center; backdrop-filter: blur(10px); }
+        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
         
-        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; scrollbar-width: none; }
+        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 6px; box-sizing: border-box; }
+        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
+        .btn-main:active { transform: scale(0.98); }
+
+        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; }
         .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
         .tab-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
         
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 8px; margin-bottom: 15px; }
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 12px; margin-bottom: 15px; }
         .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-        .metric-box { border: 1px solid var(--border-glow); padding: 10px; border-radius: 6px; text-align: center; background: rgba(0,0,0,0.6); }
-        .metric-val { display: block; font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); }
+        .metric-box { border: 1px solid var(--border-glow); padding: 12px; border-radius: 8px; text-align: center; background: rgba(0,0,0,0.6); }
+        .metric-val { display: block; font-size: 1rem; font-weight: bold; color: var(--neon-blue); }
 
-        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 8px 0; border-radius: 6px; box-sizing: border-box; }
-        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        th { color: var(--neon-blue); padding: 12px 8px; text-align: left; border-bottom: 2px solid var(--border-glow); }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        
-        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; }
-        .filter-btn.active { background: var(--notif-purple); border-color: white; }
-        .link-text { color: var(--neon-blue); cursor: pointer; font-size: 0.75rem; text-decoration: none; }
+
+        .reset-link { color: var(--warning); font-size: 0.75rem; cursor: pointer; display: block; margin-top: 15px; text-decoration: underline; }
     </style>
 </head>
 <body>
 
-<div id="video-bg-container"><div class="bg-overlay"></div></div>
+<div id="bg-overlay"></div>
 <div id="customNotification"></div>
 
-<div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh; position: relative; z-index: 100;">
-    <div class="auth-card" id="loginBox">
-        <div class="logo-container">
-            <img src="https://i.imgur.com/vHEx3uC.png" class="logo-img" alt="KLPB Logo"> <h1 class="logo-text">KLPB</h1>
-            <div class="logo-sub">Personal Growth Budget</div>
+<div id="customModal">
+    <div class="auth-card" style="width:100%; max-width:320px;">
+        <h3 id="modalTitle"></h3>
+        <div id="modalInputs"></div>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button id="modalConfirm" class="btn-main">CONFIRM</button>
+            <button onclick="closeCustomModal()" class="btn-main" style="background:var(--danger); color:white;">CANCEL</button>
         </div>
+    </div>
+</div>
+
+<div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh; padding: 20px;">
+    <div class="auth-card" id="loginBox">
+        <img src="https://i.ibb.co/hR0L7vM/icon.jpg" alt="KLPB Logo" class="app-logo">
+        <h2 style="color: var(--neon-blue); margin-bottom: 20px; letter-spacing: 2px;">KLPB LOGIN</h2>
         <input type="email" id="authEmail" placeholder="Email Address">
         <input type="password" id="authPass" placeholder="Password">
-        <button onclick="handleAuth('login')" class="btn-main">LOGIN TO ENGINE</button>
-        <div style="margin-top: 15px;">
-            <span onclick="toggleAuthMode('signup')" class="link-text">Create Account</span>
-        </div>
+        <button onclick="handleAuth('login')" class="btn-main">ACCESS ENGINE</button>
+        <button onclick="toggleAuthMode(true)" class="btn-main" style="background:transparent; border:1px solid var(--success); color:var(--success);">CREATE ACCOUNT</button>
+        <span class="reset-link" onclick="handleReset()">Forgot Password?</span>
     </div>
+
+    <div class="auth-card" id="signupBox" style="display:none;">
+        <img src="https://i.ibb.co/hR0L7vM/icon.jpg" alt="KLPB Logo" class="app-logo">
+        <h2 style="color: var(--success);">REGISTER</h2>
+        <input type="email" id="regEmail" placeholder="Email Address">
+        <input type="password" id="regPass" placeholder="Create Password">
+        <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">REGISTER</button>
+        <span onclick="toggleAuthMode(false)" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:15px; display:block;">Back to Login</span>
     </div>
+</div>
 
 <div class="container" id="mainApp">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--panel-bg); padding: 10px; border-radius: 10px; border: 1px solid var(--border-glow);">
         <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="https://i.imgur.com/vHEx3uC.png" style="width:30px; height:30px; border-radius:50%;" alt="Logo">
-            <span class="logo-text" style="font-size: 1.2rem;">KLPB</span>
+            <img src="https://i.ibb.co/hR0L7vM/icon.jpg" style="width:30px; border-radius:50%;">
+            <span id="userDisplay" style="font-size:0.7rem; color:var(--success); font-weight: bold;"></span>
         </div>
-        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
+        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:8px 15px; border-radius:6px; font-size:0.7rem; font-weight:bold;">LOGOUT</button>
     </div>
 
-    <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; border:1px solid var(--border-glow);">
-        <select id="globalMonth" onchange="renderAll()"></select>
-        <select id="globalYear" onchange="renderAll()"></select>
+    <div style="background: rgba(0, 242, 255, 0.1); padding: 12px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
+        <select id="globalMonth" style="margin:0;" onchange="renderAll()"></select>
+        <select id="globalYear" style="margin:0;" onchange="renderAll()"></select>
     </div>
 
     <div class="metric-grid">
@@ -114,9 +141,10 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'business')">Stock</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')">Inventory</button>
+        <button class="tab-btn" onclick="openTab(event, 'debtors')">Debtors</button>
+        <button class="tab-btn" onclick="openTab(event, 'ledger')">History</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
-        <button class="tab-btn" onclick="openTab(event, 'ledger')">Ledger</button>
     </div>
 
     <div id="business" class="tab-content active">
@@ -124,203 +152,161 @@
             <input type="text" id="bName" placeholder="Item Name">
             <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
                 <input type="number" id="bBuy" placeholder="Cost K">
-                <input type="number" id="bSell" placeholder="Sale K">
+                <input type="number" id="bSell" placeholder="Price K">
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
-            <button onclick="addBusiness()" class="btn-main">ADD STOCK ITEM</button>
-            <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
-            <div style="overflow-x:auto; margin-top:15px;">
-                <table id="bTable">
-                    <thead><tr><th>NAME</th><th>COST</th><th>QTY</th><th>ACTION</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <button onclick="addBusiness()" class="btn-main">ADD TO STOCK</button>
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM</th><th>CAP</th><th>QTY</th><th style="text-align:right">ACTION</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
-    <div id="personal" class="tab-content">
+    <div id="debtors" class="tab-content">
         <section>
-            <input type="text" id="pDesc" placeholder="Description">
-            <input type="number" id="pAmt" placeholder="Amount K">
-            <select id="pType">
-                <option value="PERSONAL">EXPENSE</option>
-                <option value="INCOME">INCOME</option>
-            </select>
-            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
-            <table id="pTable" style="margin-top:15px;">
-                <thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th></tr></thead>
-                <tbody></tbody>
-            </table>
+            <div id="debtSummaryHeader" class="metric-box" style="margin-bottom:10px; border-color:var(--warning);"><span id="debtSummaryText"></span></div>
+            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="ledger" class="tab-content">
         <section>
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
-                <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">SALES</button>
-                <button class="filter-btn" onclick="setLedgerFilter('PERSONAL', this)">EXPENSE</button>
-            </div>
             <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
+            <div id="ledgerFooter" style="margin-top:10px; text-align:right; font-weight:bold; color:var(--neon-blue);">TOTAL: K <span id="ledgerFilteredTotal">0</span></div>
+        </section>
+    </div>
+
+    <div id="personal" class="tab-content">
+        <section>
+            <div style="display:flex; gap:10px; margin-bottom:15px;">
+                <div class="metric-box" style="flex:1;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
+                <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
+            </div>
+            <input type="text" id="pDesc" placeholder="Expense/Income Reason">
+            <input type="number" id="pAmt" placeholder="Amount K">
+            <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
+            <button onclick="addPersonal()" class="btn-main">LOG BUDGET ENTRY</button>
+            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 </div>
 
 <script>
+// Supabase Configuration
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], personalLedger = [], globalLedger = [], currentLedgerType = 'ALL';
+let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [];
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-// --- CORE APP LOGIC ---
+// Background images based on section
+const backgrounds = {
+    auth: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09', // General growth
+    business: 'https://images.unsplash.com/photo-1556742044-3c52d6e88c62', // Market/Income
+    personal: 'https://images.unsplash.com/photo-1628155930542-3c7a64e2c833', // Savings/Budgeting
+    debtors: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f' // Financial records
+};
+
+function changeBg(key) {
+    document.getElementById('bg-overlay').style.backgroundImage = `linear-gradient(rgba(0, 11, 26, 0.8), rgba(0, 11, 26, 0.9)), url('${backgrounds[key]}?auto=format&fit=crop&q=80&w=1600')`;
+}
+
+// Password Reset Function
+async function handleReset() {
+    const email = document.getElementById('authEmail').value;
+    if (!email) return showNotify("Enter email first!", true);
+    
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+    if (error) showNotify(error.message, true);
+    else showNotify("Reset link sent to " + email);
+}
+
+// --- APP LOGIC ---
+
+function initTimeline() {
+    const mSelect = document.getElementById('globalMonth');
+    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+    mSelect.value = new Date().getMonth();
+
+    const ySelect = document.getElementById('globalYear');
+    let years = [];
+    for(let y=2025; y<=2030; y++) years.push(`<option value="${y}">YEAR ${y}</option>`);
+    ySelect.innerHTML = years.join('');
+    ySelect.value = new Date().getFullYear();
+}
+
+function openTab(evt, t) { 
+    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); 
+    document.getElementById(t).classList.add("active"); 
+    evt.currentTarget.classList.add("active"); 
+    
+    // Change background based on tab
+    if(t === 'business') changeBg('business');
+    if(t === 'personal') changeBg('personal');
+    if(t === 'debtors') changeBg('debtors');
+}
 
 function renderAll() {
     const m = parseInt(document.getElementById('globalMonth').value);
     const y = parseInt(document.getElementById('globalYear').value);
-    const searchTerm = document.getElementById('stockSearch').value.toLowerCase();
 
-    // Render Stock
-    const bTable = document.querySelector("#bTable tbody");
-    bTable.innerHTML = businessData
-        .filter(x => x.month === m && x.year === y && x.name.toLowerCase().includes(searchTerm))
-        .map(x => `<tr>
-            <td>${x.name}</td>
-            <td>K${x.cost}</td>
-            <td>${x.qty}</td>
-            <td><button onclick="handleSale(${x.id})" style="font-size:0.6rem">SELL</button></td>
-        </tr>`).join('');
-
-    // Render Personal
-    document.querySelector("#pTable tbody").innerHTML = personalLedger
+    // Stock
+    document.querySelector("#bTable tbody").innerHTML = businessData
         .filter(x => x.month === m && x.year === y)
-        .map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td></tr>`).join('');
+        .map(x => `<tr><td><b>${x.name}</b></td><td>K${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td style="text-align:right"><button onclick="handleSale(${x.id}, false)" style="background:var(--success); border:none; border-radius:4px; padding:5px;">SALE</button></td></tr>`).join('');
 
-    // Render Ledger
-    let ledgerHTML = "";
-    globalLedger.filter(l => (currentLedgerType === 'ALL' || l.type === currentLedgerType) && l.month === m)
-    .reverse().forEach(l => {
-        const color = (l.type === 'SALE' || l.type === 'INCOME') ? 'var(--success)' : 'var(--danger)';
-        ledgerHTML += `<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td style="color:${color}">K${l.amt}</td></tr>`;
-    });
-    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML;
+    // Ledger
+    let total = 0;
+    document.querySelector("#ledgerTable tbody").innerHTML = globalLedger
+        .filter(l => l.month === m && l.year === y)
+        .map(l => {
+            const isPos = ['SALE','INCOME'].includes(l.type);
+            total += isPos ? l.amt : -l.amt;
+            return `<tr><td>${l.date}</td><td>${l.desc}</td><td>${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">K${l.amt}</td></tr>`;
+        }).join('');
+    document.getElementById('ledgerFilteredTotal').innerText = total.toFixed(2);
 
-    updateMetrics(m, y);
-}
-
-function updateMetrics(m, y) {
-    const cap = businessData.filter(x => x.month === m && x.year === y).reduce((s, x) => s + (x.cost * x.qty), 0);
-    const rev = globalLedger.filter(x => x.month === m && x.year === y && x.type === 'SALE').reduce((s, x) => s + x.amt, 0);
-    const persExp = globalLedger.filter(x => x.month === m && x.year === y && x.type === 'PERSONAL').reduce((s, x) => s + x.amt, 0);
+    // Budget
+    const pCurrent = personalLedger.filter(x => x.month === m && x.year === y);
+    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
+    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0);
     
-    document.getElementById('statCap').innerText = `K ${cap}`;
-    document.getElementById('statRev').innerText = `K ${rev}`;
-    document.getElementById('statProfit').innerText = `K ${rev - cap - persExp}`;
-}
-
-function addBusiness() {
-    const name = document.getElementById('bName').value;
-    const cost = parseFloat(document.getElementById('bBuy').value);
-    const sell = parseFloat(document.getElementById('bSell').value);
-    const qty = parseInt(document.getElementById('bStock').value);
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const y = parseInt(document.getElementById('globalYear').value);
-
-    if (name && cost && qty) {
-        businessData.push({ id: Date.now(), name, cost, sell, qty, month: m, year: y });
-        logToLedger(`Stock: ${name}`, 'CAPITAL', cost * qty, m, y);
-        showNotify("STOCK ADDED");
-        renderAll();
-        syncData();
-    }
-}
-
-function handleSale(id) {
-    const item = businessData.find(x => x.id === id);
-    if (item && item.qty > 0) {
-        item.qty--;
-        logToLedger(`Sale: ${item.name}`, 'SALE', item.sell, item.month, item.year);
-        showNotify("SALE RECORDED");
-        renderAll();
-        syncData();
-    }
-}
-
-function addPersonal() {
-    const desc = document.getElementById('pDesc').value;
-    const amt = parseFloat(document.getElementById('pAmt').value);
-    const type = document.getElementById('pType').value;
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const y = parseInt(document.getElementById('globalYear').value);
-
-    if (desc && amt) {
-        personalLedger.push({ desc, amt, type, month: m, year: y });
-        logToLedger(desc, type, amt, m, y);
-        showNotify("ENTRY LOGGED");
-        renderAll();
-        syncData();
-    }
-}
-
-function logToLedger(desc, type, amt, m, y) {
-    globalLedger.push({ 
-        date: new Date().toLocaleDateString('en-GB', {day:'2-digit', month:'short'}), 
-        desc, type, amt, month: m, year: y 
-    });
-}
-
-// --- UTILITIES ---
-function showNotify(msg) {
-    const el = document.getElementById('customNotification');
-    el.innerText = msg; el.style.display = 'block';
-    setTimeout(() => el.style.display = 'none', 2500);
-}
-
-function openTab(evt, t) {
-    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
-    document.getElementById(t).classList.add("active");
-    evt.currentTarget.classList.add("active");
-}
-
-function initTimeline() {
-    const now = new Date();
-    document.getElementById('globalMonth').innerHTML = months.map((m, i) => `<option value="${i}" ${i===now.getMonth()?'selected':''}>${m}</option>`).join('');
-    document.getElementById('globalYear').innerHTML = `<option value="2026">2026</option>`;
+    // Stats
+    const mCap = stockHistory.filter(x => x.month === m && x.year === y).reduce((s, x) => s + x.cost, 0);
+    const mRev = businessData.filter(x => x.month === m && x.year === y).reduce((s, x) => s + x.totalSalesRevenue, 0);
+    document.getElementById('statCap').innerText = `K ${mCap}`;
+    document.getElementById('statRev').innerText = `K ${mRev}`;
+    document.getElementById('statProfit').innerText = `K ${mRev - mCap}`;
 }
 
 async function handleAuth(type) {
-    const email = document.getElementById('authEmail').value;
-    const password = document.getElementById('authPass').value;
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if(error) showNotify(error.message);
+    const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
+    const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
+    const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
+    if(error) showNotify(error.message, true);
 }
 
+function showNotify(msg, isError = false) {
+    const el = document.getElementById('customNotification');
+    el.innerHTML = `<div>${isError ? "⚠️" : "✔️"} ${msg}</div>`;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+function toggleAuthMode(isSignup) { 
+    document.getElementById('loginBox').style.display = isSignup ? 'none' : 'block'; 
+    document.getElementById('signupBox').style.display = isSignup ? 'block' : 'none'; 
+}
+
+// Database Listeners
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('userDisplay').innerText = session.user.email;
         initTimeline();
         renderAll();
     }
 });
-
-async function syncData() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    if(user) {
-        await supabaseClient.from('user_budgets').upsert({ 
-            user_id: user.id, 
-            payload: { businessData, personalLedger, globalLedger } 
-        });
-    }
-}
-
-function setLedgerFilter(type, btn) {
-    currentLedgerType = type;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderAll();
-}
 
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 </script>

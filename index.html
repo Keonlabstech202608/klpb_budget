@@ -19,17 +19,16 @@
             --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
-        #video-bg-container {
+        /* Static Image Background - Coin & Self Development Theme */
+        #static-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; overflow: hidden; background-color: var(--deep-blue);
-        }
-        #video-bg-container video {
-            min-width: 100%; min-height: 100%; width: auto; height: auto;
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            object-fit: cover; filter: brightness(0.4) contrast(1.2);
+            z-index: -1; background-color: var(--deep-blue);
+            background-image: linear-gradient(rgba(0,11,26,0.7), rgba(0,11,26,0.7)), 
+                              url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=2071');
+            background-size: cover; background-position: center;
         }
 
-        /* Fixed Notification: Purple, translucent, no pop-out */
+        /* Fixed Notification: Purple, translucent, no pop-out effect per request */
         #customNotification {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 15px 30px;
@@ -49,7 +48,8 @@
         
         /* Branding & Logo */
         .brand-header { margin-bottom: 20px; }
-        .logo-icon { font-size: 3rem; color: var(--neon-blue); margin-bottom: 10px; display: block; text-shadow: 0 0 15px var(--neon-blue); }
+        .logo-main { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--neon-blue); margin-bottom: 10px; box-shadow: 0 0 15px var(--neon-blue); }
+        .logo-corner { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--neon-blue); }
         .brand-name { font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; color: white; margin: 0; }
         .brand-sub { font-size: 0.6rem; color: var(--neon-blue); opacity: 0.8; }
 
@@ -71,7 +71,6 @@
         input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 6px 0; border-radius: 6px; box-sizing: border-box; outline: none; transition: 0.3s; }
         input:focus { border-color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
         .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
-        .btn-main:active { transform: scale(0.98); }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
@@ -79,10 +78,8 @@
         
         .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: #df80ff !important; font-weight: bold; text-align: center; }
         .year-separator { background: linear-gradient(90deg, transparent, var(--notif-purple), transparent) !important; color: white !important; text-align: center; font-weight: bold; border:none; }
-
         .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; min-width: 60px; }
         .filter-btn.active { background: var(--notif-purple); border-color: white; }
-
         .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
         .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .debt-alert { background: rgba(191, 0, 255, 0.2); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
@@ -92,9 +89,7 @@
 </head>
 <body>
 
-<div id="video-bg-container">
-    <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-background-of-a-digital-world-with-network-connections-23253-large.mp4"></video>
-</div>
+<div id="static-bg"></div>
 
 <div id="customNotification"></div>
 
@@ -110,18 +105,15 @@
 </div>
 
 <div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column;">
-    
     <div class="auth-card" id="loginBox">
         <div class="brand-header">
-            <i class="fas fa-seedling logo-icon"></i>
+            <img src="icon.jpg" alt="Logo" class="logo-main">
             <h1 class="brand-name">KEONLABS</h1>
             <span class="brand-sub">PERSONAL BUDGET & GROWTH ENGINE</span>
         </div>
-        
         <input type="email" id="authEmail" placeholder="Email Address">
         <input type="password" id="authPass" placeholder="Password">
         <button onclick="handleAuth('login')" class="btn-main">SYSTEM ACCESS</button>
-        
         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
             <span onclick="toggleAuthMode('signup')" style="color:var(--success); cursor:pointer; font-size:0.75rem;">NEW USER? CREATE ACCOUNT</span>
             <span onclick="toggleAuthMode('reset')" style="color:var(--warning); cursor:pointer; font-size:0.75rem;">FORGOT PASSWORD?</span>
@@ -138,7 +130,6 @@
 
     <div class="auth-card" id="resetBox" style="display:none;">
         <h2 style="color: var(--warning); margin-top:0;">RECOVERY</h2>
-        <p style="font-size:0.7rem; color: #ccc;">Enter your email to receive a reset link.</p>
         <input type="email" id="resetEmail" placeholder="Email Address">
         <button onclick="handleAuth('reset')" class="btn-main" style="background:var(--warning)">SEND RESET LINK</button>
         <span onclick="toggleAuthMode('login')" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
@@ -148,7 +139,7 @@
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display:flex; align-items:center; gap:8px;">
-            <i class="fas fa-seedling" style="color:var(--success); font-size:1.2rem;"></i>
+            <img src="icon.jpg" alt="Logo" class="logo-corner">
             <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
         </div>
         <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">TERMINATE SESSION</button>
@@ -199,8 +190,6 @@
 
     <div id="ledger" class="tab-content">
         <section>
-            <h4 style="color:var(--neon-blue); margin:0 0 10px 0;">SMART LEDGER</h4>
-            
             <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
                 <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
                 <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">INCOME</button>
@@ -208,7 +197,6 @@
                 <button class="filter-btn" onclick="setLedgerFilter('PERSONAL', this)">PERS EXP</button>
                 <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">DEBTS</button>
             </div>
-
             <div style="display: flex; gap: 5px; margin-bottom: 10px;">
                 <select id="timeFilter" onchange="renderAll()" style="font-size: 0.7rem;">
                     <option value="YEAR">THIS YEAR</option>
@@ -217,13 +205,7 @@
                 </select>
                 <input type="text" id="ledgerSearch" placeholder="🔍 Search logs..." onkeyup="renderAll()" style="margin:0;">
             </div>
-
-            <div style="overflow-x:auto;">
-                <table id="ledgerTable">
-                    <thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
             <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
                 NET TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
             </div>
@@ -236,7 +218,7 @@
                 <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
                 <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
             </div>
-            <input type="text" id="pDesc" placeholder="Description (e.g. Rent, Food)">
+            <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount K">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
             <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
@@ -247,7 +229,6 @@
     <div id="withdraw" class="tab-content">
         <section>
             <h3 style="color:var(--neon-blue); margin-top:0;">WITHDRAWAL</h3>
-            <p style="font-size: 0.7rem; opacity: 0.8;">Move business profit to your personal budget.</p>
             <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
             <input type="number" id="wAmt" placeholder="Amount K">
             <input type="text" id="wNote" placeholder="Reason">
@@ -257,6 +238,7 @@
 </div>
 
 <script>
+// --- CORE CONFIG ---
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -275,15 +257,6 @@ function initTimeline() {
     for(let y=2025; y<=2100; y++) years.push(`<option value="${y}">YEAR ${y}</option>`);
     ySelect.innerHTML = years.join('');
     ySelect.value = new Date().getFullYear();
-}
-
-// Logic continues exactly as original...
-
-function setLedgerFilter(type, btn) {
-    currentLedgerType = type;
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    renderAll();
 }
 
 function isThisWeek(dateString) {
@@ -314,55 +287,37 @@ function renderAll() {
     
     document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => {
         const debtDate = new Date(d.id);
-        const today = new Date();
-        const diffDays = Math.floor(Math.abs(today - debtDate) / (1000 * 60 * 60 * 24));
+        const diffDays = Math.floor(Math.abs(new Date() - debtDate) / (1000 * 60 * 60 * 24));
         const isOverdue = diffDays >= 5;
-
-        return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">${isOverdue ? '⚠️ ' : ''}K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
+        return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
     }).join('');
 
-    // 3. SMART LEDGER
+    // 3. LEDGER
     let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "", filteredTotal = 0;
-
     const sortedLedger = [...globalLedger].reverse().filter(l => {
         const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
         const searchMatch = l.desc.toLowerCase().includes(ledSearch);
-        let timeMatch = false;
-        if (timeFrame === 'YEAR') timeMatch = (l.year === activeYear);
-        if (timeFrame === 'MONTH') timeMatch = (l.year === activeYear && l.month === activeMonth);
-        if (timeFrame === 'WEEK') timeMatch = isThisWeek(l.date);
+        let timeMatch = (timeFrame === 'YEAR' && l.year === activeYear) || (timeFrame === 'MONTH' && l.year === activeYear && l.month === activeMonth) || (timeFrame === 'WEEK' && isThisWeek(l.date));
         return typeMatch && searchMatch && timeMatch;
     });
 
     sortedLedger.forEach(l => {
-        if (l.year !== lastYearSeen) {
-            ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`;
-            lastYearSeen = l.year; lastMonthSeen = null;
-        }
-        if (l.month !== lastMonthSeen) {
-            ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`;
-            lastMonthSeen = l.month;
-        }
-
-        const isPositive = ['SALE','INCOME','WITHDRAW'].includes(l.type);
-        const color = isPositive ? 'var(--success)' : 'var(--danger)';
-        const prefix = isPositive ? '+' : '-';
-
-        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${color}">${prefix}K${l.amt.toFixed(2)}</td></tr>`;
-        
-        if (isPositive) filteredTotal += l.amt;
-        else filteredTotal -= l.amt;
+        if (l.year !== lastYearSeen) { ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; lastYearSeen = l.year; lastMonthSeen = null; }
+        if (l.month !== lastMonthSeen) { ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; lastMonthSeen = l.month; }
+        const isPos = ['SALE','INCOME','WITHDRAW'].includes(l.type);
+        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : '-'}K${l.amt.toFixed(2)}</td></tr>`;
+        filteredTotal += isPos ? l.amt : -l.amt;
     });
     document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
     document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
 
     // 4. BUDGET
-    const pCurrent = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
-    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
-    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
-    document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
+    const pCur = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
+    document.getElementById('pIncStat').innerText = "K " + pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.getElementById('pExpStat').innerText = "K " + pCur.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
 
-    // 5. TOP STATS
+    // 5. STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     document.getElementById('statCap').innerText = `K ${mCap.toFixed(2)}`;
@@ -373,13 +328,6 @@ function renderAll() {
 }
 
 // --- LOGIC FUNCTIONS ---
-function sendWhatsAppReminder(id) {
-    const d = debtors.find(x => x.id === id);
-    if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
-    const message = `Hello ${d.name}, reminder for outstanding balance K${d.balance} for ${d.product}.`;
-    window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`, '_blank');
-}
-
 async function handleSale(id, isDebt) {
     const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
@@ -454,13 +402,12 @@ function processWithdrawal() {
     syncData(); renderAll(); showNotify("TRANSFERRED");
 }
 
-// --- UPDATED AUTH FUNCTIONS ---
+// --- AUTH & SYNC ---
 async function handleAuth(type) {
     if(type === 'reset') {
         const email = document.getElementById('resetEmail').value;
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-        if(error) showNotify(error.message, true);
-        else showNotify("Check your email for reset link!");
+        if(error) showNotify(error.message, true); else showNotify("Check email for reset link!");
         return;
     }
     const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
@@ -518,22 +465,21 @@ function openCustomModal(title, inputs) {
     });
 }
 function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
-
-// Updated for 3 modes: login, signup, reset
 function toggleAuthMode(mode) { 
     document.getElementById('loginBox').style.display = mode === 'login' ? 'block' : 'none'; 
     document.getElementById('signupBox').style.display = mode === 'signup' ? 'block' : 'none'; 
     document.getElementById('resetBox').style.display = mode === 'reset' ? 'block' : 'none'; 
 }
-
 function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
 function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
-function delP(id) { 
-    personalLedger = personalLedger.filter(x => x.id !== id); 
-    globalLedger = globalLedger.filter(l => l.id !== id);
-    syncData(); renderAll(); 
-}
+function setLedgerFilter(type, btn) { currentLedgerType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); globalLedger = globalLedger.filter(l => l.id !== id); syncData(); renderAll(); }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
+function sendWhatsAppReminder(id) {
+    const d = debtors.find(x => x.id === id);
+    if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
+    window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello ' + d.name + ', reminder for balance K' + d.balance + ' for ' + d.product + '.')}`, '_blank');
+}
 </script>
 </body>
 </html>

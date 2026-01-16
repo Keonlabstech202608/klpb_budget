@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KLPB Business Engine - Continuous Edition</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000b1a">
+    <title>KLPB - Business Engine v4.5.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -16,253 +19,482 @@
             --notif-purple: rgba(191, 0, 255, 1); 
         }
 
-        /* Video Background */
-        #video-bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background-color: var(--deep-blue); }
-        #video-bg-container video { min-width: 100%; min-height: 100%; object-fit: cover; opacity: 0.4; }
+        #video-bg-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; overflow: hidden; background-color: var(--deep-blue);
+        }
+        #video-bg-container video, #video-bg-container img {
+            min-width: 100%; min-height: 100%; width: auto; height: auto;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
 
-        /* Notification */
         #customNotification {
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
-            background: rgba(191, 0, 255, 0.65); color: white; padding: 20px;
-            border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.3); 
-            z-index: 40000; display: none; text-align: center; font-weight: bold;
+            background: rgba(191, 0, 255, 0.65); color: white; padding: 22px 40px;
+            border-radius: 20px; backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border: 1px solid rgba(255, 255, 255, 0.3); z-index: 40000;
+            display: none; text-align: center; font-weight: bold;
+            box-shadow: 0 10px 40px 0 rgba(191, 0, 255, 0.4);
+            animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes bounceIn { 0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+
+        #customModal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); z-index: 20000; backdrop-filter: blur(8px);
+            align-items: center; justify-content: center; padding: 20px;
         }
 
-        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; overflow-x: hidden; }
-        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; }
+        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
+        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 10px; width: 320px; text-align: center; }
+        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
         
-        /* Overdue Alert Animation */
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0px rgba(255, 77, 77, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 77, 77, 0); }
-            100% { box-shadow: 0 0 0 0px rgba(255, 77, 77, 0); }
-        }
-        .overdue { border-left: 4px solid var(--danger) !important; animation: pulse-red 2s infinite; background: rgba(255, 77, 77, 0.1) !important; }
-
-        /* UI Elements */
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .tabs { display: flex; gap: 5px; margin-bottom: 15px; overflow-x: auto; }
-        .tab-btn { flex: 1; padding: 10px; border-radius: 4px; border: 1px solid var(--border-glow); background: rgba(0,0,0,0.5); color: white; cursor: pointer; font-size: 0.7rem; }
-        .tab-btn.active { background: var(--neon-blue); color: black; font-weight: bold; }
+        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; scrollbar-width: none; }
+        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
+        .tab-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
         
-        .metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 8px; margin-bottom: 15px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         .metric-box { border: 1px solid var(--border-glow); padding: 10px; border-radius: 6px; text-align: center; background: rgba(0,0,0,0.6); }
-        .metric-val { display: block; font-size: 1rem; color: var(--neon-blue); font-weight: bold; }
+        .metric-val { display: block; font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); }
 
-        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 5px 0; border-radius: 4px; box-sizing: border-box; }
-        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 10px; width: 100%; margin: 6px 0; border-radius: 4px; box-sizing: border-box; }
+        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
         
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-        th { background: rgba(0, 242, 255, 0.1); padding: 10px; text-align: left; color: var(--neon-blue); }
-        td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
+        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
+        td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
+        
+        .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: var(--notif-purple) !important; font-weight: bold; text-align: center; }
+        .year-separator { background: linear-gradient(90deg, transparent, var(--notif-purple), transparent) !important; color: white !important; text-align: center; font-weight: bold; border:none; }
 
-        .whatsapp-btn { background: #25D366 !important; color: white !important; }
-        .action-btn { width: 35px; height: 35px; border-radius: 4px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; margin-left: 5px; }
+        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; }
+        .filter-btn.active { background: var(--notif-purple); border-color: white; }
+
+        .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
+        .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .debt-alert { background: rgba(191, 0, 255, 0.2); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .overdue-debt { color: var(--danger) !important; font-weight: bold; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="video-bg-container">
-    <video autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4"></video>
+    <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4"></video>
+    <img id="bgImage" style="display:none;">
 </div>
 
 <div id="customNotification"></div>
 
-<div id="mainApp" class="container" style="display:block;"> <div style="background: rgba(191, 0, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; gap: 10px; border:1px solid var(--notif-purple);">
-        <select id="globalMonth" onchange="renderAll()"></select>
-        <select id="globalYear" onchange="renderAll()"></select>
+<div id="customModal">
+    <div class="auth-card" style="width:100%; max-width:320px;">
+        <h3 id="modalTitle"></h3>
+        <div id="modalInputs"></div>
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button id="modalConfirm" class="btn-main">CONFIRM</button>
+            <button onclick="closeCustomModal()" class="btn-main" style="background:var(--danger); color:white;">CANCEL</button>
+        </div>
+    </div>
+</div>
+
+<div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh;">
+    <div class="auth-card" id="loginBox">
+        <h2 style="color: var(--neon-blue); margin-bottom: 5px;">KLPB ENGINE</h2>
+        <input type="email" id="authEmail" placeholder="Email Address">
+        <input type="password" id="authPass" placeholder="Password">
+        <button onclick="handleAuth('login')" class="btn-main">LOGIN</button>
+        <button onclick="toggleAuthMode(true)" class="btn-main" style="background:transparent; border:1px solid var(--success); color:var(--success);">CREATE NEW ACCOUNT</button>
+    </div>
+    <div class="auth-card" id="signupBox" style="display:none;">
+        <h2 style="color: var(--success);">SIGN UP</h2>
+        <input type="email" id="regEmail" placeholder="Email Address">
+        <input type="password" id="regPass" placeholder="Create Password">
+        <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">REGISTER</button>
+        <span onclick="toggleAuthMode(false)" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
+    </div>
+</div>
+
+<div class="container" id="mainApp">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
+        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
+    </div>
+
+    <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
+        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">TIMELINE:</label>
+        <select id="globalMonth" style="margin:0; width:50%;" onchange="renderAll()"></select>
+        <select id="globalYear" style="margin:0; width:40%;" onchange="renderAll()"></select>
     </div>
 
     <div class="metric-grid">
+        <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
         <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
-        <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color:var(--danger)">K 0</span></div>
+        <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
+        <div class="metric-box">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab(event, 'business')">STOCK</button>
-        <button class="tab-btn" onclick="openTab(event, 'debtors')">DEBTORS</button>
-        <button class="tab-btn" onclick="openTab(event, 'ledger')">LEDGER</button>
+        <button class="tab-btn active" onclick="openTab(event, 'business')">Stock</button>
+        <button class="tab-btn" onclick="openTab(event, 'debtors')">Debtors</button>
+        <button class="tab-btn" onclick="openTab(event, 'ledger')">Ledger</button>
+        <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
+        <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
     </div>
 
     <div id="business" class="tab-content active">
         <section>
             <input type="text" id="bName" placeholder="Item Name">
-            <input type="number" id="bSell" placeholder="Selling Price K">
-            <input type="number" id="bStock" placeholder="Quantity">
-            <button onclick="addBusiness()" class="btn-main">ADD STOCK</button>
-            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM</th><th>QTY</th><th>ACTION</th></tr></thead><tbody></tbody></table></div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
+                <input type="number" id="bBuy" placeholder="Cap K">
+                <input type="number" id="bSell" placeholder="Sell K">
+                <input type="number" id="bStock" placeholder="Qty">
+            </div>
+            <button onclick="addBusiness()" class="btn-main">ADD STOCK ITEM</button>
+            <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">SALE / RE</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="debtors" class="tab-content">
         <section>
-            <h4 style="color:var(--warning); margin:0 0 10px 0;">5-DAY DEBT MONITOR</h4>
-            <div style="overflow-x:auto;">
-                <table id="debtTable">
-                    <thead><tr><th>NAME</th><th>AMT</th><th>DUE</th><th>ACTION</th></tr></thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div id="debtSummaryHeader" class="debt-alert" style="display:none;"><p id="debtSummaryText" style="margin:0; font-size:0.75rem;"></p></div>
+            <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()">
+            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="ledger" class="tab-content">
         <section>
-            <div style="display:flex; gap:5px; margin-bottom:10px;">
-                <select id="timeFilter" onchange="renderAll()" style="font-size: 0.7rem; flex:1;">
+            <h4 style="color:var(--neon-blue); margin:0 0 10px 0;">SMART LEDGER</h4>
+            
+            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
+                <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
+                <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">INCOME</button>
+                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">EXPENSES</button>
+                <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">DEBTS</button>
+            </div>
+
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <select id="timeFilter" onchange="renderAll()" style="font-size: 0.7rem;">
                     <option value="YEAR">THIS YEAR</option>
                     <option value="MONTH">THIS MONTH</option>
                     <option value="WEEK">THIS WEEK</option>
                 </select>
-                <button class="filter-btn" style="flex:1; border:1px solid var(--neon-blue); background:none; color:white;" onclick="exportCSV()">EXPORT CSV</button>
+                <input type="text" id="ledgerSearch" placeholder="🔍 Search logs..." onkeyup="renderAll()" style="margin:0;">
             </div>
-            <table id="ledgerTable"><tbody></tbody></table>
+
+            <div style="overflow-x:auto;">
+                <table id="ledgerTable">
+                    <thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
+                TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
+            </div>
+        </section>
+    </div>
+
+    <div id="personal" class="tab-content">
+        <section>
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
+                <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
+            </div>
+            <input type="text" id="pDesc" placeholder="Description">
+            <input type="number" id="pAmt" placeholder="Amount K">
+            <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
+            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
+            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
+        </section>
+    </div>
+
+    <div id="withdraw" class="tab-content">
+        <section>
+            <h3 style="color:var(--neon-blue); margin-top:0;">WITHDRAWAL</h3>
+            <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
+            <input type="number" id="wAmt" placeholder="Amount K">
+            <input type="text" id="wNote" placeholder="Reason">
+            <button onclick="processWithdrawal()" class="btn-main" style="background:rgba(191, 0, 255, 0.7); color:white;">TRANSFER TO BUDGET</button>
         </section>
     </div>
 </div>
 
 <script>
-let businessData = [], debtors = [], globalLedger = [];
+const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [], currentLedgerType = 'ALL';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-function initApp() {
+// --- INITIALIZATION ---
+function initTimeline() {
     const mSelect = document.getElementById('globalMonth');
     mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
     mSelect.value = new Date().getMonth();
 
     const ySelect = document.getElementById('globalYear');
-    let yearOptions = "";
-    // Start from 2025 and go for 100 years
-    for(let y=2025; y<=2125; y++) {
-        yearOptions += `<option value="${y}">YEAR ${y}</option>`;
-    }
-    ySelect.innerHTML = yearOptions;
-    ySelect.value = new Date().getFullYear() < 2025 ? 2025 : new Date().getFullYear();
-    
+    let years = [];
+    for(let y=2025; y<=2100; y++) years.push(`<option value="${y}">YEAR ${y}</option>`);
+    ySelect.innerHTML = years.join('');
+    ySelect.value = new Date().getFullYear();
+}
+
+function setLedgerFilter(type, btn) {
+    currentLedgerType = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
     renderAll();
 }
 
+function isThisWeek(dateString) {
+    const recordDate = new Date(dateString);
+    const today = new Date();
+    const diffTime = Math.abs(today - recordDate);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 7;
+}
+
+// --- CORE RENDER ---
 function renderAll() {
     const activeMonth = parseInt(document.getElementById('globalMonth').value);
     const activeYear = parseInt(document.getElementById('globalYear').value);
-    const today = new Date();
+    const timeFrame = document.getElementById('timeFilter').value;
+    const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
+    const ledSearch = document.getElementById('ledgerSearch').value.toLowerCase();
+    
+    // 1. STOCK
+    document.querySelector("#bTable tbody").innerHTML = businessData
+    .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
+    .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; padding:2px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
 
-    // 1. STOCK RENDER
-    document.querySelector("#bTable tbody").innerHTML = businessData.map(x => `
-        <tr>
-            <td>${x.name}<br><small>K${x.price}</small></td>
-            <td>${x.stock}</td>
+    // 2. DEBTORS logic updated for WhatsApp and Overdue Status
+    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
+    document.getElementById('debtSummaryHeader').style.display = debtors.length ? 'block' : 'none';
+    document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} Total Outstanding.`;
+    
+    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => {
+        // Calculate days old
+        const debtDate = new Date(d.id);
+        const today = new Date();
+        const diffTime = Math.abs(today - debtDate);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        const isOverdue = diffDays >= 5;
+
+        return `<tr>
+            <td>${d.name}</td>
+            <td><small>${d.phone}</small></td>
+            <td>${d.product}</td>
+            <td class="${isOverdue ? 'overdue-debt' : ''}">${isOverdue ? '⚠️ ' : ''}K${d.balance}</td>
             <td>
-                <button class="action-btn" style="background:var(--success)" onclick="sellItem(${x.id}, false)"><i class="fas fa-cash-register"></i></button>
-                <button class="action-btn" style="background:var(--warning)" onclick="sellItem(${x.id}, true)"><i class="fas fa-user-clock"></i></button>
+                <div class="action-cell">
+                    <button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button>
+                    <button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button>
+                </div>
             </td>
-        </tr>
-    `).join('');
-
-    // 2. DEBTORS RENDER (With 5-Day Logic)
-    document.querySelector("#debtTable tbody").innerHTML = debtors.map(d => {
-        const dateAdded = new Date(d.date);
-        const diffTime = Math.abs(today - dateAdded);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        const isOverdue = diffDays > 5;
-
-        return `
-            <tr class="${isOverdue ? 'overdue' : ''}">
-                <td>${d.name}<br><small>${d.item}</small></td>
-                <td style="color:var(--danger)">K${d.amount}</td>
-                <td>${isOverdue ? 'OVERDUE' : diffDays + '/5 Days'}</td>
-                <td>
-                    <button class="action-btn whatsapp-btn" onclick="sendReminder('${d.phone}', '${d.name}', ${d.amount}, '${d.item}')">
-                        <i class="fab fa-whatsapp"></i>
-                    </button>
-                    <button class="action-btn" style="background:var(--success)" onclick="payDebt(${d.id})">
-                        <i class="fas fa-check"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
+        </tr>`;
     }).join('');
 
-    // 3. STATS
-    const totalDebt = debtors.reduce((s, x) => s + x.amount, 0);
-    document.getElementById('statDebt').innerText = `K ${totalDebt}`;
-}
+    // 3. SMART LEDGER
+    let lastMonthSeen = null;
+    let lastYearSeen = null;
+    let ledgerHTML = "";
+    let filteredTotal = 0;
 
-// --- LOGIC FUNCTIONS ---
+    const sortedLedger = [...globalLedger].reverse().filter(l => {
+        const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
+        const searchMatch = l.desc.toLowerCase().includes(ledSearch);
+        let timeMatch = false;
+        if (timeFrame === 'YEAR') timeMatch = (l.year === activeYear);
+        if (timeFrame === 'MONTH') timeMatch = (l.year === activeYear && l.month === activeMonth);
+        if (timeFrame === 'WEEK') timeMatch = isThisWeek(l.date);
+        return typeMatch && searchMatch && timeMatch;
+    });
 
-function sellItem(id, isDebt) {
-    const item = businessData.find(x => x.id === id);
-    if(item.stock <= 0) return showNotify("OUT OF STOCK", true);
-
-    if(isDebt) {
-        const name = prompt("Debtor Name:");
-        const phone = prompt("WhatsApp Number (e.g. 260...)");
-        if(name && phone) {
-            debtors.push({
-                id: Date.now(),
-                name: name,
-                phone: phone,
-                amount: item.price,
-                item: item.name,
-                date: new Date().toISOString()
-            });
-            item.stock--;
-            logToLedger(`Debt: ${item.name} to ${name}`, 'DEBT', item.price);
+    sortedLedger.forEach(l => {
+        if (l.year !== lastYearSeen) {
+            ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`;
+            lastYearSeen = l.year; lastMonthSeen = null;
         }
-    } else {
-        item.stock--;
-        logToLedger(`Sale: ${item.name}`, 'SALE', item.price);
-    }
-    renderAll();
+        if (l.month !== lastMonthSeen) {
+            ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`;
+            lastMonthSeen = l.month;
+        }
+        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${['SALE','INCOME','WITHDRAW'].includes(l.type)?'var(--success)':'var(--danger)'}">K${l.amt}</td></tr>`;
+        filteredTotal += l.amt;
+    });
+    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
+    document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
+
+    // 4. BUDGET
+    const pCurrent = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
+    document.getElementById('pIncStat').innerText = "K " + pCurrent.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.getElementById('pExpStat').innerText = "K " + pCurrent.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
+    document.querySelector("#pTable tbody").innerHTML = pCurrent.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
+
+    // 5. TOP STATS (Month Specific)
+    const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
+    const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
+    document.getElementById('statCap').innerText = `K ${mCap.toFixed(2)}`;
+    document.getElementById('statRev').innerText = `K ${mRev.toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${(mRev - mCap).toFixed(2)}`;
+    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
+    document.getElementById('wdProfitStat').innerText = `K ${(mRev - mCap).toFixed(2)}`;
 }
 
-function sendReminder(phone, name, amount, item) {
-    const msg = `Greetings ${name}, this is a friendly reminder from KLPB Business regarding your balance of K${amount} for the ${item}. Please settle within the agreed time. Thank you!`;
-    const encodedMsg = encodeURIComponent(msg);
-    window.open(`https://wa.me/${phone}?text=${encodedMsg}`, '_blank');
+// --- WHATSAPP REMINDER ---
+function sendWhatsAppReminder(id) {
+    const d = debtors.find(x => x.id === id);
+    if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
+    
+    const message = `Hello ${d.name}, this is a friendly reminder regarding your outstanding balance of K${d.balance} for ${d.product}. Please kindly settle as soon as possible. Thank you.`;
+    const cleanPhone = d.phone.replace(/\D/g, ''); // Remove non-numeric characters
+    window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+// --- BUSINESS LOGIC ---
+async function handleSale(id, isDebt) {
+    const qtyInput = document.getElementById(`q_${id}`);
+    const qty = parseInt(qtyInput.value);
+    const item = businessData.find(x => x.id === id);
+    if (item.currentStock < qty) return showNotify("LOW STOCK", true);
+    const total = item.unitSellPrice * qty;
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const y = parseInt(document.getElementById('globalYear').value);
+
+    if (isDebt) {
+        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone (eg. 260...)'}]);
+        if(res && res.n) {
+            debtors.push({ id: Date.now(), name: res.n, phone: res.p || 'N/A', product: item.name, balance: total, originalId: id });
+            logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m, y);
+            item.currentStock -= qty;
+        } else return;
+    } else {
+        item.totalSalesRevenue += total;
+        item.currentStock -= qty;
+        logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
+    }
+    syncData(); renderAll(); showNotify("SAVED");
+}
+
+async function openRestock(id) {
+    const item = businessData.find(x => x.id === id);
+    const res = await openCustomModal(`RESTOCK: ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cap K'}]);
+    if(res && res.q && res.c) {
+        const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+        item.currentStock += parseInt(res.q);
+        item.totalCapitalInvested += parseFloat(res.c);
+        stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
+        logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
+        syncData(); renderAll(); showNotify("RESTOCKED");
+    }
 }
 
 function payDebt(id) {
     const d = debtors.find(x => x.id === id);
-    logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.amount);
+    const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    const item = businessData.find(x => x.id === d.originalId);
+    if(item) item.totalSalesRevenue += d.balance;
+    logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
     debtors = debtors.filter(x => x.id !== id);
-    showNotify("PAYMENT RECORDED");
-    renderAll();
+    syncData(); renderAll(); showNotify("PAID");
 }
 
 function addBusiness() {
-    const n = document.getElementById('bName').value;
-    const p = parseFloat(document.getElementById('bSell').value);
-    const q = parseInt(document.getElementById('bStock').value);
-    if(n && p) {
-        businessData.push({ id: Date.now(), name: n, price: p, stock: q });
-        logToLedger(`Added Stock: ${n}`, 'CAPITAL', 0);
-        renderAll();
-        showNotify("STOCK ADDED");
+    const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    if(n && c) {
+        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
+        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
+        logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
+        syncData(); renderAll(); showNotify("ADDED");
     }
 }
 
-function logToLedger(desc, type, amt) {
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const y = parseInt(document.getElementById('globalYear').value);
-    globalLedger.push({ date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y });
+function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    if(d && a) {
+        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
+        syncData(); renderAll(); showNotify("LOGGED");
+    }
 }
 
+function processWithdrawal() {
+    const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    if(!amt || amt <= 0) return showNotify("Invalid amount", true);
+    personalLedger.push({ id: Date.now(), desc: `[WD] ${document.getElementById('wNote').value || 'Withdraw'}`, amt: amt, type: 'income', month: m, year: y });
+    logToLedger(`Withdrawal`, 'WITHDRAW', amt, m, y);
+    syncData(); renderAll(); showNotify("TRANSFERRED");
+}
+
+// --- AUTH & SYNC ---
+async function handleAuth(type) {
+    const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
+    const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
+    const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
+    if(error) showNotify(error.message, true); else showNotify("Online 🚀");
+}
+
+async function syncData() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    if(!user) return;
+    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, updated_at: new Date().toISOString() });
+}
+
+async function loadData(userId) {
+    const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
+    if (data?.payload) {
+        const p = data.payload;
+        businessData = p.businessData || []; stockHistory = p.stockHistory || [];
+        personalLedger = p.personalLedger || []; debtors = p.debtors || []; globalLedger = p.globalLedger || [];
+    }
+    initTimeline(); renderAll();
+}
+
+supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+        document.getElementById('authOverlay').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
+        document.getElementById('userDisplay').innerText = session.user.email;
+        loadData(session.user.id);
+    }
+});
+
+// --- UI UTILS ---
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    el.style.background = isError ? 'rgba(255, 0, 0, 0.6)' : 'rgba(191, 0, 255, 0.65)';
-    el.innerHTML = msg;
+    el.innerHTML = `<div style="font-size:1.8rem; margin-bottom:5px;">${isError ? "⚠️" : "✔️"}</div><div>${msg}</div>`;
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
-function openTab(evt, t) {
-    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
-    document.getElementById(t).classList.add("active");
-    evt.currentTarget.classList.add("active");
+function openCustomModal(title, inputs) {
+    const modal = document.getElementById('customModal');
+    document.getElementById('modalTitle').innerText = title;
+    const container = document.getElementById('modalInputs'); container.innerHTML = '';
+    inputs.forEach(inp => {
+        const el = document.createElement('input'); el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
+        container.appendChild(el);
+    });
+    modal.style.display = 'flex';
+    return new Promise(resolve => {
+        document.getElementById('modalConfirm').onclick = () => {
+            const res = {}; inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
+            closeCustomModal(); resolve(res);
+        };
+    });
 }
-
-window.onload = initApp;
+function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+function toggleAuthMode(isSignup) { document.getElementById('loginBox').style.display = isSignup ? 'none' : 'block'; document.getElementById('signupBox').style.display = isSignup ? 'block' : 'none'; }
+function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
+function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
+async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 </script>
 </body>
 </html>

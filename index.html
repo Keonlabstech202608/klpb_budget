@@ -6,7 +6,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.2.0</title>
+    <title>KLPB - Business Engine v4.1.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -29,7 +29,6 @@
             object-fit: cover;
         }
 
-        /* Personalized Notification */
         #customNotification {
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 22px 40px;
@@ -103,9 +102,13 @@
     <div class="auth-card" id="loginBox">
         <h2 style="color: var(--neon-blue);">KLPB ENGINE</h2>
         <input type="email" id="authEmail" placeholder="Email">
-        <input type="password" id="authPass" placeholder="Password">
+        <div style="position:relative;">
+            <input type="password" id="authPass" placeholder="Password">
+            <i class="fas fa-eye" style="position:absolute; right:10px; top:18px; cursor:pointer;" onclick="togglePass('authPass')"></i>
+        </div>
         <button onclick="handleAuth('login')" class="btn-main">LOGIN</button>
         <button onclick="toggleAuthMode(true)" class="btn-main" style="background:transparent; border:1px solid var(--success); color:var(--success);">SIGN UP</button>
+        <p onclick="forgotPassword()" style="font-size:0.7rem; color:var(--neon-blue); cursor:pointer; margin-top:10px;">Forgot Password?</p>
     </div>
 
     <div class="auth-card" id="signupBox" style="display:none;">
@@ -126,6 +129,7 @@
     <div class="metric-grid">
         <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
         <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
+        <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
         <div class="metric-box">PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
     </div>
 
@@ -133,7 +137,7 @@
         <button class="tab-btn active" onclick="openTab(event, 'business')">Stock</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
         <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')">Archives</button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')">Reports</button>
     </div>
 
     <div id="business" class="tab-content active">
@@ -148,7 +152,7 @@
             </div>
             <button onclick="addBusiness()" class="btn-main">ADD NEW STOCK</button>
             <input type="text" id="stockSearch" placeholder="🔍 Search..." onkeyup="renderAll()" style="margin-top:10px;">
-            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM</th><th>QTY</th><th>SELL</th><th>ACTION</th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>ITEM</th><th>QTY</th><th>CAP</th><th>ACTION</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
@@ -173,9 +177,9 @@
 
     <div id="summary" class="tab-content">
         <section>
-            <h3 style="color:var(--neon-blue); font-size:0.9rem;">PAST YEAR SUMMARIES</h3>
+            <h3 style="color:var(--neon-blue); font-size:0.9rem;">YEARLY ARCHIVES</h3>
             <div id="archiveList"></div>
-            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & RESET YEAR</button>
+            <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE CURRENT YEAR</button>
         </section>
     </div>
 </div>
@@ -185,12 +189,16 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [];
+let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], debtors = [], globalLedger = [];
 
 // --- AUTH ---
 function toggleAuthMode(isSignup) {
     document.getElementById('loginBox').style.display = isSignup ? 'none' : 'block';
     document.getElementById('signupBox').style.display = isSignup ? 'block' : 'none';
+}
+function togglePass(id) {
+    const el = document.getElementById(id);
+    el.type = el.type === 'password' ? 'text' : 'password';
 }
 async function handleAuth(type) {
     const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
@@ -208,13 +216,13 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// --- CORE DATA ---
+// --- DATA ---
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
     await supabaseClient.from('user_budgets').upsert({ 
         user_id: user.id, 
-        payload: { businessData, stockHistory, archiveVault, personalLedger }
+        payload: { businessData, stockHistory, archiveVault, personalLedger, debtors, globalLedger }
     });
 }
 async function loadData(userId) {
@@ -224,6 +232,8 @@ async function loadData(userId) {
         stockHistory = data.payload.stockHistory || [];
         archiveVault = data.payload.archiveVault || [];
         personalLedger = data.payload.personalLedger || [];
+        debtors = data.payload.debtors || [];
+        globalLedger = data.payload.globalLedger || [];
     }
     renderAll(); renderArchiveList();
 }
@@ -231,92 +241,107 @@ async function loadData(userId) {
 function renderAll() {
     const search = document.getElementById('stockSearch').value.toLowerCase();
     
+    // Render Stock
     document.querySelector("#bTable tbody").innerHTML = businessData
     .filter(x => x.name.toLowerCase().includes(search))
     .map(x => `<tr>
-        <td><b>${x.name}</b></td>
+        <td><b>${x.name}</b><br><small>K${x.unitSellPrice}</small></td>
         <td>${x.currentStock}</td>
-        <td style="color:var(--neon-blue)">K${x.unitSellPrice}</td>
+        <td>K${x.totalCapitalInvested}</td>
         <td>
             <div class="action-cell">
                 <button class="action-btn" onclick="handleSale(${x.id})" style="background:var(--success)"><i class="fas fa-shopping-cart"></i></button>
-                <button class="action-btn" onclick="restockItem(${x.id})" title="Restock" style="background:var(--neon-blue); color:#000;"><i class="fas fa-plus"></i></button>
-                <button class="action-btn" onclick="editPrice(${x.id})" title="Edit Price" style="background:var(--warning); color:#000;"><i class="fas fa-pencil"></i></button>
+                <button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue); color:#000;"><i class="fas fa-plus"></i></button>
             </div>
         </td>
     </tr>`).join('');
 
+    // Totals
     const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     document.getElementById('statCap').innerText = `K ${tCap.toFixed(2)}`;
     document.getElementById('statRev').innerText = `K ${tRev.toFixed(2)}`;
     document.getElementById('statProfit').innerText = `K ${(tRev - tCap).toFixed(2)}`;
 
+    // Budget Table
     document.querySelector("#pTable tbody").innerHTML = personalLedger.map(x => `
         <tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>
     `).join('');
 }
 
-// --- NEW ACTIONS ---
-async function editPrice(id) {
-    const item = businessData.find(x => x.id === id);
-    const res = await openCustomModal(`EDIT PRICE: ${item.name}`, [{id:'p', type:'number', placeholder:`Current: K${item.unitSellPrice}`}]);
-    if(res && res.p) {
-        item.unitSellPrice = parseFloat(res.p);
-        syncData(); renderAll(); showNotify("PRICE UPDATED");
-    }
-}
-
+// --- RESTOCKING LOGIC ---
 async function restockItem(id) {
     const item = businessData.find(x => x.id === id);
     const res = await openCustomModal(`RESTOCK: ${item.name}`, [
-        {id:'q', type:'number', placeholder:'Add Qty'},
-        {id:'c', type:'number', placeholder:'Capital Cost K'}
+        {id:'q', type:'number', placeholder:'Additional Qty'},
+        {id:'c', type:'number', placeholder:'Additional Capital Cost K'}
     ]);
     if(res && res.q && res.c) {
         item.currentStock += parseInt(res.q);
-        stockHistory.push({ id: Date.now(), cost: parseFloat(res.c) });
-        syncData(); renderAll(); showNotify("RESTOCKED");
+        item.totalCapitalInvested += parseFloat(res.c);
+        stockHistory.push({ id: Date.now(), name: item.name, cost: parseFloat(res.c) });
+        syncData(); renderAll(); showNotify("RESTOCKED!");
     }
 }
 
-// --- ARCHIVE LOGIC (FAST) ---
+async function handleSale(id) {
+    const item = businessData.find(x => x.id === id);
+    if(item.currentStock <= 0) return showNotify("OUT OF STOCK", true);
+    item.currentStock -= 1;
+    item.totalSalesRevenue += item.unitSellPrice;
+    syncData(); renderAll(); showNotify("SOLD!");
+}
+
+// --- ARCHIVE LOGIC ---
 async function archiveYear() {
-    const res = await openCustomModal("ARCHIVE YEAR", [{id:'y', type:'text', placeholder:'Year (e.g. 2026)'}]);
+    const res = await openCustomModal("ARCHIVE YEAR", [{id:'y', type:'text', placeholder:'Year Name (e.g. 2025)'}]);
     if(!res || !res.y) return;
 
+    // Optimized Single-Pass Calculations
     const tCap = stockHistory.reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const tRev = businessData.reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const tPExp = personalLedger.filter(x => x.type === 'expense').reduce((s, x) => s + (parseFloat(x.amt) || 0), 0);
     
-    archiveVault.unshift({
-        year: res.y, cap: tCap.toFixed(2), rev: tRev.toFixed(2), 
-        exp: (tCap + tPExp).toFixed(2), profit: (tRev - (tCap + tPExp)).toFixed(2)
-    });
+    const finalData = {
+        year: res.y,
+        cap: tCap.toFixed(2),
+        rev: tRev.toFixed(2),
+        exp: (tCap + tPExp).toFixed(2),
+        profit: (tRev - (tCap + tPExp)).toFixed(2)
+    };
 
-    businessData = []; stockHistory = []; personalLedger = [];
-    await syncData(); renderAll(); renderArchiveList();
+    archiveVault.push(finalData);
+    
+    // Reset Data
+    businessData = []; stockHistory = []; personalLedger = []; debtors = []; globalLedger = [];
+    
+    await syncData();
+    renderAll();
+    renderArchiveList();
     showNotify("YEAR ARCHIVED!");
 }
 
 function renderArchiveList() {
     const container = document.getElementById('archiveList');
-    if(!archiveVault.length) return container.innerHTML = "<small>Empty.</small>";
+    if(!archiveVault.length) { container.innerHTML = "<small>No records.</small>"; return; }
+    
     container.innerHTML = archiveVault.map(v => `
         <div class="archive-card">
-            <div style="color:var(--neon-blue); font-weight:bold;">${v.year} PERFORMANCE</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:5px; margin-top:10px; font-size:0.7rem;">
-                <span>CAPITAL: K${v.cap}</span><span>REVENUE: K${v.rev}</span>
-                <span>EXPENSES: K${v.exp}</span><span style="color:var(--success)">PROFIT: K${v.profit}</span>
+            <div style="color:var(--neon-blue); font-weight:bold; margin-bottom:8px;">YEAR: ${v.year}</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; font-size:0.75rem;">
+                <div>CAPITAL: <br><b>K${v.cap}</b></div>
+                <div>REVENUE: <br><b>K${v.rev}</b></div>
+                <div>TOTAL EXP: <br><b>K${v.exp}</b></div>
+                <div style="color:var(--success)">NET PROFIT: <br><b>K${v.profit}</b></div>
             </div>
         </div>
     `).join('');
 }
 
-// --- UI HELPERS ---
+// --- HELPERS ---
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    el.innerHTML = `<div style="font-size:1.5rem;">${isError ? "🚨" : "✅"}</div><div>${msg}</div>`;
+    el.innerHTML = `<div style="font-size:1.5rem; margin-bottom:5px;">${isError ? "🚨" : "✅"}</div><div>${msg}</div>`;
     el.style.display = 'block';
     setTimeout(() => el.style.display = 'none', 3000);
 }
@@ -327,17 +352,10 @@ function openTab(evt, t) {
 function addBusiness() {
     const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value);
     if(n && c) {
-        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalSalesRevenue: 0 });
-        stockHistory.push({ id: Date.now(), cost: c });
+        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0 });
+        stockHistory.push({ id: Date.now(), name: n, cost: c });
         syncData(); renderAll(); showNotify("ITEM ADDED");
     }
-}
-async function handleSale(id) {
-    const item = businessData.find(x => x.id === id);
-    if(item.currentStock <= 0) return showNotify("OUT OF STOCK", true);
-    item.currentStock -= 1;
-    item.totalSalesRevenue += item.unitSellPrice;
-    syncData(); renderAll(); showNotify("SOLD");
 }
 function addPersonal() {
     const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value;
@@ -351,7 +369,7 @@ function processWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmt').value);
     if(!amt) return;
     personalLedger.push({ id: Date.now(), desc: `Withdrawal: ${document.getElementById('wNote').value}`, amt: amt, type: 'income' });
-    syncData(); renderAll(); showNotify("WITHDRAWN");
+    syncData(); renderAll(); showNotify("TRANSFERRED");
 }
 function openCustomModal(title, inputs) {
     const modal = document.getElementById('customModal');

@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KLPB - Business Engine v4.3.0</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000b1a">
+    <title>KLPB - Business Engine v4.2.0</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -26,6 +29,7 @@
             object-fit: cover;
         }
 
+        /* Personalized Notification */
         #customNotification {
             position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 22px 40px;
@@ -35,7 +39,10 @@
             box-shadow: 0 10px 40px 0 rgba(191, 0, 255, 0.4);
             animation: bounceIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         }
-        @keyframes bounceIn { 0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; } 100% { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+        @keyframes bounceIn { 
+            0% { transform: translate(-50%, -100%) scale(0.5); opacity: 0; }
+            100% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+        }
 
         #customModal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -55,9 +62,9 @@
         .tab-content.active { display: block; }
         
         section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 8px; margin-bottom: 15px; }
-        .metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         .metric-box { border: 1px solid var(--border-glow); padding: 10px; border-radius: 6px; text-align: center; background: rgba(0,0,0,0.6); }
-        .metric-val { display: block; font-size: 0.8rem; font-weight: bold; color: var(--neon-blue); }
+        .metric-val { display: block; font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); }
 
         input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 10px; width: 100%; margin: 6px 0; border-radius: 4px; box-sizing: border-box; }
         .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
@@ -69,7 +76,6 @@
         .action-cell { display: flex; gap: 4px; justify-content: flex-end; }
         .action-btn { border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
         
-        .log-item { font-size: 0.65rem; padding: 5px; border-left: 2px solid var(--neon-blue); background: rgba(255,255,255,0.05); margin-bottom: 4px; }
         .archive-card { background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); border-radius: 8px; padding: 12px; margin-bottom: 10px; }
     </style>
 </head>
@@ -77,6 +83,7 @@
 
 <div id="video-bg-container">
     <video id="bgVideo" autoplay muted loop playsinline><source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-blue-and-white-data-27425-large.mp4"></video>
+    <img id="bgImage" style="display:none;">
 </div>
 
 <div id="customNotification"></div>
@@ -100,12 +107,13 @@
         <button onclick="handleAuth('login')" class="btn-main">LOGIN</button>
         <button onclick="toggleAuthMode(true)" class="btn-main" style="background:transparent; border:1px solid var(--success); color:var(--success);">SIGN UP</button>
     </div>
+
     <div class="auth-card" id="signupBox" style="display:none;">
         <h2 style="color: var(--success);">SIGN UP</h2>
         <input type="email" id="regEmail" placeholder="Email">
         <input type="password" id="regPass" placeholder="Password">
         <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">CREATE ACCOUNT</button>
-        <p onclick="toggleAuthMode(false)" style="font-size:0.7rem; color:var(--neon-blue); cursor:pointer;">Back to Login</p>
+        <p onclick="toggleAuthMode(false)" style="font-size:0.7rem; color:var(--neon-blue); cursor:pointer; margin-top:10px;">Back to Login</p>
     </div>
 </div>
 
@@ -125,7 +133,7 @@
         <button class="tab-btn active" onclick="openTab(event, 'business')">Stock</button>
         <button class="tab-btn" onclick="openTab(event, 'personal')">Budget</button>
         <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
-        <button class="tab-btn" onclick="openTab(event, 'summary')">History</button>
+        <button class="tab-btn" onclick="openTab(event, 'summary')">Archives</button>
     </div>
 
     <div id="business" class="tab-content active">
@@ -165,10 +173,7 @@
 
     <div id="summary" class="tab-content">
         <section>
-            <h4 style="color:var(--neon-blue); margin-top:0;">SYSTEM LOG (CURRENT YEAR)</h4>
-            <div id="systemLog" style="max-height:150px; overflow-y:auto; margin-bottom:15px; border:1px solid var(--border-glow); padding:5px;"></div>
-            
-            <h4 style="color:var(--neon-blue);">PAST YEAR SUMMARIES</h4>
+            <h3 style="color:var(--neon-blue); font-size:0.9rem;">PAST YEAR SUMMARIES</h3>
             <div id="archiveList"></div>
             <button onclick="archiveYear()" class="btn-main" style="background:var(--warning); margin-top:20px;">ARCHIVE & RESET YEAR</button>
         </section>
@@ -180,7 +185,7 @@ const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [], systemLogs = [];
+let businessData = [], stockHistory = [], archiveVault = [], personalLedger = [];
 
 // --- AUTH ---
 function toggleAuthMode(isSignup) {
@@ -209,7 +214,7 @@ async function syncData() {
     if(!user) return;
     await supabaseClient.from('user_budgets').upsert({ 
         user_id: user.id, 
-        payload: { businessData, stockHistory, archiveVault, personalLedger, systemLogs }
+        payload: { businessData, stockHistory, archiveVault, personalLedger }
     });
 }
 async function loadData(userId) {
@@ -219,13 +224,13 @@ async function loadData(userId) {
         stockHistory = data.payload.stockHistory || [];
         archiveVault = data.payload.archiveVault || [];
         personalLedger = data.payload.personalLedger || [];
-        systemLogs = data.payload.systemLogs || [];
     }
-    renderAll(); renderArchiveList(); renderLogs();
+    renderAll(); renderArchiveList();
 }
 
 function renderAll() {
     const search = document.getElementById('stockSearch').value.toLowerCase();
+    
     document.querySelector("#bTable tbody").innerHTML = businessData
     .filter(x => x.name.toLowerCase().includes(search))
     .map(x => `<tr>
@@ -235,8 +240,8 @@ function renderAll() {
         <td>
             <div class="action-cell">
                 <button class="action-btn" onclick="handleSale(${x.id})" style="background:var(--success)"><i class="fas fa-shopping-cart"></i></button>
-                <button class="action-btn" onclick="restockItem(${x.id})" style="background:var(--neon-blue); color:#000;"><i class="fas fa-plus"></i></button>
-                <button class="action-btn" onclick="editPrice(${x.id})" style="background:var(--warning); color:#000;"><i class="fas fa-pencil"></i></button>
+                <button class="action-btn" onclick="restockItem(${x.id})" title="Restock" style="background:var(--neon-blue); color:#000;"><i class="fas fa-plus"></i></button>
+                <button class="action-btn" onclick="editPrice(${x.id})" title="Edit Price" style="background:var(--warning); color:#000;"><i class="fas fa-pencil"></i></button>
             </div>
         </td>
     </tr>`).join('');
@@ -252,23 +257,11 @@ function renderAll() {
     `).join('');
 }
 
-// --- LOGGING ---
-function addLog(msg) {
-    const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-    systemLogs.unshift(`[${time}] ${msg}`);
-    renderLogs();
-}
-function renderLogs() {
-    const container = document.getElementById('systemLog');
-    container.innerHTML = systemLogs.map(l => `<div class="log-item">${l}</div>`).join('');
-}
-
-// --- UPDATED ACTIONS WITH LOGS ---
+// --- NEW ACTIONS ---
 async function editPrice(id) {
     const item = businessData.find(x => x.id === id);
     const res = await openCustomModal(`EDIT PRICE: ${item.name}`, [{id:'p', type:'number', placeholder:`Current: K${item.unitSellPrice}`}]);
     if(res && res.p) {
-        addLog(`Price Change: ${item.name} from K${item.unitSellPrice} to K${res.p}`);
         item.unitSellPrice = parseFloat(res.p);
         syncData(); renderAll(); showNotify("PRICE UPDATED");
     }
@@ -278,17 +271,16 @@ async function restockItem(id) {
     const item = businessData.find(x => x.id === id);
     const res = await openCustomModal(`RESTOCK: ${item.name}`, [
         {id:'q', type:'number', placeholder:'Add Qty'},
-        {id:'c', type:'number', placeholder:'Cost K'}
+        {id:'c', type:'number', placeholder:'Capital Cost K'}
     ]);
     if(res && res.q && res.c) {
-        addLog(`Restocked: ${item.name} (+${res.q} units) at K${res.c}`);
         item.currentStock += parseInt(res.q);
         stockHistory.push({ id: Date.now(), cost: parseFloat(res.c) });
         syncData(); renderAll(); showNotify("RESTOCKED");
     }
 }
 
-// --- ARCHIVE LOGIC ---
+// --- ARCHIVE LOGIC (FAST) ---
 async function archiveYear() {
     const res = await openCustomModal("ARCHIVE YEAR", [{id:'y', type:'text', placeholder:'Year (e.g. 2026)'}]);
     if(!res || !res.y) return;
@@ -302,8 +294,8 @@ async function archiveYear() {
         exp: (tCap + tPExp).toFixed(2), profit: (tRev - (tCap + tPExp)).toFixed(2)
     });
 
-    businessData = []; stockHistory = []; personalLedger = []; systemLogs = [];
-    await syncData(); renderAll(); renderArchiveList(); renderLogs();
+    businessData = []; stockHistory = []; personalLedger = [];
+    await syncData(); renderAll(); renderArchiveList();
     showNotify("YEAR ARCHIVED!");
 }
 
@@ -337,7 +329,6 @@ function addBusiness() {
     if(n && c) {
         businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalSalesRevenue: 0 });
         stockHistory.push({ id: Date.now(), cost: c });
-        addLog(`New Product: ${n} added with ${q} units.`);
         syncData(); renderAll(); showNotify("ITEM ADDED");
     }
 }
@@ -359,9 +350,7 @@ function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); sy
 function processWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmt').value);
     if(!amt) return;
-    const note = document.getElementById('wNote').value || "General";
-    personalLedger.push({ id: Date.now(), desc: `Withdrawal: ${note}`, amt: amt, type: 'income' });
-    addLog(`Withdrawal: K${amt} for ${note}`);
+    personalLedger.push({ id: Date.now(), desc: `Withdrawal: ${document.getElementById('wNote').value}`, amt: amt, type: 'income' });
     syncData(); renderAll(); showNotify("WITHDRAWN");
 }
 function openCustomModal(title, inputs) {

@@ -19,7 +19,6 @@
             --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
-        /* Static Image Background - Coin & Self Development Theme */
         #static-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; background-color: var(--deep-blue);
@@ -28,7 +27,6 @@
             background-size: cover; background-position: center;
         }
 
-        /* Fixed Notification: Purple, translucent, no pop-out effect per request */
         #customNotification {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: var(--notif-purple); color: white; padding: 15px 30px;
@@ -46,8 +44,6 @@
 
         body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
         
-        /* Branding & Logo */
-        .brand-header { margin-bottom: 20px; }
         .logo-main { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--neon-blue); margin-bottom: 10px; box-shadow: 0 0 15px var(--neon-blue); }
         .logo-corner { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--neon-blue); }
         .brand-name { font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; color: white; margin: 0; }
@@ -69,28 +65,19 @@
         .metric-val { display: block; font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); }
 
         input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 6px 0; border-radius: 6px; box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
         .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
         
         table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
         th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
         td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        
         .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: #df80ff !important; font-weight: bold; text-align: center; }
-        .year-separator { background: linear-gradient(90deg, transparent, var(--notif-purple), transparent) !important; color: white !important; text-align: center; font-weight: bold; border:none; }
-        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; min-width: 60px; }
-        .filter-btn.active { background: var(--notif-purple); border-color: white; }
         .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
         .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .debt-alert { background: rgba(191, 0, 255, 0.2); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .overdue-debt { color: var(--danger) !important; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div id="static-bg"></div>
-
 <div id="customNotification"></div>
 
 <div id="customModal">
@@ -116,23 +103,14 @@
         <button onclick="handleAuth('login')" class="btn-main">SYSTEM ACCESS</button>
         <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
             <span onclick="toggleAuthMode('signup')" style="color:var(--success); cursor:pointer; font-size:0.75rem;">NEW USER? CREATE ACCOUNT</span>
-            <span onclick="toggleAuthMode('reset')" style="color:var(--warning); cursor:pointer; font-size:0.75rem;">FORGOT PASSWORD?</span>
         </div>
     </div>
-
     <div class="auth-card" id="signupBox" style="display:none;">
-        <h2 style="color: var(--success); margin-top:0;">INITIALIZE USER</h2>
+        <h2 style="color: var(--success); margin-top:0;">INITIALIZE</h2>
         <input type="email" id="regEmail" placeholder="Email Address">
         <input type="password" id="regPass" placeholder="Secure Password">
-        <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">REGISTER ACCOUNT</button>
-        <span onclick="toggleAuthMode('login')" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
-    </div>
-
-    <div class="auth-card" id="resetBox" style="display:none;">
-        <h2 style="color: var(--warning); margin-top:0;">RECOVERY</h2>
-        <input type="email" id="resetEmail" placeholder="Email Address">
-        <button onclick="handleAuth('reset')" class="btn-main" style="background:var(--warning)">SEND RESET LINK</button>
-        <span onclick="toggleAuthMode('login')" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
+        <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">REGISTER</button>
+        <span onclick="toggleAuthMode('login')" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back</span>
     </div>
 </div>
 
@@ -142,13 +120,12 @@
             <img src="icon.jpg" alt="Logo" class="logo-corner">
             <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
         </div>
-        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">TERMINATE SESSION</button>
+        <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">TERMINATE</button>
     </div>
 
     <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
-        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">TIMELINE:</label>
-        <select id="globalMonth" style="margin:0; width:50%;" onchange="renderAll()"></select>
-        <select id="globalYear" style="margin:0; width:40%;" onchange="renderAll()"></select>
+        <select id="globalMonth" style="margin:0; width:55%;" onchange="renderAll()"></select>
+        <select id="globalYear" style="margin:0; width:45%;" onchange="renderAll()"></select>
     </div>
 
     <div class="metric-grid">
@@ -175,40 +152,19 @@
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
             <button onclick="addBusiness()" class="btn-main">ADD STOCK ITEM</button>
-            <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
-            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">SALE / RE</th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="debtors" class="tab-content">
         <section>
-            <div id="debtSummaryHeader" class="debt-alert" style="display:none;"><p id="debtSummaryText" style="margin:0; font-size:0.75rem;"></p></div>
-            <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()">
-            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
+            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="ledger" class="tab-content">
         <section>
-            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
-                <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
-                <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">INCOME</button>
-                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">BIZ EXP</button>
-                <button class="filter-btn" onclick="setLedgerFilter('PERSONAL', this)">PERS EXP</button>
-                <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">DEBTS</button>
-            </div>
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                <select id="timeFilter" onchange="renderAll()" style="font-size: 0.7rem;">
-                    <option value="YEAR">THIS YEAR</option>
-                    <option value="MONTH">THIS MONTH</option>
-                    <option value="WEEK">THIS WEEK</option>
-                </select>
-                <input type="text" id="ledgerSearch" placeholder="🔍 Search logs..." onkeyup="renderAll()" style="margin:0;">
-            </div>
             <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
-            <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
-                NET TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
-            </div>
         </section>
     </div>
 
@@ -221,195 +177,114 @@
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount K">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
+            <button onclick="addPersonal()" class="btn-main">LOG BUDGET ENTRY</button>
             <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
         </section>
     </div>
 
     <div id="withdraw" class="tab-content">
         <section>
-            <h3 style="color:var(--neon-blue); margin-top:0;">WITHDRAWAL</h3>
-            <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
-            <input type="number" id="wAmt" placeholder="Amount K">
-            <input type="text" id="wNote" placeholder="Reason">
-            <button onclick="processWithdrawal()" class="btn-main" style="background:rgba(191, 0, 255, 0.7); color:white;">TRANSFER TO BUDGET</button>
+            <h3 style="color:var(--neon-blue); margin-top:0;">TRANSFER PROFIT</h3>
+            <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">AVAILABLE PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
+            <input type="number" id="wAmt" placeholder="Amount to Withdraw K">
+            <input type="text" id="wNote" placeholder="Reason for transfer">
+            <button onclick="processWithdrawal()" class="btn-main" style="background:rgba(191, 0, 255, 0.7); color:white;">SEND TO PERSONAL BUDGET</button>
         </section>
     </div>
 </div>
 
 <script>
-// --- CORE CONFIG ---
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [], currentLedgerType = 'ALL';
+let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [];
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
-// --- INITIALIZATION ---
-function initTimeline() {
-    const mSelect = document.getElementById('globalMonth');
-    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
-    mSelect.value = new Date().getMonth();
-
-    const ySelect = document.getElementById('globalYear');
-    let years = [];
-    for(let y=2025; y<=2100; y++) years.push(`<option value="${y}">YEAR ${y}</option>`);
-    ySelect.innerHTML = years.join('');
-    ySelect.value = new Date().getFullYear();
-}
-
-function isThisWeek(dateString) {
-    const recordDate = new Date(dateString);
-    const today = new Date();
-    const diffTime = Math.abs(today - recordDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays <= 7;
-}
-
-// --- CORE RENDER ---
+// --- RENDER ---
 function renderAll() {
-    const activeMonth = parseInt(document.getElementById('globalMonth').value);
-    const activeYear = parseInt(document.getElementById('globalYear').value);
-    const timeFrame = document.getElementById('timeFilter').value;
-    const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
-    const ledSearch = document.getElementById('ledgerSearch').value.toLowerCase();
-    
-    // 1. STOCK
-    document.querySelector("#bTable tbody").innerHTML = businessData
-    .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
-    .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; padding:2px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
+    const activeM = parseInt(document.getElementById('globalMonth').value);
+    const activeY = parseInt(document.getElementById('globalYear').value);
 
-    // 2. DEBTORS
-    const totalD = debtors.reduce((s, x) => s + x.balance, 0);
-    document.getElementById('debtSummaryHeader').style.display = debtors.length ? 'block' : 'none';
-    document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} Total Outstanding.`;
-    
-    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => {
-        const debtDate = new Date(d.id);
-        const diffDays = Math.floor(Math.abs(new Date() - debtDate) / (1000 * 60 * 60 * 24));
-        const isOverdue = diffDays >= 5;
-        return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
-    }).join('');
+    // Calc Biz Stats
+    const mCap = stockHistory.filter(x => x.month === activeM && x.year === activeY).reduce((s, x) => s + x.cost, 0);
+    const mRev = businessData.filter(x => x.month === activeM && x.year === activeY).reduce((s, x) => s + x.totalSalesRevenue, 0);
+    const mProfit = mRev - mCap;
 
-    // 3. LEDGER
-    let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "", filteredTotal = 0;
-    const sortedLedger = [...globalLedger].reverse().filter(l => {
-        const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
-        const searchMatch = l.desc.toLowerCase().includes(ledSearch);
-        let timeMatch = (timeFrame === 'YEAR' && l.year === activeYear) || (timeFrame === 'MONTH' && l.year === activeYear && l.month === activeMonth) || (timeFrame === 'WEEK' && isThisWeek(l.date));
-        return typeMatch && searchMatch && timeMatch;
-    });
-
-    sortedLedger.forEach(l => {
-        if (l.year !== lastYearSeen) { ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; lastYearSeen = l.year; lastMonthSeen = null; }
-        if (l.month !== lastMonthSeen) { ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; lastMonthSeen = l.month; }
-        const isPos = ['SALE','INCOME','WITHDRAW'].includes(l.type);
-        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : '-'}K${l.amt.toFixed(2)}</td></tr>`;
-        filteredTotal += isPos ? l.amt : -l.amt;
-    });
-    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
-    document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
-
-    // 4. BUDGET
-    const pCur = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
-    document.getElementById('pIncStat').innerText = "K " + pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0).toFixed(2);
-    document.getElementById('pExpStat').innerText = "K " + pCur.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0).toFixed(2);
-    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
-
-    // 5. STATS
-    const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-    const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     document.getElementById('statCap').innerText = `K ${mCap.toFixed(2)}`;
     document.getElementById('statRev').innerText = `K ${mRev.toFixed(2)}`;
-    document.getElementById('statProfit').innerText = `K ${(mRev - mCap).toFixed(2)}`;
-    document.getElementById('statDebt').innerText = `K ${totalD.toFixed(2)}`;
-    document.getElementById('wdProfitStat').innerText = `K ${(mRev - mCap).toFixed(2)}`;
+    document.getElementById('statProfit').innerText = `K ${mProfit.toFixed(2)}`;
+    document.getElementById('wdProfitStat').innerText = `K ${mProfit.toFixed(2)}`;
+
+    // Render Stock
+    document.querySelector("#bTable tbody").innerHTML = businessData.filter(x => x.month === activeM && x.year === activeY)
+        .map(x => `<tr><td><b>${x.name}</b></td><td>K${x.totalCapitalInvested}</td><td>${x.currentStock}</td><td><button onclick="handleSale(${x.id})">$</button></td></tr>`).join('');
+
+    // Personal Budget
+    const pCur = personalLedger.filter(x => x.month === activeM && x.year === activeY);
+    const pInc = pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
+    const pExp = pCur.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0);
+    document.getElementById('pIncStat').innerText = `K ${pInc.toFixed(2)}`;
+    document.getElementById('pExpStat').innerText = `K ${pExp.toFixed(2)}`;
+    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `<tr><td>${x.desc}</td><td>K${x.amt}</td><td>${x.type}</td><td><button onclick="delP(${x.id})">x</button></td></tr>`).join('');
 }
 
-// --- LOGIC FUNCTIONS ---
-async function handleSale(id, isDebt) {
-    const qty = parseInt(document.getElementById(`q_${id}`).value);
-    const item = businessData.find(x => x.id === id);
-    if (item.currentStock < qty) return showNotify("LOW STOCK", true);
-    const total = item.unitSellPrice * qty;
-    const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+// --- LOGIC WITH VALIDATIONS ---
 
-    if (isDebt) {
-        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
-        if(res && res.n) {
-            debtors.push({ id: Date.now(), name: res.n, phone: res.p || 'N/A', product: item.name, balance: total, originalId: id });
-            logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m, y);
-            item.currentStock -= qty;
-        } else return;
-    } else {
-        item.totalSalesRevenue += total;
-        item.currentStock -= qty;
-        logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
+function addPersonal() {
+    const d = document.getElementById('pDesc').value;
+    const a = parseFloat(document.getElementById('pAmt').value);
+    const t = document.getElementById('pType').value;
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const y = parseInt(document.getElementById('globalYear').value);
+
+    if (!d || !a) return showNotify("Enter details", true);
+
+    // Validation: Expense cannot exceed Income in Personal Budget
+    if (t === 'expense') {
+        const pCur = personalLedger.filter(x => x.month === m && x.year === y);
+        const currentIncome = pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
+        const currentExpense = pCur.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0);
+        
+        if (currentExpense + a > currentIncome) {
+            return showNotify("INSUFFICIENT BUDGET INCOME", true);
+        }
     }
+
+    personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
     syncData(); renderAll(); showNotify("SAVED");
 }
 
-async function openRestock(id) {
-    const item = businessData.find(x => x.id === id);
-    const res = await openCustomModal(`RESTOCK: ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cap K'}]);
-    if(res && res.q && res.c) {
-        const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
-        item.currentStock += parseInt(res.q);
-        item.totalCapitalInvested += parseFloat(res.c);
-        stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
-        logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
-        syncData(); renderAll(); showNotify("RESTOCKED");
-    }
-}
-
-function payDebt(id) {
-    const d = debtors.find(x => x.id === id);
-    const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
-    const item = businessData.find(x => x.id === d.originalId);
-    if(item) item.totalSalesRevenue += d.balance;
-    logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
-    debtors = debtors.filter(x => x.id !== id);
-    syncData(); renderAll(); showNotify("PAID");
-}
-
-function addBusiness() {
-    const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
-    if(n && c) {
-        businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
-        stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
-        logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
-        syncData(); renderAll(); showNotify("ADDED");
-    }
-}
-
-function addPersonal() {
-    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
-    if(d && a) {
-        personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
-        logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
-        document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
-        syncData(); renderAll(); showNotify("LOGGED");
-    }
-}
-
 function processWithdrawal() {
-    const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
-    const note = document.getElementById('wNote').value || 'Withdraw';
-    if(!amt || amt <= 0) return showNotify("Invalid amount", true);
-    personalLedger.push({ id: Date.now(), desc: `[WD] ${note}`, amt: amt, type: 'income', month: m, year: y });
-    logToLedger(`Withdrawal: ${note}`, 'WITHDRAW', amt, m, y);
-    syncData(); renderAll(); showNotify("TRANSFERRED");
+    const amt = parseFloat(document.getElementById('wAmt').value);
+    const note = document.getElementById('wNote').value || 'Profit Withdrawal';
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const y = parseInt(document.getElementById('globalYear').value);
+
+    // Calc current profit
+    const mCap = stockHistory.filter(x => x.month === m && x.year === y).reduce((s, x) => s + x.cost, 0);
+    const mRev = businessData.filter(x => x.month === m && x.year === y).reduce((s, x) => s + x.totalSalesRevenue, 0);
+    const currentProfit = mRev - mCap;
+
+    // Validation: Cannot withdraw more than net profit
+    if (currentProfit <= 0) return showNotify("ZERO PROFIT TO WITHDRAW", true);
+    if (amt > currentProfit) return showNotify("AMOUNT EXCEEDS NET PROFIT", true);
+    if (!amt || amt <= 0) return showNotify("INVALID AMOUNT", true);
+
+    // Subtract from business (by adding it as a business expense/negative sale record logic)
+    // We log it as a specific ledger type 'WITHDRAW'
+    globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc: `WD: ${note}`, type: 'WITHDRAW', amt: amt, month: m, year: y });
+    
+    // Add as income to Personal Budget
+    personalLedger.push({ id: Date.now(), desc: `[BIZ PROFIT] ${note}`, amt: amt, type: 'income', month: m, year: y });
+    
+    syncData(); renderAll();
+    document.getElementById('wAmt').value = '';
+    showNotify("PROFIT TRANSFERRED TO BUDGET");
 }
 
-// --- AUTH & SYNC ---
+// --- CORE UTILS ---
 async function handleAuth(type) {
-    if(type === 'reset') {
-        const email = document.getElementById('resetEmail').value;
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-        if(error) showNotify(error.message, true); else showNotify("Check email for reset link!");
-        return;
-    }
     const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
     const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
     const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
@@ -418,18 +293,18 @@ async function handleAuth(type) {
 
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
-    if(!user) return;
-    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, updated_at: new Date().toISOString() });
+    if(user) await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, updated_at: new Date().toISOString() });
 }
 
 async function loadData(userId) {
     const { data } = await supabaseClient.from('user_budgets').select('payload').eq('user_id', userId).maybeSingle();
     if (data?.payload) {
-        const p = data.payload;
-        businessData = p.businessData || []; stockHistory = p.stockHistory || [];
-        personalLedger = p.personalLedger || []; debtors = p.debtors || []; globalLedger = p.globalLedger || [];
+        businessData = data.payload.businessData || []; 
+        stockHistory = data.payload.stockHistory || [];
+        personalLedger = data.payload.personalLedger || []; 
+        globalLedger = data.payload.globalLedger || [];
     }
-    initTimeline(); renderAll();
+    renderAll();
 }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -437,6 +312,12 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('userDisplay').innerText = session.user.email;
+        const mSelect = document.getElementById('globalMonth');
+        mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+        mSelect.value = new Date().getMonth();
+        const ySelect = document.getElementById('globalYear');
+        ySelect.innerHTML = [2025, 2026, 2027].map(y => `<option value="${y}">${y}</option>`).join('');
+        ySelect.value = new Date().getFullYear();
         loadData(session.user.id);
     }
 });
@@ -447,39 +328,9 @@ function showNotify(msg, isError = false) {
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
-
-function openCustomModal(title, inputs) {
-    const modal = document.getElementById('customModal');
-    document.getElementById('modalTitle').innerText = title;
-    const container = document.getElementById('modalInputs'); container.innerHTML = '';
-    inputs.forEach(inp => {
-        const el = document.createElement('input'); el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
-        container.appendChild(el);
-    });
-    modal.style.display = 'flex';
-    return new Promise(resolve => {
-        document.getElementById('modalConfirm').onclick = () => {
-            const res = {}; inputs.forEach(inp => res[inp.id] = document.getElementById(`m_inp_${inp.id}`).value);
-            closeCustomModal(); resolve(res);
-        };
-    });
-}
-function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
-function toggleAuthMode(mode) { 
-    document.getElementById('loginBox').style.display = mode === 'login' ? 'block' : 'none'; 
-    document.getElementById('signupBox').style.display = mode === 'signup' ? 'block' : 'none'; 
-    document.getElementById('resetBox').style.display = mode === 'reset' ? 'block' : 'none'; 
-}
 function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
-function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
-function setLedgerFilter(type, btn) { currentLedgerType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
-function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); globalLedger = globalLedger.filter(l => l.id !== id); syncData(); renderAll(); }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
-function sendWhatsAppReminder(id) {
-    const d = debtors.find(x => x.id === id);
-    if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
-    window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello ' + d.name + ', reminder for balance K' + d.balance + ' for ' + d.product + '.')}`, '_blank');
-}
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); syncData(); renderAll(); }
 </script>
 </body>
 </html>

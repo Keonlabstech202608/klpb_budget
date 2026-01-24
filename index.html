@@ -16,7 +16,7 @@
 
     <link rel="apple-touch-startup-image" href="splash.png">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.6.3</title>
+    <title>KLPB - Business Engine v4.6.2</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -370,7 +370,7 @@ function renderAll() {
             <td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td>
         </tr>`).join('');
 
-    // 5. STATS (DASHBOARD - FIXED FILTERING)
+    // 5. STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const mWithdrawals = globalLedger.filter(l => l.month === activeMonth && l.year === activeYear && l.type === 'WITHDRAW').reduce((s, l) => s + l.amt, 0);
@@ -532,7 +532,6 @@ function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
     el.innerHTML = `<div>${isError ? "⚠️" : "✔️"} ${msg}</div>`;
     el.style.display = 'block';
-    el.style.backgroundColor = 'rgba(191, 0, 255, 0.75)'; // Translucent bright purple
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 

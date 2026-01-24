@@ -15,7 +15,7 @@
 
     <link rel="apple-touch-startup-image" href="splash.png">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.6.3</title>
+    <title>KLPB - Business Engine v4.6.2</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,7 +25,7 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(147, 51, 234, 0.7); /* Translucent bright purple [cite: 2026-01-14] */
+            --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
         #static-bg {
@@ -43,7 +43,6 @@
             border: 1px solid rgba(255, 255, 255, 0.2); z-index: 40000;
             display: none; text-align: center; font-weight: bold;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            transition: opacity 0.3s ease;
         }
 
         #customModal {
@@ -112,6 +111,7 @@
 <div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column;">
     <div class="auth-card" id="loginBox">
         <div class="brand-header">
+            <img https://raw.githubusercontent.com/Keonlabstech202608/klpb_budget/main/icon.jpg>
             <h1 class="brand-name">KEONLABS</h1>
             <span class="brand-sub">PERSONAL BUDGET & GROWTH ENGINE</span>
         </div>
@@ -143,10 +143,10 @@
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display:flex; align-items:center; gap:8px;">
+            <img https://raw.githubusercontent.com/Keonlabstech202608/klpb_budget/main/icon.jpg>
             <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
         </div>
         <div style="display:flex; gap:5px;">
-            <button onclick="manualBackup()" style="background:rgba(0, 242, 255, 0.2); border:1px solid var(--neon-blue); color:var(--neon-blue); padding:5px 10px; border-radius:4px; font-size:0.7rem;">BACKUP</button>
             <button onclick="resetUserData()" style="background:rgba(255, 77, 77, 0.2); border:1px solid var(--danger); color:var(--danger); padding:5px 10px; border-radius:4px; font-size:0.7rem;">RESET DATA</button>
             <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">TERMINATE SESSION</button>
         </div>
@@ -221,7 +221,7 @@
 
     <div id="personal" class="tab-content">
         <section>
-            <div id="pStatsContainer" style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
                 <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
                 <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
             </div>
@@ -245,6 +245,7 @@
 </div>
 
 <script>
+// --- CORE CONFIG ---
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -271,6 +272,7 @@ function isThisWeek(dateString) {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 7;
 }
 
+// --- CORE RENDER ---
 function renderAll() {
     const activeMonth = parseInt(document.getElementById('globalMonth').value);
     const activeYear = parseInt(document.getElementById('globalYear').value);
@@ -319,10 +321,13 @@ function renderAll() {
         }
 
         const isPos = ['SALE', 'INCOME'].includes(l.type);
-        const displayAmt = Math.abs(l.amt); 
+        const displayAmt = Math.abs(l.amt); // Ensures no negative signs in the table rows
 
-        if (isPos) { totalLedgerIncome += displayAmt; } 
-        else { totalLedgerExpense += displayAmt; }
+        if (isPos) {
+            totalLedgerIncome += l.amt;
+        } else {
+            totalLedgerExpense += l.amt;
+        }
 
         ledgerHTML += `
             <tr>
@@ -336,18 +341,31 @@ function renderAll() {
     });
 
     document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
-    
-    const netLedger = totalLedgerIncome - totalLedgerExpense;
+
+    // Update the footer with separate totals
+    const netTotal = totalLedgerIncome - totalLedgerExpense;
     document.getElementById('ledgerFooter').innerHTML = `
         <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-            <span>INC: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span>
-            <span>EXP: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span>
+            <span>TOTAL INCOME: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span>
+            <span>TOTAL EXPENSE: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span>
         </div>
         <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
-            NET: <span id="ledgerFilteredTotal">K ${netLedger.toFixed(2)}</span>
+            NET TOTAL: <span id="ledgerFilteredTotal">K ${netTotal.toFixed(2)}</span>
         </div>
     `;
+    });
 
+    sortedLedger.forEach(l => {
+        if (l.year !== lastYearSeen) { ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; lastYearSeen = l.year; lastMonthSeen = null; }
+        if (l.month !== lastMonthSeen) { ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; lastMonthSeen = l.month; }
+        const isPos = ['SALE','INCOME'].includes(l.type);
+        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : '-'}K${l.amt.toFixed(2)}</td></tr>`;
+        filteredTotal += isPos ? l.amt : -l.amt;
+    });
+    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
+    document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
+
+    // 4. BUDGET
     // 4. BUDGET
     const pCur = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
     const totalIncome = pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
@@ -357,9 +375,10 @@ function renderAll() {
     document.getElementById('pIncStat').innerText = "K " + totalIncome.toFixed(2);
     document.getElementById('pExpStat').innerText = "K " + totalExpense.toFixed(2);
     
-    document.getElementById('pStatsContainer').innerHTML = `
-        <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div>
-        <div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div>
+    // Optional: Add a visual indicator for net remaining budget
+    document.querySelector("#personal section").querySelector('div').innerHTML = `
+        <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div>
+        <div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span id="pExpStat" style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div>
         <div class="metric-box" style="flex:1; border-color:var(--neon-blue);">NET: <span style="color:var(--neon-blue)">K ${netBudget.toFixed(2)}</span></div>
     `;
 
@@ -370,7 +389,6 @@ function renderAll() {
             <td style="color:${x.type === 'income' ? 'var(--success)' : 'var(--danger)'}">${x.type.toUpperCase()}</td>
             <td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td>
         </tr>`).join('');
-
     // 5. STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
@@ -384,6 +402,7 @@ function renderAll() {
     document.getElementById('wdProfitStat').innerText = `K ${netProfit.toFixed(2)}`;
 }
 
+// --- LOGIC FUNCTIONS ---
 async function handleSale(id, isDebt) {
     const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
@@ -403,10 +422,7 @@ async function handleSale(id, isDebt) {
         item.currentStock -= qty;
         logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
     }
-    
-    renderAll(); 
-    showNotify("SAVED");
-    await syncData(); 
+    syncData(); renderAll(); showNotify("SAVED");
 }
 
 async function openRestock(id) {
@@ -418,43 +434,31 @@ async function openRestock(id) {
         item.totalCapitalInvested += parseFloat(res.c);
         stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
         logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
-        
-        renderAll(); 
-        showNotify("RESTOCKED");
-        await syncData(); 
+        syncData(); renderAll(); showNotify("RESTOCKED");
     }
 }
 
-async function payDebt(id) {
+function payDebt(id) {
     const d = debtors.find(x => x.id === id);
     const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     const item = businessData.find(x => x.id === d.originalId);
     if(item) item.totalSalesRevenue += d.balance;
     logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
     debtors = debtors.filter(x => x.id !== id);
-    
-    renderAll(); 
-    showNotify("PAID");
-    await syncData(); 
+    syncData(); renderAll(); showNotify("PAID");
 }
 
-async function addBusiness() {
+function addBusiness() {
     const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     if(n && c) {
         businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
         stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
         logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
-        
-        document.getElementById('bName').value = ''; document.getElementById('bBuy').value = ''; 
-        document.getElementById('bSell').value = ''; document.getElementById('bStock').value = '';
-        
-        renderAll(); 
-        showNotify("ADDED");
-        await syncData(); 
+        syncData(); renderAll(); showNotify("ADDED");
     }
 }
 
-async function addPersonal() {
+function addPersonal() {
     const d = document.getElementById('pDesc').value;
     const a = parseFloat(document.getElementById('pAmt').value);
     const t = document.getElementById('pType').value;
@@ -471,10 +475,7 @@ async function addPersonal() {
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
         logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
         document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
-        
-        renderAll(); 
-        showNotify("LOGGED");
-        await syncData(); 
+        syncData(); renderAll(); showNotify("LOGGED");
     }
 }
 
@@ -495,37 +496,28 @@ async function processWithdrawal() {
     personalLedger.push({ id: Date.now(), desc: `[WD] ${note}`, amt: amt, type: 'income', month: m, year: y });
     logToLedger(`Withdrawal: ${note}`, 'WITHDRAW', amt, m, y);
     document.getElementById('wAmt').value = ''; document.getElementById('wNote').value = '';
-    
-    renderAll(); 
-    showNotify("TRANSFERRED TO BUDGET");
-    await syncData(); 
+    syncData(); renderAll(); showNotify("TRANSFERRED TO BUDGET");
 }
 
-async function manualBackup() {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
-        businessData, stockHistory, personalLedger, debtors, globalLedger
-    }));
-    const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href", dataStr);
-    downloadAnchorNode.setAttribute("download", "keonlabs_backup_" + new Date().toISOString().slice(0,10) + ".json");
-    document.body.appendChild(downloadAnchorNode);
-    downloadAnchorNode.click();
-    downloadAnchorNode.remove();
-    showNotify("Backup Downloaded");
-}
-
+// ---RESET DATA ---
 async function resetUserData() {
     const res = await openCustomModal("CONFIRM RESET", [{id:'confirm', type:'text', placeholder:'Type DELETE to confirm'}]);
     if (res && res.confirm === 'DELETE') {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if(user) {
-            await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
-            showNotify("Data Wiped. Reloading...");
-            setTimeout(() => location.reload(), 1500);
+            const { error } = await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
+            if(error) { showNotify("Error resetting data", true); } 
+            else {
+                showNotify("Data Wiped. Reloading...");
+                setTimeout(() => location.reload(), 1500);
+            }
         }
+    } else {
+        showNotify("Reset Cancelled", true);
     }
 }
 
+// --- AUTH & SYNC ---
 async function handleAuth(type) {
     if(type === 'reset') {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(document.getElementById('resetEmail').value);
@@ -541,16 +533,7 @@ async function handleAuth(type) {
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
-    const { error } = await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, 
-        payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, 
-        updated_at: new Date().toISOString() 
-    }, { onConflict: 'user_id' });
-    
-    if (error) {
-        showNotify("Sync Error!", true);
-        console.error(error);
-    }
+    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, updated_at: new Date().toISOString() });
 }
 
 async function loadData(userId) {
@@ -576,11 +559,6 @@ function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
     el.innerHTML = `<div>${isError ? "⚠️" : "✔️"} ${msg}</div>`;
     el.style.display = 'block';
-    
-    // Notification color (translucent bright purple) [cite: 2026-01-14]
-    el.style.backgroundColor = 'rgba(147, 51, 234, 0.7)'; 
-    el.style.backdropFilter = 'blur(10px)'; 
-
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
@@ -609,14 +587,7 @@ function toggleAuthMode(mode) {
 function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
 function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
 function setLedgerFilter(type, btn) { currentLedgerType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
-
-async function delP(id) { 
-    personalLedger = personalLedger.filter(x => x.id !== id); 
-    globalLedger = globalLedger.filter(l => l.id !== id); 
-    renderAll();
-    await syncData(); 
-}
-
+function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); globalLedger = globalLedger.filter(l => l.id !== id); syncData(); renderAll(); }
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 function sendWhatsAppReminder(id) {
     const d = debtors.find(x => x.id === id);
@@ -626,3 +597,6 @@ function sendWhatsAppReminder(id) {
 </script>
 </body>
 </html>
+
+
+

@@ -111,7 +111,6 @@
 <div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column;">
     <div class="auth-card" id="loginBox">
         <div class="brand-header">
-            <img https://raw.githubusercontent.com/Keonlabstech202608/klpb_budget/main/icon.jpg>
             <h1 class="brand-name">KEONLABS</h1>
             <span class="brand-sub">PERSONAL BUDGET & GROWTH ENGINE</span>
         </div>
@@ -143,7 +142,6 @@
 <div class="container" id="mainApp">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display:flex; align-items:center; gap:8px;">
-            <img https://raw.githubusercontent.com/Keonlabstech202608/klpb_budget/main/icon.jpg>
             <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
         </div>
         <div style="display:flex; gap:5px;">
@@ -221,7 +219,7 @@
 
     <div id="personal" class="tab-content">
         <section>
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+            <div id="pStatsContainer" style="display:flex; justify-content:space-between; margin-bottom:10px;">
                 <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
                 <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
             </div>
@@ -245,7 +243,6 @@
 </div>
 
 <script>
-// --- CORE CONFIG ---
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -272,7 +269,6 @@ function isThisWeek(dateString) {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 7;
 }
 
-// --- CORE RENDER ---
 function renderAll() {
     const activeMonth = parseInt(document.getElementById('globalMonth').value);
     const activeYear = parseInt(document.getElementById('globalYear').value);
@@ -295,7 +291,7 @@ function renderAll() {
         return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
     }).join('');
 
-    // 3. LEDGER
+    // 3. LEDGER (Calculated separately, Absolute Expenses)
     let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "";
     let totalLedgerIncome = 0;
     let totalLedgerExpense = 0;
@@ -321,13 +317,10 @@ function renderAll() {
         }
 
         const isPos = ['SALE', 'INCOME'].includes(l.type);
-        const displayAmt = Math.abs(l.amt); // Ensures no negative signs in the table rows
+        const displayAmt = Math.abs(l.amt); 
 
-        if (isPos) {
-            totalLedgerIncome += l.amt;
-        } else {
-            totalLedgerExpense += l.amt;
-        }
+        if (isPos) { totalLedgerIncome += displayAmt; } 
+        else { totalLedgerExpense += displayAmt; }
 
         ledgerHTML += `
             <tr>
@@ -341,31 +334,18 @@ function renderAll() {
     });
 
     document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
-
-    // Update the footer with separate totals
-    const netTotal = totalLedgerIncome - totalLedgerExpense;
+    
+    const netLedger = totalLedgerIncome - totalLedgerExpense;
     document.getElementById('ledgerFooter').innerHTML = `
         <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-            <span>TOTAL INCOME: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span>
-            <span>TOTAL EXPENSE: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span>
+            <span>INC: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span>
+            <span>EXP: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span>
         </div>
         <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
-            NET TOTAL: <span id="ledgerFilteredTotal">K ${netTotal.toFixed(2)}</span>
+            NET: <span id="ledgerFilteredTotal">K ${netLedger.toFixed(2)}</span>
         </div>
     `;
-    });
 
-    sortedLedger.forEach(l => {
-        if (l.year !== lastYearSeen) { ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; lastYearSeen = l.year; lastMonthSeen = null; }
-        if (l.month !== lastMonthSeen) { ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; lastMonthSeen = l.month; }
-        const isPos = ['SALE','INCOME'].includes(l.type);
-        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : '-'}K${l.amt.toFixed(2)}</td></tr>`;
-        filteredTotal += isPos ? l.amt : -l.amt;
-    });
-    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
-    document.getElementById('ledgerFilteredTotal').innerText = filteredTotal.toFixed(2);
-
-    // 4. BUDGET
     // 4. BUDGET
     const pCur = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
     const totalIncome = pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
@@ -375,10 +355,9 @@ function renderAll() {
     document.getElementById('pIncStat').innerText = "K " + totalIncome.toFixed(2);
     document.getElementById('pExpStat').innerText = "K " + totalExpense.toFixed(2);
     
-    // Optional: Add a visual indicator for net remaining budget
-    document.querySelector("#personal section").querySelector('div').innerHTML = `
-        <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div>
-        <div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span id="pExpStat" style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div>
+    document.getElementById('pStatsContainer').innerHTML = `
+        <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div>
+        <div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div>
         <div class="metric-box" style="flex:1; border-color:var(--neon-blue);">NET: <span style="color:var(--neon-blue)">K ${netBudget.toFixed(2)}</span></div>
     `;
 
@@ -389,6 +368,7 @@ function renderAll() {
             <td style="color:${x.type === 'income' ? 'var(--success)' : 'var(--danger)'}">${x.type.toUpperCase()}</td>
             <td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td>
         </tr>`).join('');
+
     // 5. STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
@@ -402,7 +382,6 @@ function renderAll() {
     document.getElementById('wdProfitStat').innerText = `K ${netProfit.toFixed(2)}`;
 }
 
-// --- LOGIC FUNCTIONS ---
 async function handleSale(id, isDebt) {
     const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
@@ -499,25 +478,18 @@ async function processWithdrawal() {
     syncData(); renderAll(); showNotify("TRANSFERRED TO BUDGET");
 }
 
-// ---RESET DATA ---
 async function resetUserData() {
     const res = await openCustomModal("CONFIRM RESET", [{id:'confirm', type:'text', placeholder:'Type DELETE to confirm'}]);
     if (res && res.confirm === 'DELETE') {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if(user) {
-            const { error } = await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
-            if(error) { showNotify("Error resetting data", true); } 
-            else {
-                showNotify("Data Wiped. Reloading...");
-                setTimeout(() => location.reload(), 1500);
-            }
+            await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
+            showNotify("Data Wiped. Reloading...");
+            setTimeout(() => location.reload(), 1500);
         }
-    } else {
-        showNotify("Reset Cancelled", true);
     }
 }
 
-// --- AUTH & SYNC ---
 async function handleAuth(type) {
     if(type === 'reset') {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(document.getElementById('resetEmail').value);
@@ -597,5 +569,3 @@ function sendWhatsAppReminder(id) {
 </script>
 </body>
 </html>
-
-

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KEONLABS | Biometric Authorization</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --neon-blue: #00f2ff; 
+            --deep-blue: #000b1a; 
+            --panel-bg: rgba(0, 11, 26, 0.85);
+            --border-glow: rgba(0, 242, 255, 0.4); 
+            --text-main: #e0faff;
+            --notif-purple: rgba(191, 0, 255, 0.75); 
+        }
+
+        body, html {
+            height: 100%; margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text-main);
+            overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #static-bg {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; background-color: var(--deep-blue);
+            background-image: linear-gradient(rgba(0,11,26,0.6), rgba(0,11,26,0.8)), 
+                              url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=2071');
+            background-size: cover; background-position: center;
+        }
+
+        .invite-container {
+            position: relative;
+            text-align: center;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glow);
+            padding: 50px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.1);
+            max-width: 420px; width: 90%;
+            animation: fadeIn 1.5s ease-out;
+            overflow: hidden; /* Clips the scanner line */
+        }
+
+        /* THE SCANNER LINE EFFECT */
+        .scanner-line {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 4px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 15px var(--neon-blue), 0 0 30px var(--neon-blue);
+            opacity: 0.6;
+            animation: scanMove 3s infinite linear;
+            z-index: 10;
+        }
+
+        @keyframes scanMove {
+            0% { top: 0; }
+            50% { top: 100%; }
+            100% { top: 0; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .logo-area img {
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 25px var(--neon-blue);
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 5;
+        }
+
+        h1 {
+            font-size: 2rem;
+            letter-spacing: 6px;
+            margin: 10px 0;
+            color: white;
+            text-shadow: 0 0 15px var(--neon-blue);
+        }
+
+        .status-pulse {
+            display: inline-block;
+            width: 8px; height: 8px;
+            background: var(--neon-blue);
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(0, 242, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 242, 255, 0); }
+        }
+
+        p {
+            font-size: 0.85rem;
+            color: #b0d4ff;
+            margin-bottom: 35px;
+            line-height: 1.8;
+            letter-spacing: 1px;
+        }
+
+        .access-btn {
+            background: rgba(191, 0, 255, 0.2);
+            color: white;
+            padding: 18px 45px;
+            border: 1px solid var(--notif-purple);
+            border-radius: 4px;
+            font-weight: 800;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            transition: 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            position: relative;
+            z-index: 20;
+        }
+
+        .access-btn:hover {
+            background: var(--notif-purple);
+            box-shadow: 0 0 30px var(--notif-purple);
+            transform: translateY(-2px);
+        }
+
+        .footer-text {
+            margin-top: 30px;
+            font-size: 0.65rem;
+            opacity: 0.4;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        #customNotification {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: var(--notif-purple); color: white; padding: 15px 35px;
+            border-radius: 50px; backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: none; z-index: 100; font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="static-bg"></div>
+    <div id="customNotification"></div>
+
+    <div class="invite-container">
+        <div class="scanner-line"></div>
+        
+        <div class="logo-area">
+            <img src="https://raw.githubusercontent.com/Keonlabstech202608/klpb_budget/main/icon.jpg" alt="KEONLABS">
+        </div>
+
+        <h1>KEONLABS</h1>
+        <div style="margin-bottom: 20px;">
+            <span class="status-pulse"></span>
+            <span style="font-size: 0.7rem; color: var(--neon-blue); font-weight: bold; letter-spacing: 2px;">SECURE LINK ACTIVE</span>
+        </div>
+        
+        <p>Awaiting authorization. Please verify your credentials to initialize the financial growth engine and cloud synchronization.</p>
+
+        <a href="index.html" class="access-btn">
+            GRANT ACCESS
+        </a>
+
+        <div class="footer-text">
+            SYSTEM VERSION: 4.6.3 // DATA-ENCRYPTION: AES-256
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            const notif = document.getElementById('customNotification');
+            notif.innerText = "IDENTITY SCAN IN PROGRESS...";
+            notif.style.display = 'block';
+            setTimeout(() => { 
+                notif.innerText = "SCAN COMPLETE. ACCESS GRANTED.";
+                setTimeout(() => { notif.style.display = 'none'; }, 2000);
+            }, 3000);
+        };
+    </script>
+</body>
+</html>

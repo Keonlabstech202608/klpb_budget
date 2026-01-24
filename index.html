@@ -25,7 +25,7 @@
             --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
             --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
             --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.75); 
+            --notif-purple: rgba(147, 51, 234, 0.7); /* Translucent bright purple */
         }
 
         #static-bg {
@@ -43,6 +43,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2); z-index: 40000;
             display: none; text-align: center; font-weight: bold;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: opacity 0.3s ease;
         }
 
         #customModal {
@@ -291,7 +292,7 @@ function renderAll() {
         return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
     }).join('');
 
-    // 3. LEDGER (Calculated separately, Absolute Expenses)
+    // 3. LEDGER
     let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "";
     let totalLedgerIncome = 0;
     let totalLedgerExpense = 0;
@@ -369,7 +370,7 @@ function renderAll() {
             <td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td>
         </tr>`).join('');
 
-    // 5. STATS (DASHBOARD - FIXED FILTERING)
+    // 5. STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const mWithdrawals = globalLedger.filter(l => l.month === activeMonth && l.year === activeYear && l.type === 'WITHDRAW').reduce((s, l) => s + l.amt, 0);
@@ -401,7 +402,11 @@ async function handleSale(id, isDebt) {
         item.currentStock -= qty;
         logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
     }
-    syncData(); renderAll(); showNotify("SAVED");
+    
+    // UPDATED: Refelct immediately before sync
+    renderAll(); 
+    showNotify("SAVED");
+    await syncData(); 
 }
 
 async function openRestock(id) {
@@ -413,7 +418,11 @@ async function openRestock(id) {
         item.totalCapitalInvested += parseFloat(res.c);
         stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
         logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
-        syncData(); renderAll(); showNotify("RESTOCKED");
+        
+        // UPDATED: Refelct immediately
+        renderAll(); 
+        showNotify("RESTOCKED");
+        await syncData(); 
     }
 }
 
@@ -424,7 +433,11 @@ function payDebt(id) {
     if(item) item.totalSalesRevenue += d.balance;
     logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
     debtors = debtors.filter(x => x.id !== id);
-    syncData(); renderAll(); showNotify("PAID");
+    
+    // UPDATED: Reflect immediately
+    renderAll(); 
+    showNotify("PAID");
+    syncData(); 
 }
 
 function addBusiness() {
@@ -433,7 +446,14 @@ function addBusiness() {
         businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
         stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
         logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
-        syncData(); renderAll(); showNotify("ADDED");
+        
+        // Clear inputs
+        document.getElementById('bName').value = ''; document.getElementById('bBuy').value = ''; 
+        document.getElementById('bSell').value = ''; document.getElementById('bStock').value = '';
+        
+        renderAll(); 
+        showNotify("ADDED");
+        syncData(); 
     }
 }
 
@@ -454,7 +474,10 @@ function addPersonal() {
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
         logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
         document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
-        syncData(); renderAll(); showNotify("LOGGED");
+        
+        renderAll(); 
+        showNotify("LOGGED");
+        syncData(); 
     }
 }
 
@@ -475,7 +498,10 @@ async function processWithdrawal() {
     personalLedger.push({ id: Date.now(), desc: `[WD] ${note}`, amt: amt, type: 'income', month: m, year: y });
     logToLedger(`Withdrawal: ${note}`, 'WITHDRAW', amt, m, y);
     document.getElementById('wAmt').value = ''; document.getElementById('wNote').value = '';
-    syncData(); renderAll(); showNotify("TRANSFERRED TO BUDGET");
+    
+    renderAll(); 
+    showNotify("TRANSFERRED TO BUDGET");
+    syncData(); 
 }
 
 async function resetUserData() {
@@ -531,7 +557,11 @@ function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
     el.innerHTML = `<div>${isError ? "⚠️" : "✔️"} ${msg}</div>`;
     el.style.display = 'block';
-    el.style.backgroundColor = 'rgba(191, 0, 255, 0.75)'; // Translucent bright purple
+    
+    // UPDATED: Notification color (translucent bright purple) [cite: 2026-01-14]
+    el.style.backgroundColor = 'rgba(147, 51, 234, 0.7)'; 
+    el.style.backdropFilter = 'blur(10px)'; 
+
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
 
@@ -560,7 +590,15 @@ function toggleAuthMode(mode) {
 function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
 function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
 function setLedgerFilter(type, btn) { currentLedgerType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
-function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); globalLedger = globalLedger.filter(l => l.id !== id); syncData(); renderAll(); }
+
+// UPDATED: delP now calls renderAll for instant feedback
+function delP(id) { 
+    personalLedger = personalLedger.filter(x => x.id !== id); 
+    globalLedger = globalLedger.filter(l => l.id !== id); 
+    renderAll();
+    syncData(); 
+}
+
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 function sendWhatsAppReminder(id) {
     const d = debtors.find(x => x.id === id);

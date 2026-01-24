@@ -296,12 +296,64 @@ function renderAll() {
     }).join('');
 
     // 3. LEDGER
-    let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "", filteredTotal = 0;
+    // 3. LEDGER
+    let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "";
+    let totalLedgerIncome = 0;
+    let totalLedgerExpense = 0;
+
     const sortedLedger = [...globalLedger].reverse().filter(l => {
         const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
         const searchMatch = l.desc.toLowerCase().includes(ledSearch);
-        let timeMatch = (timeFrame === 'YEAR' && l.year === activeYear) || (timeFrame === 'MONTH' && l.year === activeYear && l.month === activeMonth) || (timeFrame === 'WEEK' && isThisWeek(l.date));
+        let timeMatch = (timeFrame === 'YEAR' && l.year === activeYear) || 
+                         (timeFrame === 'MONTH' && l.year === activeYear && l.month === activeMonth) || 
+                         (timeFrame === 'WEEK' && isThisWeek(l.date));
         return typeMatch && searchMatch && timeMatch;
+    });
+
+    sortedLedger.forEach(l => {
+        if (l.year !== lastYearSeen) { 
+            ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; 
+            lastYearSeen = l.year; 
+            lastMonthSeen = null; 
+        }
+        if (l.month !== lastMonthSeen) { 
+            ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; 
+            lastMonthSeen = l.month; 
+        }
+
+        const isPos = ['SALE', 'INCOME'].includes(l.type);
+        const displayAmt = Math.abs(l.amt); // Ensures no negative signs in the table rows
+
+        if (isPos) {
+            totalLedgerIncome += l.amt;
+        } else {
+            totalLedgerExpense += l.amt;
+        }
+
+        ledgerHTML += `
+            <tr>
+                <td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td>
+                <td>${l.desc}</td>
+                <td style="font-size:0.6rem; opacity:0.7;">${l.type}</td>
+                <td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">
+                    ${isPos ? '+' : '-'}K${displayAmt.toFixed(2)}
+                </td>
+            </tr>`;
+    });
+
+    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
+
+    // Update the footer with separate totals
+    const netTotal = totalLedgerIncome - totalLedgerExpense;
+    document.getElementById('ledgerFooter').innerHTML = `
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
+            <span>TOTAL INCOME: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span>
+            <span>TOTAL EXPENSE: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span>
+        </div>
+        <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
+            NET TOTAL: <span id="ledgerFilteredTotal">K ${netTotal.toFixed(2)}</span>
+        </div>
+    `;
     });
 
     sortedLedger.forEach(l => {
@@ -546,4 +598,5 @@ function sendWhatsAppReminder(id) {
 </script>
 </body>
 </html>
+
 

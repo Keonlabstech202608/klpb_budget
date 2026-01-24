@@ -380,8 +380,33 @@ function addBusiness() {
 }
 
 function addPersonal() {
-    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
+    const d = document.getElementById('pDesc').value;
+    const a = parseFloat(document.getElementById('pAmt').value);
+    const t = document.getElementById('pType').value;
+    const m = parseInt(document.getElementById('globalMonth').value);
+    const y = parseInt(document.getElementById('globalYear').value);
+
     if(d && a) {
+        // --- NEW SAFETY CHECK ---
+        if (t === 'expense') {
+            const currentMonthItems = personalLedger.filter(x => x.month === m && x.year === y);
+            
+            const totalIncome = currentMonthItems
+                .filter(x => x.type === 'income')
+                .reduce((s, x) => s + x.amt, 0);
+                
+            const totalExpense = currentMonthItems
+                .filter(x => x.type === 'expense')
+                .reduce((s, x) => s + x.amt, 0);
+
+            // If existing expenses + new amount > total income
+            if (totalExpense + a > totalIncome) {
+                // Using your translucent purple notification
+                return showNotify("Insufficient Budget Income!", true);
+            }
+        }
+        // --- END CHECK ---
+
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
         logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
         document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
@@ -499,4 +524,3 @@ function sendWhatsAppReminder(id) {
 </script>
 </body>
 </html>
-

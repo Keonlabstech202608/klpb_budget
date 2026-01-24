@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,7 +15,7 @@
 
     <link rel="apple-touch-startup-image" href="splash.png">
     <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.6.2</title>
+    <title>KLPB - Business Engine v4.6.3</title>
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -113,7 +112,7 @@
     <div class="auth-card" id="loginBox">
         <div class="brand-header">
             <h1 class="brand-name">KEONLABS</h1>
-            <span class="brand-sub">PERSONAL BUDGET & GROWTH ENGINE</span>
+            <span class="brand-sub">BUSINESS ENGINE v4.6.3</span>
         </div>
         <input type="email" id="authEmail" placeholder="Email Address">
         <input type="password" id="authPass" placeholder="Password">
@@ -144,10 +143,11 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
         <div style="display:flex; align-items:center; gap:8px;">
             <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
+            <span id="syncIndicator" style="font-size:0.6rem; color:var(--neon-blue); opacity:0.6;">● Live</span>
         </div>
         <div style="display:flex; gap:5px;">
             <button onclick="resetUserData()" style="background:rgba(255, 77, 77, 0.2); border:1px solid var(--danger); color:var(--danger); padding:5px 10px; border-radius:4px; font-size:0.7rem;">RESET DATA</button>
-            <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">TERMINATE SESSION</button>
+            <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
         </div>
     </div>
 
@@ -213,17 +213,13 @@
             </div>
             <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
             <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
-                NET TOTAL: K <span id="ledgerFilteredTotal">0.00</span>
             </div>
         </section>
     </div>
 
     <div id="personal" class="tab-content">
         <section>
-            <div id="pStatsContainer" style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span id="pIncStat" style="color:var(--success)">K 0</span></div>
-                <div class="metric-box" style="flex:1;">EXP: <span id="pExpStat" style="color:var(--danger)">K 0</span></div>
-            </div>
+            <div id="pStatsContainer" style="display:flex; justify-content:space-between; margin-bottom:10px;"></div>
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount K">
             <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
@@ -251,6 +247,7 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [], currentLedgerType = 'ALL';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
 
+// Initialize Global Variables
 function initTimeline() {
     const mSelect = document.getElementById('globalMonth');
     mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
@@ -270,19 +267,22 @@ function isThisWeek(dateString) {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 7;
 }
 
+// ---------------------------------------------------------
+// UI RENDERING ENGINE
+// ---------------------------------------------------------
 function renderAll() {
     const activeMonth = parseInt(document.getElementById('globalMonth').value);
     const activeYear = parseInt(document.getElementById('globalYear').value);
-    const timeFrame = document.getElementById('timeFilter').value;
+    const timeFrame = document.getElementById('timeFilter')?.value || 'YEAR';
     const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
     const ledSearch = document.getElementById('ledgerSearch').value.toLowerCase();
     
-    // 1. STOCK
+    // STOCK RENDER
     document.querySelector("#bTable tbody").innerHTML = businessData
     .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
     .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; padding:2px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
 
-    // 2. DEBTORS
+    // DEBTORS RENDER
     const totalD = debtors.reduce((s, x) => s + x.balance, 0);
     document.getElementById('debtSummaryHeader').style.display = debtors.length ? 'block' : 'none';
     document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} Total Outstanding.`;
@@ -292,11 +292,8 @@ function renderAll() {
         return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
     }).join('');
 
-    // 3. LEDGER (Calculated separately, Absolute Expenses)
-    let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "";
-    let totalLedgerIncome = 0;
-    let totalLedgerExpense = 0;
-
+    // LEDGER RENDER
+    let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "", totalLedgerIncome = 0, totalLedgerExpense = 0;
     const sortedLedger = [...globalLedger].reverse().filter(l => {
         const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
         const searchMatch = l.desc.toLowerCase().includes(ledSearch);
@@ -307,75 +304,28 @@ function renderAll() {
     });
 
     sortedLedger.forEach(l => {
-        if (l.year !== lastYearSeen) { 
-            ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; 
-            lastYearSeen = l.year; 
-            lastMonthSeen = null; 
-        }
-        if (l.month !== lastMonthSeen) { 
-            ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; 
-            lastMonthSeen = l.month; 
-        }
-
+        if (l.year !== lastYearSeen) { ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; lastYearSeen = l.year; lastMonthSeen = null; }
+        if (l.month !== lastMonthSeen) { ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; lastMonthSeen = l.month; }
         const isPos = ['SALE', 'INCOME'].includes(l.type);
         const displayAmt = Math.abs(l.amt); 
-
-        if (isPos) { totalLedgerIncome += displayAmt; } 
-        else { totalLedgerExpense += displayAmt; }
-
-        ledgerHTML += `
-            <tr>
-                <td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td>
-                <td>${l.desc}</td>
-                <td style="font-size:0.6rem; opacity:0.7;">${l.type}</td>
-                <td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">
-                    ${isPos ? '+' : '-'}K${displayAmt.toFixed(2)}
-                </td>
-            </tr>`;
+        if (isPos) totalLedgerIncome += displayAmt; else totalLedgerExpense += displayAmt;
+        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : '-'}K${displayAmt.toFixed(2)}</td></tr>`;
     });
-
     document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
-    
-    const netLedger = totalLedgerIncome - totalLedgerExpense;
-    document.getElementById('ledgerFooter').innerHTML = `
-        <div style="display: flex; justify-content: space-between; font-size: 0.75rem;">
-            <span>INC: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span>
-            <span>EXP: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span>
-        </div>
-        <div style="margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px;">
-            NET: <span id="ledgerFilteredTotal">K ${netLedger.toFixed(2)}</span>
-        </div>
-    `;
+    document.getElementById('ledgerFooter').innerHTML = `<div style="display:flex; justify-content:space-between; font-size:0.75rem;"><span>INC: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span><span>EXP: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span></div><div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px;">NET: <span>K ${(totalLedgerIncome - totalLedgerExpense).toFixed(2)}</span></div>`;
 
-    // 4. BUDGET
+    // BUDGET RENDER
     const pCur = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
     const totalIncome = pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
     const totalExpense = pCur.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0);
-    const netBudget = totalIncome - totalExpense;
+    document.getElementById('pStatsContainer').innerHTML = `<div class="metric-box" style="flex:1; margin-right:5px;">INC: <span style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div><div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div><div class="metric-box" style="flex:1; border-color:var(--neon-blue);">NET: <span style="color:var(--neon-blue)">K ${(totalIncome - totalExpense).toFixed(2)}</span></div>`;
+    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `<tr><td>${x.desc}</td><td>K${x.amt.toFixed(2)}</td><td style="color:${x.type === 'income' ? 'var(--success)' : 'var(--danger)'}">${x.type.toUpperCase()}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
 
-    document.getElementById('pIncStat').innerText = "K " + totalIncome.toFixed(2);
-    document.getElementById('pExpStat').innerText = "K " + totalExpense.toFixed(2);
-    
-    document.getElementById('pStatsContainer').innerHTML = `
-        <div class="metric-box" style="flex:1; margin-right:5px;">INC: <span style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div>
-        <div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div>
-        <div class="metric-box" style="flex:1; border-color:var(--neon-blue);">NET: <span style="color:var(--neon-blue)">K ${netBudget.toFixed(2)}</span></div>
-    `;
-
-    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `
-        <tr>
-            <td>${x.desc}</td>
-            <td>K${x.amt.toFixed(2)}</td>
-            <td style="color:${x.type === 'income' ? 'var(--success)' : 'var(--danger)'}">${x.type.toUpperCase()}</td>
-            <td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td>
-        </tr>`).join('');
-
-    // 5. STATS
+    // STATS RENDER
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const mWithdrawals = globalLedger.filter(l => l.month === activeMonth && l.year === activeYear && l.type === 'WITHDRAW').reduce((s, l) => s + l.amt, 0);
     const netProfit = mRev - mCap - mWithdrawals;
-
     document.getElementById('statCap').innerText = `K ${mCap.toFixed(2)}`;
     document.getElementById('statRev').innerText = `K ${mRev.toFixed(2)}`;
     document.getElementById('statProfit').innerText = `K ${netProfit.toFixed(2)}`;
@@ -383,6 +333,9 @@ function renderAll() {
     document.getElementById('wdProfitStat').innerText = `K ${netProfit.toFixed(2)}`;
 }
 
+// ---------------------------------------------------------
+// DATA ACTIONS (ASYNC)
+// ---------------------------------------------------------
 async function handleSale(id, isDebt) {
     const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
@@ -402,7 +355,9 @@ async function handleSale(id, isDebt) {
         item.currentStock -= qty;
         logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
     }
-    syncData(); renderAll(); showNotify("SAVED");
+    await syncData(); 
+    renderAll(); 
+    showNotify("SAVED");
 }
 
 async function openRestock(id) {
@@ -414,99 +369,60 @@ async function openRestock(id) {
         item.totalCapitalInvested += parseFloat(res.c);
         stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
         logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
-        syncData(); renderAll(); showNotify("RESTOCKED");
+        await syncData(); renderAll(); showNotify("RESTOCKED");
     }
 }
 
-function payDebt(id) {
+async function payDebt(id) {
     const d = debtors.find(x => x.id === id);
     const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     const item = businessData.find(x => x.id === d.originalId);
     if(item) item.totalSalesRevenue += d.balance;
     logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
     debtors = debtors.filter(x => x.id !== id);
-    syncData(); renderAll(); showNotify("PAID");
+    await syncData(); renderAll(); showNotify("PAID");
 }
 
-function addBusiness() {
+async function addBusiness() {
     const n = document.getElementById('bName').value, c = parseFloat(document.getElementById('bBuy').value), s = parseFloat(document.getElementById('bSell').value), q = parseInt(document.getElementById('bStock').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     if(n && c) {
         businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
         stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
         logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
-        syncData(); renderAll(); showNotify("ADDED");
+        await syncData(); renderAll(); showNotify("ADDED");
+        ['bName', 'bBuy', 'bSell', 'bStock'].forEach(id => document.getElementById(id).value = '');
     }
 }
 
-function addPersonal() {
-    const d = document.getElementById('pDesc').value;
-    const a = parseFloat(document.getElementById('pAmt').value);
-    const t = document.getElementById('pType').value;
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const y = parseInt(document.getElementById('globalYear').value);
-
+async function addPersonal() {
+    const d = document.getElementById('pDesc').value, a = parseFloat(document.getElementById('pAmt').value), t = document.getElementById('pType').value, m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
     if(d && a) {
-        if (t === 'expense') {
-            const currentMonthItems = personalLedger.filter(x => x.month === m && x.year === y);
-            const totalIncome = currentMonthItems.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
-            const totalExpense = currentMonthItems.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0);
-            if (totalExpense + a > totalIncome) return showNotify("Insufficient Budget Income!", true);
-        }
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
         logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
+        await syncData(); renderAll(); showNotify("LOGGED");
         document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
-        syncData(); renderAll(); showNotify("LOGGED");
     }
 }
 
 async function processWithdrawal() {
-    const amt = parseFloat(document.getElementById('wAmt').value);
-    const m = parseInt(document.getElementById('globalMonth').value);
-    const y = parseInt(document.getElementById('globalYear').value);
-    const note = document.getElementById('wNote').value || 'Withdraw';
-
-    const mCap = stockHistory.filter(x => x.month === m && x.year === y).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
-    const mRev = businessData.filter(x => x.month === m && x.year === y).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
-    const previousWithdrawals = globalLedger.filter(l => l.month === m && l.year === y && l.type === 'WITHDRAW').reduce((s, l) => s + l.amt, 0);
-    const availableProfit = mRev - mCap - previousWithdrawals;
-
-    if(!amt || amt <= 0) return showNotify("Invalid amount", true);
-    if (amt > availableProfit) return showNotify(`Insufficient Profit! Max: K${availableProfit.toFixed(2)}`, true);
-
+    const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value), note = document.getElementById('wNote').value || 'Withdraw';
     personalLedger.push({ id: Date.now(), desc: `[WD] ${note}`, amt: amt, type: 'income', month: m, year: y });
     logToLedger(`Withdrawal: ${note}`, 'WITHDRAW', amt, m, y);
+    await syncData(); renderAll(); showNotify("TRANSFERRED");
     document.getElementById('wAmt').value = ''; document.getElementById('wNote').value = '';
-    syncData(); renderAll(); showNotify("TRANSFERRED TO BUDGET");
 }
 
-async function resetUserData() {
-    const res = await openCustomModal("CONFIRM RESET", [{id:'confirm', type:'text', placeholder:'Type DELETE to confirm'}]);
-    if (res && res.confirm === 'DELETE') {
-        const { data: { user } } = await supabaseClient.auth.getUser();
-        if(user) {
-            await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
-            showNotify("Data Wiped. Reloading...");
-            setTimeout(() => location.reload(), 1500);
-        }
-    }
-}
-
-async function handleAuth(type) {
-    if(type === 'reset') {
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(document.getElementById('resetEmail').value);
-        if(error) showNotify(error.message, true); else showNotify("Check email for reset link!");
-        return;
-    }
-    const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
-    const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
-    const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
-    if(error) showNotify(error.message, true);
-}
-
+// ---------------------------------------------------------
+// SUPABASE & REALTIME LOGIC
+// ---------------------------------------------------------
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
-    await supabaseClient.from('user_budgets').upsert({ user_id: user.id, payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, updated_at: new Date().toISOString() });
+    const { error } = await supabaseClient.from('user_budgets').upsert({ 
+        user_id: user.id, 
+        payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, 
+        updated_at: new Date().toISOString() 
+    });
 }
 
 async function loadData(userId) {
@@ -516,7 +432,29 @@ async function loadData(userId) {
         businessData = p.businessData || []; stockHistory = p.stockHistory || [];
         personalLedger = p.personalLedger || []; debtors = p.debtors || []; globalLedger = p.globalLedger || [];
     }
-    initTimeline(); renderAll();
+    initTimeline(); 
+    renderAll();
+    setupRealtime(userId);
+}
+
+// FIX: Added Realtime Subscription to listen for changes from other devices
+function setupRealtime(userId) {
+    supabaseClient
+        .channel('public:user_budgets')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_budgets', filter: `user_id=eq.${userId}` }, 
+        (payload) => {
+            if (payload.new && payload.new.payload) {
+                const p = payload.new.payload;
+                businessData = p.businessData || [];
+                stockHistory = p.stockHistory || [];
+                personalLedger = p.personalLedger || [];
+                debtors = p.debtors || [];
+                globalLedger = p.globalLedger || [];
+                renderAll();
+                console.log("Remote changes detected and synced.");
+            }
+        })
+        .subscribe();
 }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
@@ -527,6 +465,19 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
         loadData(session.user.id);
     }
 });
+
+// AUTH & UTILS
+async function handleAuth(type) {
+    if(type === 'reset') {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(document.getElementById('resetEmail').value);
+        if(error) showNotify(error.message, true); else showNotify("Check email!");
+        return;
+    }
+    const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
+    const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
+    const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
+    if(error) showNotify(error.message, true);
+}
 
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
@@ -560,8 +511,27 @@ function toggleAuthMode(mode) {
 function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
 function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
 function setLedgerFilter(type, btn) { currentLedgerType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
-function delP(id) { personalLedger = personalLedger.filter(x => x.id !== id); globalLedger = globalLedger.filter(l => l.id !== id); syncData(); renderAll(); }
+
+async function delP(id) { 
+    personalLedger = personalLedger.filter(x => x.id !== id); 
+    globalLedger = globalLedger.filter(l => l.id !== id); 
+    await syncData(); renderAll(); 
+}
+
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
+
+async function resetUserData() {
+    const res = await openCustomModal("CONFIRM RESET", [{id:'confirm', type:'text', placeholder:'Type DELETE to confirm'}]);
+    if (res && res.confirm === 'DELETE') {
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if(user) {
+            await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
+            showNotify("Wiped. Reloading...");
+            setTimeout(() => location.reload(), 1500);
+        }
+    }
+}
+
 function sendWhatsAppReminder(id) {
     const d = debtors.find(x => x.id === id);
     if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);

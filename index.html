@@ -28,6 +28,26 @@
             --notif-purple: rgba(191, 0, 255, 0.75); 
         }
 
+        #introSplash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 99999; display: flex; align-items: center;
+            justify-content: center; flex-direction: column; overflow: hidden;
+            transition: opacity 1s ease-out;
+        }
+        #introSplash.hidden {
+            opacity: 0; pointer-events: none;
+        }
+        #introSplash video {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        #introSplash .skip-btn {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 10; padding: 12px 32px; background: rgba(0,242,255,0.15);
+            color: white; border: 2px solid var(--neon-blue); border-radius: 50px;
+            font-weight: bold; backdrop-filter: blur(12px); font-size: 0.85rem;
+            cursor: pointer;
+        }
+
         #static-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1; background-color: var(--deep-blue);
@@ -93,6 +113,15 @@
     </style>
 </head>
 <body>
+
+<!-- ====================== INTRO VIDEO SPLASH ====================== -->
+<div id="introSplash">
+    <video id="introVideo" autoplay muted playsinline loop>
+        <source src="intro-video.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <button onclick="skipIntro()" class="skip-btn">SKIP INTRO →</button>
+</div>
 
 <div id="static-bg"></div>
 <div id="customNotification"></div>
@@ -246,6 +275,44 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [], currentLedgerType = 'ALL';
 const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+
+// ====================== INTRO VIDEO ======================
+function initIntroVideo() {
+    const splash = document.getElementById('introSplash');
+    const video = document.getElementById('introVideo');
+    const authOverlay = document.getElementById('authOverlay');
+
+    // Hide login until intro finishes
+    authOverlay.style.display = 'none';
+
+    if (!video) return;
+
+    // End intro when video finishes
+    video.onended = () => endIntro();
+    
+    // Safety timeout (max 12 seconds)
+    setTimeout(() => {
+        if (splash.style.display !== 'none') endIntro();
+    }, 12000);
+}
+
+function endIntro() {
+    const splash = document.getElementById('introSplash');
+    const authOverlay = document.getElementById('authOverlay');
+    
+    splash.classList.add('hidden');
+    
+    setTimeout(() => {
+        splash.style.display = 'none';
+        authOverlay.style.display = 'flex';   // show login screen
+    }, 900);
+}
+
+function skipIntro() {
+    const video = document.getElementById('introVideo');
+    if (video) video.pause();
+    endIntro();
+}
 
 // Initialize Global Variables
 function initTimeline() {
@@ -459,6 +526,10 @@ function setupRealtime(userId) {
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
+        // Make sure intro is gone if user was already logged in
+        const splash = document.getElementById('introSplash');
+        if (splash) splash.style.display = 'none';
+        
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('userDisplay').innerText = session.user.email;
@@ -537,7 +608,12 @@ function sendWhatsAppReminder(id) {
     if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
     window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello ' + d.name + ', reminder for balance K' + d.balance + ' for ' + d.product + '.')}`, '_blank');
 }
+
+// ====================== START APP ======================
+window.addEventListener('load', () => {
+    initTimeline();
+    initIntroVideo();   // ← Intro video runs first
+});
 </script>
 </body>
 </html>
-

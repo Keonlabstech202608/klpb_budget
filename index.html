@@ -4,195 +4,605 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="manifest" href="manifest.json">
-
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
-
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#9333ea">
-
+    <meta name="theme-color" content="#1a1f2e">
     <link rel="apple-touch-icon" href="icon.png">
-
     <link rel="apple-touch-startup-image" href="splash.png">
-    <meta name="theme-color" content="#000b1a">
-    <title>KLPB - Business Engine v4.6.3</title>
-    
+    <title>KEONLABS — Business Engine v4.6.3</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
         :root {
-            --neon-blue: #00f2ff; --deep-blue: #000b1a; --panel-bg: rgba(0, 11, 26, 0.85);
-            --border-glow: rgba(0, 242, 255, 0.4); --text-main: #e0faff;
-            --danger: #ff4d4d; --warning: #ffaa00; --success: #00ff88;
-            --notif-purple: rgba(191, 0, 255, 0.75); 
+            --bg-base: #0d1117;
+            --bg-surface: #161b27;
+            --bg-card: #1e2535;
+            --bg-hover: #252d40;
+            --border: rgba(255,255,255,0.07);
+            --border-accent: rgba(99,179,237,0.3);
+            --text-primary: #e8edf5;
+            --text-secondary: #8892a4;
+            --text-muted: #4a5568;
+            --accent: #63b3ed;
+            --accent-2: #68d391;
+            --accent-warm: #f6ad55;
+            --danger: #fc8181;
+            --success: #68d391;
+            --warning: #f6ad55;
+            --gold: #e2b96a;
+            --font-head: 'Syne', sans-serif;
+            --font-body: 'DM Sans', sans-serif;
+            --radius: 10px;
+            --radius-lg: 16px;
         }
 
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            background: var(--bg-base);
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+        }
+
+        /* ── BACKGROUND ── */
+        #static-bg {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% -10%, rgba(99,179,237,0.08) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 40% at 80% 110%, rgba(104,211,145,0.06) 0%, transparent 60%),
+                var(--bg-base);
+        }
+        #static-bg::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+
+        /* ── INTRO SPLASH ── */
         #introSplash {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 99999; display: flex; align-items: center;
-            justify-content: center; flex-direction: column; overflow: hidden;
+            position: fixed; inset: 0; background: #000; z-index: 99999;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
             transition: opacity 1s ease-out;
         }
-        #introSplash.hidden {
-            opacity: 0; pointer-events: none;
-        }
-        #introSplash video {
-            width: 100%; height: 100%; object-fit: cover;
-        }
+        #introSplash.hidden { opacity: 0; pointer-events: none; }
+        #introSplash video { width: 100%; height: 100%; object-fit: cover; }
         #introSplash .skip-btn {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            z-index: 10; padding: 12px 32px; background: rgba(0,242,255,0.15);
-            color: white; border: 2px solid var(--neon-blue); border-radius: 50px;
-            font-weight: bold; backdrop-filter: blur(12px); font-size: 0.85rem;
-            cursor: pointer;
+            z-index: 10; padding: 12px 32px;
+            background: rgba(99,179,237,0.12);
+            color: var(--accent); border: 1px solid var(--border-accent);
+            border-radius: 50px; font-weight: 500; font-size: 0.8rem;
+            cursor: pointer; font-family: var(--font-body);
+            letter-spacing: 0.5px; backdrop-filter: blur(10px);
         }
 
-        #static-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; background-color: var(--deep-blue);
-            background-image: linear-gradient(rgba(0,11,26,0.7), rgba(0,11,26,0.7)), 
-                              url('https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?auto=format&fit=crop&q=80&w=2071');
-            background-size: cover; background-position: center;
-        }
-
+        /* ── NOTIFICATION ── */
         #customNotification {
-            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: var(--notif-purple); color: white; padding: 15px 30px;
-            border-radius: 12px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2); z-index: 40000;
-            display: none; text-align: center; font-weight: bold;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-card); color: var(--text-primary);
+            padding: 14px 28px; border-radius: var(--radius);
+            border: 1px solid var(--border-accent);
+            z-index: 40000; display: none; text-align: center;
+            font-size: 0.85rem; font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4);
         }
 
+        /* ── MODAL ── */
         #customModal {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); z-index: 20000; backdrop-filter: blur(8px);
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7); z-index: 20000;
+            backdrop-filter: blur(8px);
             align-items: center; justify-content: center; padding: 20px;
         }
+        .modal-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-accent);
+            border-radius: var(--radius-lg);
+            padding: 32px 28px; width: 100%; max-width: 340px;
+        }
+        .modal-card h3 {
+            font-family: var(--font-head);
+            font-size: 1rem; letter-spacing: 0.5px;
+            color: var(--accent); margin-bottom: 20px;
+        }
 
-        body { font-family: 'Segoe UI', sans-serif; color: var(--text-main); margin: 0; background: transparent; -webkit-tap-highlight-color: transparent; }
-        
-        .brand-header { margin-bottom: 20px; }
-        .logo-main { width: 90px; height: 90px; border-radius: 50%; border: 2px solid var(--neon-blue); margin-bottom: 10px; box-shadow: 0 0 15px var(--neon-blue); }
-        .brand-name { font-size: 1.2rem; font-weight: 800; letter-spacing: 2px; color: white; margin: 0; }
-        .brand-sub { font-size: 0.6rem; color: var(--neon-blue); opacity: 0.8; }
+        /* ── AUTH ── */
+        #authOverlay {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; flex-direction: column;
+            position: relative; z-index: 10;
+            padding: 20px;
+        }
 
-        .auth-card { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 30px; border-radius: 15px; width: 320px; text-align: center; backdrop-filter: blur(10px); }
-        .container { max-width: 1200px; margin: auto; padding: 15px; display: none; position: relative; z-index: 1; }
-        
-        .tabs { display: flex; overflow-x: auto; gap: 8px; margin-bottom: 20px; border-bottom: 1px solid var(--border-glow); padding-bottom: 10px; scrollbar-width: none; }
-        .tab-btn { flex: 0 0 auto; background: rgba(0, 242, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 10px 15px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 0.7rem; text-transform: uppercase; }
-        .tab-btn.active { background: var(--neon-blue); color: #000; box-shadow: 0 0 10px var(--neon-blue); }
-        
+        .auth-hero {
+            text-align: center; margin-bottom: 36px;
+        }
+        .auth-logo {
+            width: 80px; height: 80px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-hover));
+            border: 1px solid var(--border-accent);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 0 40px rgba(99,179,237,0.1);
+        }
+        .auth-logo img {
+            width: 56px; height: 56px; border-radius: 12px;
+            object-fit: cover;
+        }
+        .auth-logo-fallback {
+            font-family: var(--font-head); font-size: 1.6rem;
+            font-weight: 800; color: var(--accent); letter-spacing: -1px;
+        }
+        .auth-brand {
+            font-family: var(--font-head); font-size: 1.5rem;
+            font-weight: 800; color: var(--text-primary); letter-spacing: -0.5px;
+        }
+        .auth-sub {
+            font-size: 0.72rem; color: var(--text-muted);
+            letter-spacing: 2px; margin-top: 6px; text-transform: uppercase;
+        }
+
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 32px 28px; border-radius: var(--radius-lg);
+            width: 100%; max-width: 360px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+        }
+        .auth-card h2 { font-family: var(--font-head); font-size: 1.1rem; margin-bottom: 20px; }
+
+        .auth-divider {
+            border: none; border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+        .auth-link {
+            font-size: 0.78rem; color: var(--accent); cursor: pointer;
+            display: block; text-align: center; margin-top: 8px;
+            opacity: 0.8; transition: opacity 0.2s;
+        }
+        .auth-link:hover { opacity: 1; }
+        .auth-link.muted { color: var(--warning); }
+
+        /* ── INPUTS ── */
+        input, select {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 12px 14px; width: 100%;
+            margin: 5px 0; border-radius: var(--radius);
+            box-sizing: border-box; outline: none;
+            font-family: var(--font-body); font-size: 0.875rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(99,179,237,0.1);
+        }
+        input::placeholder { color: var(--text-muted); }
+        select option { background: var(--bg-card); }
+
+        /* ── BUTTONS ── */
+        .btn-main {
+            background: var(--accent); color: #0d1117;
+            padding: 12px 20px; width: 100%; border: none;
+            font-weight: 600; cursor: pointer; border-radius: var(--radius);
+            margin-top: 10px; font-family: var(--font-body); font-size: 0.875rem;
+            letter-spacing: 0.3px; transition: opacity 0.2s, transform 0.1s;
+        }
+        .btn-main:hover { opacity: 0.9; }
+        .btn-main:active { transform: scale(0.98); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-warning { background: var(--warning); }
+        .btn-purple { background: rgba(159,122,234,0.9); color: white; }
+        .btn-ghost {
+            background: transparent; color: var(--text-secondary);
+            border: 1px solid var(--border); padding: 8px 16px;
+            border-radius: var(--radius); font-family: var(--font-body);
+            font-size: 0.78rem; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-ghost.danger { border-color: rgba(252,129,129,0.3); color: var(--danger); }
+        .btn-ghost.danger:hover { border-color: var(--danger); background: rgba(252,129,129,0.05); }
+
+        /* ── MAIN APP ── */
+        .container {
+            max-width: 1100px; margin: auto; padding: 16px;
+            display: none; position: relative; z-index: 1;
+        }
+
+        /* ── TOP BAR ── */
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+        }
+        .topbar-left { display: flex; align-items: center; gap: 10px; }
+        .topbar-brand {
+            font-family: var(--font-head); font-weight: 800;
+            font-size: 0.95rem; color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+        .topbar-badge {
+            font-size: 0.6rem; color: var(--text-muted);
+            background: var(--bg-surface);
+            padding: 2px 8px; border-radius: 20px;
+            border: 1px solid var(--border); letter-spacing: 1px;
+        }
+        #userDisplay { font-size: 0.72rem; color: var(--success); }
+        #syncIndicator {
+            font-size: 0.65rem; color: var(--accent); opacity: 0.7;
+        }
+        .topbar-actions { display: flex; gap: 8px; }
+
+        /* ── TIMELINE SELECTOR ── */
+        .timeline-bar {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 10px 14px; margin-bottom: 20px;
+        }
+        .timeline-label {
+            font-size: 0.68rem; color: var(--text-muted);
+            font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .timeline-bar select { margin: 0; }
+
+        /* ── METRIC GRID ── */
+        .metric-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr);
+            gap: 12px; margin-bottom: 20px;
+        }
+        .metric-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px 18px;
+            position: relative; overflow: hidden;
+        }
+        .metric-box::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: var(--accent-color, var(--accent));
+        }
+        .metric-label {
+            font-size: 0.65rem; color: var(--text-muted);
+            letter-spacing: 1.5px; text-transform: uppercase;
+            font-weight: 500; margin-bottom: 8px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .metric-val {
+            display: block; font-family: var(--font-head);
+            font-size: 1.1rem; font-weight: 700;
+            color: var(--text-primary);
+        }
+        .metric-val.blue { color: var(--accent); }
+        .metric-val.green { color: var(--success); }
+        .metric-val.gold { color: var(--gold); }
+        .metric-val.warn { color: var(--warning); }
+
+        /* ── TABS ── */
+        .tabs {
+            display: flex; overflow-x: auto; gap: 4px;
+            margin-bottom: 20px;
+            scrollbar-width: none;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 5px;
+        }
+        .tabs::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            flex: 0 0 auto; background: transparent;
+            border: none; color: var(--text-muted);
+            padding: 8px 16px; cursor: pointer;
+            border-radius: 7px; font-weight: 500;
+            font-size: 0.78rem; font-family: var(--font-body);
+            transition: all 0.2s; letter-spacing: 0.3px;
+        }
+        .tab-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+        .tab-btn.active {
+            background: var(--accent); color: #0d1117;
+            font-weight: 600;
+        }
+
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        
-        section { background: var(--panel-bg); border: 1px solid var(--border-glow); padding: 18px; border-radius: 8px; margin-bottom: 15px; }
-        .metric-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-        .metric-box { border: 1px solid var(--border-glow); padding: 10px; border-radius: 6px; text-align: center; background: rgba(0,0,0,0.6); }
-        .metric-val { display: block; font-size: 0.9rem; font-weight: bold; color: var(--neon-blue); }
 
-        input, select { background: rgba(0, 15, 30, 0.9); border: 1px solid var(--border-glow); color: white; padding: 12px; width: 100%; margin: 6px 0; border-radius: 6px; box-sizing: border-box; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--neon-blue); box-shadow: 0 0 5px var(--neon-blue); }
-        .btn-main { background: var(--success); color: #000; padding: 12px; width: 100%; border: none; font-weight: bold; cursor: pointer; border-radius: 6px; margin-top: 10px; transition: 0.3s; }
-        
-        table { width: 100%; border-collapse: collapse; font-size: 0.75rem; background: rgba(0,0,0,0.3); }
-        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-blue); padding: 12px 8px; text-align: left; }
-        td { padding: 12px 8px; border-bottom: 1px solid rgba(0, 242, 255, 0.1); }
-        
-        .month-separator { background: rgba(191, 0, 255, 0.15) !important; color: #df80ff !important; font-weight: bold; text-align: center; }
-        .year-separator { background: linear-gradient(90deg, transparent, var(--notif-purple), transparent) !important; color: white !important; text-align: center; font-weight: bold; border:none; }
-        .filter-btn { flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-glow); color: var(--text-main); padding: 6px; cursor: pointer; border-radius: 4px; font-size: 0.6rem; min-width: 60px; }
-        .filter-btn.active { background: var(--notif-purple); border-color: white; }
-        .action-cell { display: flex; gap: 5px; justify-content: flex-end; }
-        .action-btn { border: none; width: 32px; height: 32px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .debt-alert { background: rgba(191, 0, 255, 0.2); border-left: 4px solid var(--neon-blue); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
-        .overdue-debt { color: var(--danger) !important; font-weight: bold; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        /* ── SECTION ── */
+        section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            padding: 20px; border-radius: var(--radius-lg);
+            margin-bottom: 16px;
+        }
+        section h3 {
+            font-family: var(--font-head); font-size: 0.9rem;
+            color: var(--accent); margin-bottom: 16px; letter-spacing: 0.3px;
+        }
+
+        /* ── TABLES ── */
+        .table-wrap { overflow-x: auto; border-radius: var(--radius); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        thead tr { border-bottom: 1px solid var(--border); }
+        th {
+            color: var(--text-muted); padding: 10px 10px;
+            text-align: left; font-size: 0.68rem;
+            font-weight: 600; letter-spacing: 1px; text-transform: uppercase;
+        }
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            color: var(--text-primary);
+            vertical-align: middle;
+        }
+        tbody tr:hover { background: rgba(255,255,255,0.02); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .month-separator td {
+            background: rgba(99,179,237,0.06) !important;
+            color: var(--accent) !important;
+            font-weight: 600; font-size: 0.72rem;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+        .year-separator td {
+            background: rgba(104,211,145,0.06) !important;
+            color: var(--success) !important;
+            font-size: 0.7rem; letter-spacing: 2px;
+            text-transform: uppercase; font-weight: 700;
+        }
+
+        /* ── ACTION CELLS ── */
+        .action-cell { display: flex; gap: 6px; align-items: center; justify-content: flex-end; }
+        .action-btn {
+            border: none; width: 32px; height: 32px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; transition: opacity 0.2s, transform 0.1s;
+        }
+        .action-btn:hover { opacity: 0.85; }
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn.green { background: rgba(104,211,145,0.15); color: var(--success); border: 1px solid rgba(104,211,145,0.2); }
+        .action-btn.blue { background: rgba(99,179,237,0.15); color: var(--accent); border: 1px solid rgba(99,179,237,0.2); }
+        .action-btn.gold { background: rgba(246,173,85,0.15); color: var(--warning); border: 1px solid rgba(246,173,85,0.2); }
+        .action-btn.wa { background: rgba(37,211,102,0.15); color: #25D366; border: 1px solid rgba(37,211,102,0.2); }
+
+        /* ── FILTER BUTTONS ── */
+        .filters { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+        .filter-btn {
+            background: var(--bg-surface); border: 1px solid var(--border);
+            color: var(--text-secondary); padding: 6px 14px;
+            border-radius: 20px; font-size: 0.72rem;
+            font-family: var(--font-body); cursor: pointer;
+            transition: all 0.2s; font-weight: 500;
+        }
+        .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+        .filter-btn.active {
+            background: rgba(99,179,237,0.12);
+            border-color: var(--accent); color: var(--accent);
+        }
+
+        /* ── DEBT ALERT ── */
+        .debt-alert {
+            background: rgba(246,173,85,0.08);
+            border-left: 3px solid var(--warning);
+            padding: 12px 16px; border-radius: 0 var(--radius) var(--radius) 0;
+            margin-bottom: 14px;
+        }
+        .debt-alert p { font-size: 0.8rem; color: var(--warning); }
+
+        /* ── OVERDUE ── */
+        .overdue-debt {
+            color: var(--danger) !important; font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* ── LEDGER FOOTER ── */
+        .ledger-footer {
+            margin-top: 12px; padding: 14px 16px;
+            background: var(--bg-surface); border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        /* ── BUDGET STATS ── */
+        .budget-stats { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+        .budget-stat {
+            flex: 1; min-width: 80px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 12px 14px;
+            font-size: 0.75rem; color: var(--text-secondary);
+        }
+        .budget-stat span { display: block; font-size: 0.95rem; font-weight: 700; margin-top: 4px; }
+
+        /* ── WITHDRAWAL PANEL ── */
+        .withdraw-header {
+            background: rgba(104,211,145,0.08);
+            border: 1px solid rgba(104,211,145,0.15);
+            border-radius: var(--radius); padding: 16px;
+            margin-bottom: 16px; text-align: center;
+        }
+        .withdraw-header .label { font-size: 0.68rem; color: var(--text-muted); letter-spacing: 1.5px; text-transform: uppercase; }
+        .withdraw-header .val { font-family: var(--font-head); font-size: 1.4rem; color: var(--success); font-weight: 700; }
+
+        /* ── STOCK INLINE INPUT ── */
+        .qty-input {
+            width: 40px !important; padding: 4px 6px !important;
+            text-align: center; font-size: 0.85rem !important;
+            margin: 0 !important;
+        }
+
+        /* ── STATUS BADGE ── */
+        .badge {
+            display: inline-block; padding: 3px 10px; border-radius: 20px;
+            font-size: 0.65rem; font-weight: 600; letter-spacing: 0.5px;
+        }
+        .badge-ok { background: rgba(104,211,145,0.12); color: var(--success); }
+        .badge-low { background: rgba(246,173,85,0.12); color: var(--warning); }
+        .badge-inc { background: rgba(104,211,145,0.12); color: var(--success); }
+        .badge-exp { background: rgba(252,129,129,0.12); color: var(--danger); }
+
+        /* ── IMAGE STRIPS / HERO BANNERS ── */
+        .hero-strip {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 12px; margin-bottom: 20px; border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .hero-img {
+            height: 90px; border-radius: var(--radius);
+            object-fit: cover; width: 100%; opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+        .hero-img:hover { opacity: 0.8; }
+
+        .section-banner {
+            width: 100%; height: 60px; object-fit: cover;
+            border-radius: var(--radius); margin-bottom: 14px;
+            opacity: 0.35;
+        }
+
+        /* ── THREE-COLUMN FORM ── */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
     </style>
 </head>
 <body>
 
-<!-- ====================== INTRO VIDEO SPLASH ====================== -->
+<!-- INTRO VIDEO SPLASH -->
 <div id="introSplash">
     <video id="introVideo" autoplay muted playsinline loop>
         <source src="intro-video[1].mp4" type="video/mp4">
-        Your browser does not support the video tag.
     </video>
-    <button onclick="skipIntro()" class="skip-btn">SKIP INTRO →</button>
+    <button onclick="skipIntro()" class="skip-btn">Skip Intro →</button>
 </div>
 
 <div id="static-bg"></div>
 <div id="customNotification"></div>
 
+<!-- MODAL -->
 <div id="customModal">
-    <div class="auth-card" style="width:100%; max-width:320px;">
+    <div class="modal-card">
         <h3 id="modalTitle"></h3>
         <div id="modalInputs"></div>
-        <div style="display:flex; gap:10px; margin-top:15px;">
-            <button id="modalConfirm" class="btn-main">CONFIRM</button>
-            <button onclick="closeCustomModal()" class="btn-main" style="background:var(--danger); color:white;">CANCEL</button>
+        <div style="display:flex; gap:8px; margin-top:16px;">
+            <button id="modalConfirm" class="btn-main btn-success" style="flex:1;">Confirm</button>
+            <button onclick="closeCustomModal()" class="btn-main btn-danger" style="flex:1;">Cancel</button>
         </div>
     </div>
 </div>
 
-<div id="authOverlay" style="display: flex; align-items: center; justify-content: center; height: 100vh; flex-direction: column;">
+<!-- AUTH -->
+<div id="authOverlay">
+    <div class="auth-hero">
+        <div class="auth-logo">
+            <div class="auth-logo-fallback">KL</div>
+        </div>
+        <div class="auth-brand">KEONLABS</div>
+        <div class="auth-sub">Business Engine v4.6.3</div>
+    </div>
+
+    <!-- Hero strip under brand -->
+    <div style="width:100%; max-width:360px; margin-bottom:24px;">
+        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&q=80" alt="" class="section-banner" style="height:80px; opacity:0.3; border-radius:12px;">
+    </div>
+
     <div class="auth-card" id="loginBox">
-        <div class="brand-header">
-            <h1 class="brand-name">KEONLABS</h1>
-            <span class="brand-sub">BUSINESS ENGINE v4.6.3</span>
-        </div>
-        <input type="email" id="authEmail" placeholder="Email Address">
+        <input type="email" id="authEmail" placeholder="Email address">
         <input type="password" id="authPass" placeholder="Password">
-        <button onclick="handleAuth('login')" class="btn-main">SYSTEM ACCESS</button>
-        <div style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;">
-            <span onclick="toggleAuthMode('signup')" style="color:var(--success); cursor:pointer; font-size:0.75rem;">NEW USER? CREATE ACCOUNT</span>
-            <span onclick="toggleAuthMode('reset')" style="color:var(--warning); cursor:pointer; font-size:0.75rem;">FORGOT PASSWORD?</span>
-        </div>
+        <button onclick="handleAuth('login')" class="btn-main" style="background:var(--accent);">System Access</button>
+        <hr class="auth-divider">
+        <span onclick="toggleAuthMode('signup')" class="auth-link">New user? Create account</span>
+        <span onclick="toggleAuthMode('reset')" class="auth-link muted">Forgot password?</span>
     </div>
 
     <div class="auth-card" id="signupBox" style="display:none;">
-        <h2 style="color: var(--success); margin-top:0;">INITIALIZE USER</h2>
-        <input type="email" id="regEmail" placeholder="Email Address">
-        <input type="password" id="regPass" placeholder="Secure Password">
-        <button onclick="handleAuth('signup')" class="btn-main" style="background:var(--neon-blue)">REGISTER ACCOUNT</button>
-        <span onclick="toggleAuthMode('login')" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
+        <h2>Create Account</h2>
+        <input type="email" id="regEmail" placeholder="Email address">
+        <input type="password" id="regPass" placeholder="Secure password">
+        <button onclick="handleAuth('signup')" class="btn-main">Register Account</button>
+        <span onclick="toggleAuthMode('login')" class="auth-link" style="margin-top:14px;">← Back to Login</span>
     </div>
 
     <div class="auth-card" id="resetBox" style="display:none;">
-        <h2 style="color: var(--warning); margin-top:0;">RECOVERY</h2>
-        <input type="email" id="resetEmail" placeholder="Email Address">
-        <button onclick="handleAuth('reset')" class="btn-main" style="background:var(--warning)">SEND RESET LINK</button>
-        <span onclick="toggleAuthMode('login')" style="color:var(--neon-blue); cursor:pointer; font-size:0.8rem; margin-top:10px; display:block;">Back to Login</span>
+        <h2 style="color:var(--warning);">Account Recovery</h2>
+        <input type="email" id="resetEmail" placeholder="Email address">
+        <button onclick="handleAuth('reset')" class="btn-main btn-warning">Send Reset Link</button>
+        <span onclick="toggleAuthMode('login')" class="auth-link" style="margin-top:14px;">← Back to Login</span>
     </div>
 </div>
 
+<!-- MAIN APP -->
 <div class="container" id="mainApp">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-            <span id="userDisplay" style="font-size:0.6rem; color:var(--success);"></span>
-            <span id="syncIndicator" style="font-size:0.6rem; color:var(--neon-blue); opacity:0.6;">● Live</span>
+
+    <!-- TOP BAR -->
+    <div class="topbar">
+        <div class="topbar-left">
+            <div>
+                <div class="topbar-brand">KEONLABS</div>
+                <div style="display:flex; align-items:center; gap:8px; margin-top:2px;">
+                    <span id="userDisplay"></span>
+                    <span id="syncIndicator">● Live</span>
+                </div>
+            </div>
+            <span class="topbar-badge">v4.6.3</span>
         </div>
-        <div style="display:flex; gap:5px;">
-            <button onclick="resetUserData()" style="background:rgba(255, 77, 77, 0.2); border:1px solid var(--danger); color:var(--danger); padding:5px 10px; border-radius:4px; font-size:0.7rem;">RESET DATA</button>
-            <button onclick="logoutUser()" style="background:var(--danger); border:none; color:white; padding:5px 10px; border-radius:4px; font-size:0.7rem;">LOGOUT</button>
+        <div class="topbar-actions">
+            <button onclick="resetUserData()" class="btn-ghost danger">Reset</button>
+            <button onclick="logoutUser()" class="btn-ghost" style="border-color:rgba(252,129,129,0.3); color:var(--danger);">Logout</button>
         </div>
     </div>
 
-    <div style="background: rgba(0, 242, 255, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; border:1px solid var(--border-glow);">
-        <label style="font-size:0.7rem; color:var(--neon-blue); font-weight:bold;">TIMELINE:</label>
-        <select id="globalMonth" style="margin:0; width:50%;" onchange="renderAll()"></select>
-        <select id="globalYear" style="margin:0; width:40%;" onchange="renderAll()"></select>
+    <!-- HERO IMAGES -->
+    <div class="hero-strip">
+        <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&q=80" alt="Business analytics" class="hero-img">
+        <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80" alt="Business finance" class="hero-img">
     </div>
 
+    <!-- TIMELINE -->
+    <div class="timeline-bar">
+        <span class="timeline-label">Timeline</span>
+        <select id="globalMonth" style="flex:1;" onchange="renderAll()"></select>
+        <select id="globalYear" style="width:120px;" onchange="renderAll()"></select>
+    </div>
+
+    <!-- METRICS -->
     <div class="metric-grid">
-        <div class="metric-box">CAPITAL<span id="statCap" class="metric-val">K 0</span></div>
-        <div class="metric-box">REVENUE<span id="statRev" class="metric-val">K 0</span></div>
-        <div class="metric-box">DEBT<span id="statDebt" class="metric-val" style="color: var(--warning);">K 0</span></div>
-        <div class="metric-box">NET PROFIT<span id="statProfit" class="metric-val" style="color: var(--success);">K 0</span></div>
+        <div class="metric-box" style="--accent-color: var(--accent);">
+            <div class="metric-label"><i class="fas fa-coins" style="font-size:10px;"></i> Capital</div>
+            <span id="statCap" class="metric-val blue">K 0</span>
+        </div>
+        <div class="metric-box" style="--accent-color: var(--success);">
+            <div class="metric-label"><i class="fas fa-chart-line" style="font-size:10px;"></i> Revenue</div>
+            <span id="statRev" class="metric-val green">K 0</span>
+        </div>
+        <div class="metric-box" style="--accent-color: var(--warning);">
+            <div class="metric-label"><i class="fas fa-exclamation-triangle" style="font-size:10px;"></i> Debt</div>
+            <span id="statDebt" class="metric-val warn">K 0</span>
+        </div>
+        <div class="metric-box" style="--accent-color: var(--gold);">
+            <div class="metric-label"><i class="fas fa-arrow-trend-up" style="font-size:10px;"></i> Net Profit</div>
+            <span id="statProfit" class="metric-val gold">K 0</span>
+        </div>
     </div>
 
+    <!-- TABS -->
     <div class="tabs">
         <button class="tab-btn active" onclick="openTab(event, 'business')">Stock</button>
         <button class="tab-btn" onclick="openTab(event, 'debtors')">Debtors</button>
@@ -201,72 +611,112 @@
         <button class="tab-btn" onclick="openTab(event, 'withdraw')">Withdraw</button>
     </div>
 
+    <!-- STOCK TAB -->
     <div id="business" class="tab-content active">
         <section>
-            <input type="text" id="bName" placeholder="Item Name">
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px;">
-                <input type="number" id="bBuy" placeholder="Cap K">
-                <input type="number" id="bSell" placeholder="Sell K">
+            <img src="https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80" alt="" class="section-banner">
+            <input type="text" id="bName" placeholder="Item name">
+            <div class="form-row">
+                <input type="number" id="bBuy" placeholder="Capital K">
+                <input type="number" id="bSell" placeholder="Sell price K">
                 <input type="number" id="bStock" placeholder="Qty">
             </div>
-            <button onclick="addBusiness()" class="btn-main">ADD STOCK ITEM</button>
-            <input type="text" id="stockSearch" placeholder="🔍 Search items..." onkeyup="renderAll()" style="margin-top:10px;">
-            <div style="overflow-x:auto; margin-top:15px;"><table id="bTable"><thead><tr><th>DETAILS</th><th>CAP</th><th>QTY</th><th style="text-align:right">SALE / RE</th></tr></thead><tbody></tbody></table></div>
+            <button onclick="addBusiness()" class="btn-main" style="background:var(--accent);">Add Stock Item</button>
+            <input type="text" id="stockSearch" placeholder="Search items..." onkeyup="renderAll()" style="margin-top:12px;">
+            <div class="table-wrap" style="margin-top:14px;">
+                <table id="bTable">
+                    <thead><tr>
+                        <th>Item</th><th>Capital</th><th>Qty</th><th style="text-align:right;">Actions</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </section>
     </div>
 
+    <!-- DEBTORS TAB -->
     <div id="debtors" class="tab-content">
         <section>
-            <div id="debtSummaryHeader" class="debt-alert" style="display:none;"><p id="debtSummaryText" style="margin:0; font-size:0.75rem;"></p></div>
-            <input type="text" id="debtSearch" placeholder="🔍 Search name..." onkeyup="renderAll()">
-            <div style="overflow-x:auto;"><table id="debtTable"><thead><tr><th>NAME</th><th>PHONE</th><th>ITEM</th><th>BAL</th><th>ACTIONS</th></tr></thead><tbody></tbody></table></div>
+            <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&q=80" alt="" class="section-banner">
+            <div id="debtSummaryHeader" class="debt-alert" style="display:none;">
+                <p id="debtSummaryText"></p>
+            </div>
+            <input type="text" id="debtSearch" placeholder="Search by name..." onkeyup="renderAll()">
+            <div class="table-wrap">
+                <table id="debtTable">
+                    <thead><tr>
+                        <th>Name</th><th>Phone</th><th>Item</th><th>Balance</th><th style="text-align:right;">Actions</th>
+                    </tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </section>
     </div>
 
+    <!-- LEDGER TAB -->
     <div id="ledger" class="tab-content">
         <section>
-            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px;">
-                <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">ALL</button>
-                <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">INCOME</button>
-                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">BIZ EXP</button>
-                <button class="filter-btn" onclick="setLedgerFilter('PERSONAL', this)">PERS EXP</button>
-                <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">DEBTS</button>
+            <div class="filters">
+                <button class="filter-btn active" onclick="setLedgerFilter('ALL', this)">All</button>
+                <button class="filter-btn" onclick="setLedgerFilter('SALE', this)">Income</button>
+                <button class="filter-btn" onclick="setLedgerFilter('CAPITAL', this)">Biz Exp</button>
+                <button class="filter-btn" onclick="setLedgerFilter('PERSONAL', this)">Personal</button>
+                <button class="filter-btn" onclick="setLedgerFilter('DEBT', this)">Debts</button>
             </div>
-            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-                <select id="timeFilter" onchange="renderAll()" style="font-size: 0.7rem;">
-                    <option value="YEAR">THIS YEAR</option>
-                    <option value="MONTH">THIS MONTH</option>
-                    <option value="WEEK">THIS WEEK</option>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <select id="timeFilter" onchange="renderAll()" style="font-size:0.8rem; flex:1;">
+                    <option value="YEAR">This Year</option>
+                    <option value="MONTH">This Month</option>
+                    <option value="WEEK">This Week</option>
                 </select>
-                <input type="text" id="ledgerSearch" placeholder="🔍 Search logs..." onkeyup="renderAll()" style="margin:0;">
+                <input type="text" id="ledgerSearch" placeholder="Search logs..." onkeyup="renderAll()" style="flex:2; margin:0;">
             </div>
-            <div style="overflow-x:auto;"><table id="ledgerTable"><thead><tr><th>DATE</th><th>DESC</th><th>TYPE</th><th>AMT</th></tr></thead><tbody></tbody></table></div>
-            <div id="ledgerFooter" style="margin-top:10px; padding:10px; background:rgba(191,0,255,0.1); border-radius:5px; text-align:right; font-weight:bold; color:var(--notif-purple);">
+            <div class="table-wrap">
+                <table id="ledgerTable">
+                    <thead><tr><th>Date</th><th>Description</th><th>Type</th><th>Amount</th></tr></thead>
+                    <tbody></tbody>
+                </table>
             </div>
+            <div id="ledgerFooter" class="ledger-footer"></div>
         </section>
     </div>
 
+    <!-- BUDGET TAB -->
     <div id="personal" class="tab-content">
         <section>
-            <div id="pStatsContainer" style="display:flex; justify-content:space-between; margin-bottom:10px;"></div>
+            <img src="https://images.unsplash.com/photo-1579621970563-ebec7560ff3e?w=800&q=80" alt="" class="section-banner">
+            <div id="pStatsContainer" class="budget-stats"></div>
             <input type="text" id="pDesc" placeholder="Description">
             <input type="number" id="pAmt" placeholder="Amount K">
-            <select id="pType"><option value="expense">EXPENSE</option><option value="income">INCOME</option></select>
-            <button onclick="addPersonal()" class="btn-main">LOG ENTRY</button>
-            <div style="overflow-x:auto; margin-top:10px;"><table id="pTable"><thead><tr><th>DESC</th><th>AMT</th><th>TYPE</th><th>X</th></tr></thead><tbody></tbody></table></div>
+            <select id="pType">
+                <option value="expense">Expense</option>
+                <option value="income">Income</option>
+            </select>
+            <button onclick="addPersonal()" class="btn-main">Log Entry</button>
+            <div class="table-wrap" style="margin-top:12px;">
+                <table id="pTable">
+                    <thead><tr><th>Description</th><th>Amount</th><th>Type</th><th></th></tr></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
         </section>
     </div>
 
+    <!-- WITHDRAW TAB -->
     <div id="withdraw" class="tab-content">
         <section>
-            <h3 style="color:var(--neon-blue); margin-top:0;">WITHDRAWAL</h3>
-            <div class="metric-box" style="margin-bottom:15px; border-color:var(--success);">MONTH PROFIT: <span id="wdProfitStat" style="color:var(--success); font-weight:bold;">K 0</span></div>
+            <h3>Transfer to Budget</h3>
+            <div class="withdraw-header">
+                <div class="label">Monthly Profit Available</div>
+                <div id="wdProfitStat" class="val">K 0</div>
+            </div>
             <input type="number" id="wAmt" placeholder="Amount K">
-            <input type="text" id="wNote" placeholder="Reason">
-            <button onclick="processWithdrawal()" class="btn-main" style="background:rgba(191, 0, 255, 0.7); color:white;">TRANSFER TO BUDGET</button>
+            <input type="text" id="wNote" placeholder="Reason / Note">
+            <button onclick="processWithdrawal()" class="btn-main btn-purple" style="background:rgba(159,122,234,0.9);">Transfer to Budget</button>
         </section>
     </div>
-</div>
+
+</div><!-- /container -->
 
 <script>
 const SUPABASE_URL = 'https://osloiqymubajtacarwze.supabase.co';
@@ -274,55 +724,38 @@ const SUPABASE_KEY = 'sb_publishable_bEVd8mvJlf4Z2bcll61a7g_r8eQe_Ad';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let businessData = [], stockHistory = [], personalLedger = [], debtors = [], globalLedger = [], currentLedgerType = 'ALL';
-const months = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
-// ====================== INTRO VIDEO ======================
+// ── INTRO VIDEO ──
 function initIntroVideo() {
     const splash = document.getElementById('introSplash');
     const video = document.getElementById('introVideo');
     const authOverlay = document.getElementById('authOverlay');
-
-    // Hide login until intro finishes
     authOverlay.style.display = 'none';
-
     if (!video) return;
-
-    // End intro when video finishes
     video.onended = () => endIntro();
-    
-    // Safety timeout (max 12 seconds)
-    setTimeout(() => {
-        if (splash.style.display !== 'none') endIntro();
-    }, 12000);
+    setTimeout(() => { if (splash.style.display !== 'none') endIntro(); }, 12000);
 }
-
 function endIntro() {
     const splash = document.getElementById('introSplash');
     const authOverlay = document.getElementById('authOverlay');
-    
     splash.classList.add('hidden');
-    
-    setTimeout(() => {
-        splash.style.display = 'none';
-        authOverlay.style.display = 'flex';   // show login screen
-    }, 900);
+    setTimeout(() => { splash.style.display = 'none'; authOverlay.style.display = 'flex'; }, 900);
 }
-
 function skipIntro() {
     const video = document.getElementById('introVideo');
     if (video) video.pause();
     endIntro();
 }
 
-// Initialize Global Variables
+// ── TIMELINE ──
 function initTimeline() {
     const mSelect = document.getElementById('globalMonth');
-    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+    mSelect.innerHTML = months.map((m, i) => `<option value="${i}">${m.toUpperCase()}</option>`).join('');
     mSelect.value = new Date().getMonth();
-
     const ySelect = document.getElementById('globalYear');
     let years = [];
-    for(let y=2025; y<=2100; y++) years.push(`<option value="${y}">YEAR ${y}</option>`);
+    for(let y=2025; y<=2100; y++) years.push(`<option value="${y}">${y}</option>`);
     ySelect.innerHTML = years.join('');
     ySelect.value = new Date().getFullYear();
 }
@@ -334,61 +767,127 @@ function isThisWeek(dateString) {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 7;
 }
 
-// ---------------------------------------------------------
-// UI RENDERING ENGINE
-// ---------------------------------------------------------
+// ── RENDER ENGINE ──
 function renderAll() {
     const activeMonth = parseInt(document.getElementById('globalMonth').value);
     const activeYear = parseInt(document.getElementById('globalYear').value);
     const timeFrame = document.getElementById('timeFilter')?.value || 'YEAR';
     const stockSearch = document.getElementById('stockSearch').value.toLowerCase();
     const ledSearch = document.getElementById('ledgerSearch').value.toLowerCase();
-    
-    // STOCK RENDER
-    document.querySelector("#bTable tbody").innerHTML = businessData
-    .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
-    .map(x => `<tr><td><b style="color:var(--neon-blue)">${x.name}</b><br><small>K${x.unitSellPrice}</small></td><td>K${x.totalCapitalInvested}</td><td style="color:${x.currentStock <= 3 ? 'var(--warning)' : 'var(--success)'}">${x.currentStock}</td><td><div class="action-cell"><input type="number" id="q_${x.id}" value="1" style="width:30px; padding:2px;"><button class="action-btn" onclick="handleSale(${x.id}, false)" style="background:var(--success)"><i class="fas fa-dollar-sign"></i></button><button class="action-btn" onclick="handleSale(${x.id}, true)" style="background:var(--warning)"><i class="fas fa-user-clock"></i></button><button class="action-btn" onclick="openRestock(${x.id})" style="background:var(--neon-blue)"><i class="fas fa-plus"></i></button></div></td></tr>`).join('');
 
-    // DEBTORS RENDER
+    // STOCK
+    document.querySelector("#bTable tbody").innerHTML = businessData
+        .filter(x => x.month === activeMonth && x.year === activeYear && x.name.toLowerCase().includes(stockSearch))
+        .map(x => {
+            const isLow = x.currentStock <= 3;
+            return `<tr>
+                <td>
+                    <div style="font-weight:600; color:var(--text-primary);">${x.name}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">K${x.unitSellPrice} / unit</div>
+                </td>
+                <td style="color:var(--text-secondary);">K${x.totalCapitalInvested}</td>
+                <td>
+                    <span class="badge ${isLow ? 'badge-low' : 'badge-ok'}">${x.currentStock} ${isLow ? '⚠' : ''}</span>
+                </td>
+                <td>
+                    <div class="action-cell">
+                        <input type="number" id="q_${x.id}" value="1" class="qty-input">
+                        <button class="action-btn green" onclick="handleSale(${x.id}, false)" title="Record Sale"><i class="fas fa-check"></i></button>
+                        <button class="action-btn gold" onclick="handleSale(${x.id}, true)" title="Debtor Sale"><i class="fas fa-user-clock"></i></button>
+                        <button class="action-btn blue" onclick="openRestock(${x.id})" title="Restock"><i class="fas fa-plus"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+    // DEBTORS
     const totalD = debtors.reduce((s, x) => s + x.balance, 0);
     document.getElementById('debtSummaryHeader').style.display = debtors.length ? 'block' : 'none';
-    document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} Total Outstanding.`;
-    
-    document.querySelector("#debtTable tbody").innerHTML = debtors.filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase())).map(d => {
-        const isOverdue = Math.floor(Math.abs(new Date() - new Date(d.id)) / (1000 * 60 * 60 * 24)) >= 5;
-        return `<tr><td>${d.name}</td><td><small>${d.phone}</small></td><td>${d.product}</td><td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td><td><div class="action-cell"><button class="action-btn" onclick="sendWhatsAppReminder(${d.id})" style="background:#25D366; color:white;"><i class="fab fa-whatsapp"></i></button><button class="action-btn" onclick="payDebt(${d.id})" style="background:var(--success)"><i class="fas fa-check"></i></button></div></td></tr>`;
-    }).join('');
+    document.getElementById('debtSummaryText').innerText = `K${totalD.toFixed(2)} total outstanding across ${debtors.length} debtor${debtors.length !== 1 ? 's' : ''}.`;
 
-    // LEDGER RENDER
+    document.querySelector("#debtTable tbody").innerHTML = debtors
+        .filter(d => d.name.toLowerCase().includes(document.getElementById('debtSearch').value.toLowerCase()))
+        .map(d => {
+            const isOverdue = Math.floor(Math.abs(new Date() - new Date(d.id)) / (1000 * 60 * 60 * 24)) >= 5;
+            return `<tr>
+                <td style="font-weight:500;">${d.name}</td>
+                <td style="color:var(--text-muted); font-size:0.78rem;">${d.phone}</td>
+                <td>${d.product}</td>
+                <td class="${isOverdue ? 'overdue-debt' : ''}">K${d.balance}</td>
+                <td>
+                    <div class="action-cell">
+                        <button class="action-btn wa" onclick="sendWhatsAppReminder(${d.id})" title="WhatsApp Reminder"><i class="fab fa-whatsapp"></i></button>
+                        <button class="action-btn green" onclick="payDebt(${d.id})" title="Mark Paid"><i class="fas fa-check"></i></button>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+    // LEDGER
     let lastMonthSeen = null, lastYearSeen = null, ledgerHTML = "", totalLedgerIncome = 0, totalLedgerExpense = 0;
     const sortedLedger = [...globalLedger].reverse().filter(l => {
         const typeMatch = (currentLedgerType === 'ALL' || l.type === currentLedgerType);
         const searchMatch = l.desc.toLowerCase().includes(ledSearch);
-        let timeMatch = (timeFrame === 'YEAR' && l.year === activeYear) || 
-                         (timeFrame === 'MONTH' && l.year === activeYear && l.month === activeMonth) || 
-                         (timeFrame === 'WEEK' && isThisWeek(l.date));
+        const timeMatch = (timeFrame === 'YEAR' && l.year === activeYear) ||
+                          (timeFrame === 'MONTH' && l.year === activeYear && l.month === activeMonth) ||
+                          (timeFrame === 'WEEK' && isThisWeek(l.date));
         return typeMatch && searchMatch && timeMatch;
     });
 
     sortedLedger.forEach(l => {
-        if (l.year !== lastYearSeen) { ledgerHTML += `<tr class="year-separator"><td colspan="4">TIMELINE: ${l.year}</td></tr>`; lastYearSeen = l.year; lastMonthSeen = null; }
-        if (l.month !== lastMonthSeen) { ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`; lastMonthSeen = l.month; }
+        if (l.year !== lastYearSeen) {
+            ledgerHTML += `<tr class="year-separator"><td colspan="4">— ${l.year} —</td></tr>`;
+            lastYearSeen = l.year; lastMonthSeen = null;
+        }
+        if (l.month !== lastMonthSeen) {
+            ledgerHTML += `<tr class="month-separator"><td colspan="4">${months[l.month]}</td></tr>`;
+            lastMonthSeen = l.month;
+        }
         const isPos = ['SALE', 'INCOME'].includes(l.type);
-        const displayAmt = Math.abs(l.amt); 
+        const displayAmt = Math.abs(l.amt);
         if (isPos) totalLedgerIncome += displayAmt; else totalLedgerExpense += displayAmt;
-        ledgerHTML += `<tr><td style="color:var(--neon-blue); font-size:0.65rem;">${l.date}</td><td>${l.desc}</td><td style="font-size:0.6rem; opacity:0.7;">${l.type}</td><td style="color:${isPos ? 'var(--success)' : 'var(--danger)'}">${isPos ? '+' : '-'}K${displayAmt.toFixed(2)}</td></tr>`;
+        ledgerHTML += `<tr>
+            <td style="color:var(--text-muted); font-size:0.72rem;">${l.date}</td>
+            <td>${l.desc}</td>
+            <td><span class="badge ${isPos ? 'badge-inc' : 'badge-exp'}">${l.type}</span></td>
+            <td style="font-weight:600; color:${isPos ? 'var(--success)' : 'var(--danger)'};">${isPos ? '+' : '-'}K${displayAmt.toFixed(2)}</td>
+        </tr>`;
     });
-    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;">No records.</td></tr>';
-    document.getElementById('ledgerFooter').innerHTML = `<div style="display:flex; justify-content:space-between; font-size:0.75rem;"><span>INC: <span style="color:var(--success)">K ${totalLedgerIncome.toFixed(2)}</span></span><span>EXP: <span style="color:var(--danger)">K ${totalLedgerExpense.toFixed(2)}</span></span></div><div style="margin-top:5px; border-top:1px solid rgba(255,255,255,0.1); padding-top:5px;">NET: <span>K ${(totalLedgerIncome - totalLedgerExpense).toFixed(2)}</span></div>`;
 
-    // BUDGET RENDER
+    document.querySelector("#ledgerTable tbody").innerHTML = ledgerHTML ||
+        '<tr><td colspan="4" style="text-align:center; color:var(--text-muted); padding:24px;">No records found.</td></tr>';
+
+    document.getElementById('ledgerFooter').innerHTML = `
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:8px;">
+            <span style="color:var(--text-muted);">Income</span>
+            <span style="color:var(--success); font-weight:600;">K ${totalLedgerIncome.toFixed(2)}</span>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:10px;">
+            <span style="color:var(--text-muted);">Expenses</span>
+            <span style="color:var(--danger); font-weight:600;">K ${totalLedgerExpense.toFixed(2)}</span>
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:10px; display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span style="color:var(--text-secondary); font-weight:500;">Net</span>
+            <span style="font-weight:700; color:var(--accent);">K ${(totalLedgerIncome - totalLedgerExpense).toFixed(2)}</span>
+        </div>`;
+
+    // BUDGET
     const pCur = personalLedger.filter(x => x.month === activeMonth && x.year === activeYear);
     const totalIncome = pCur.filter(x => x.type === 'income').reduce((s, x) => s + x.amt, 0);
     const totalExpense = pCur.filter(x => x.type === 'expense').reduce((s, x) => s + x.amt, 0);
-    document.getElementById('pStatsContainer').innerHTML = `<div class="metric-box" style="flex:1; margin-right:5px;">INC: <span style="color:var(--success)">K ${totalIncome.toFixed(2)}</span></div><div class="metric-box" style="flex:1; margin-right:5px;">EXP: <span style="color:var(--danger)">K ${totalExpense.toFixed(2)}</span></div><div class="metric-box" style="flex:1; border-color:var(--neon-blue);">NET: <span style="color:var(--neon-blue)">K ${(totalIncome - totalExpense).toFixed(2)}</span></div>`;
-    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `<tr><td>${x.desc}</td><td>K${x.amt.toFixed(2)}</td><td style="color:${x.type === 'income' ? 'var(--success)' : 'var(--danger)'}">${x.type.toUpperCase()}</td><td><button onclick="delP(${x.id})" style="color:var(--danger); background:none; border:none;">×</button></td></tr>`).join('');
+    document.getElementById('pStatsContainer').innerHTML = `
+        <div class="budget-stat">Income<span style="color:var(--success);">K ${totalIncome.toFixed(2)}</span></div>
+        <div class="budget-stat">Expenses<span style="color:var(--danger);">K ${totalExpense.toFixed(2)}</span></div>
+        <div class="budget-stat">Net<span style="color:var(--accent);">K ${(totalIncome - totalExpense).toFixed(2)}</span></div>`;
 
-    // STATS RENDER
+    document.querySelector("#pTable tbody").innerHTML = pCur.map(x => `<tr>
+        <td>${x.desc}</td>
+        <td style="font-weight:600;">K${x.amt.toFixed(2)}</td>
+        <td><span class="badge ${x.type === 'income' ? 'badge-inc' : 'badge-exp'}">${x.type}</span></td>
+        <td><button onclick="delP(${x.id})" style="background:none; border:none; color:var(--danger); cursor:pointer; font-size:1rem;">×</button></td>
+    </tr>`).join('');
+
+    // STATS
     const mCap = stockHistory.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.cost) || 0), 0);
     const mRev = businessData.filter(x => x.month === activeMonth && x.year === activeYear).reduce((s, x) => s + (parseFloat(x.totalSalesRevenue) || 0), 0);
     const mWithdrawals = globalLedger.filter(l => l.month === activeMonth && l.year === activeYear && l.type === 'WITHDRAW').reduce((s, l) => s + l.amt, 0);
@@ -400,18 +899,15 @@ function renderAll() {
     document.getElementById('wdProfitStat').innerText = `K ${netProfit.toFixed(2)}`;
 }
 
-// ---------------------------------------------------------
-// DATA ACTIONS (ASYNC)
-// ---------------------------------------------------------
+// ── DATA ACTIONS ──
 async function handleSale(id, isDebt) {
     const qty = parseInt(document.getElementById(`q_${id}`).value);
     const item = businessData.find(x => x.id === id);
-    if (item.currentStock < qty) return showNotify("LOW STOCK", true);
+    if (item.currentStock < qty) return showNotify("⚠ Insufficient stock", true);
     const total = item.unitSellPrice * qty;
     const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
-
     if (isDebt) {
-        const res = await openCustomModal("DEBTOR", [{id:'n', type:'text', placeholder:'Name'}, {id:'p', type:'text', placeholder:'Phone'}]);
+        const res = await openCustomModal("Debtor Sale", [{id:'n', type:'text', placeholder:'Debtor name'}, {id:'p', type:'text', placeholder:'Phone number'}]);
         if(res && res.n) {
             debtors.push({ id: Date.now(), name: res.n, phone: res.p || 'N/A', product: item.name, balance: total, originalId: id });
             logToLedger(`Debt: ${item.name} to ${res.n}`, 'DEBT', total, m, y);
@@ -422,21 +918,19 @@ async function handleSale(id, isDebt) {
         item.currentStock -= qty;
         logToLedger(`Sale: ${item.name} x${qty}`, 'SALE', total, m, y);
     }
-    await syncData(); 
-    renderAll(); 
-    showNotify("SAVED");
+    await syncData(); renderAll(); showNotify("Saved successfully");
 }
 
 async function openRestock(id) {
     const item = businessData.find(x => x.id === id);
-    const res = await openCustomModal(`RESTOCK: ${item.name}`, [{id:'q', type:'number', placeholder:'Qty'}, {id:'c', type:'number', placeholder:'Cap K'}]);
+    const res = await openCustomModal(`Restock: ${item.name}`, [{id:'q', type:'number', placeholder:'Quantity'}, {id:'c', type:'number', placeholder:'Capital cost K'}]);
     if(res && res.q && res.c) {
         const m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value);
         item.currentStock += parseInt(res.q);
         item.totalCapitalInvested += parseFloat(res.c);
         stockHistory.push({ id: Date.now(), name: item.name, qty: parseInt(res.q), cost: parseFloat(res.c), month: m, year: y });
         logToLedger(`Restock: ${item.name}`, 'CAPITAL', parseFloat(res.c), m, y);
-        await syncData(); renderAll(); showNotify("RESTOCKED");
+        await syncData(); renderAll(); showNotify("Restocked");
     }
 }
 
@@ -447,7 +941,7 @@ async function payDebt(id) {
     if(item) item.totalSalesRevenue += d.balance;
     logToLedger(`Debt Paid: ${d.name}`, 'SALE', d.balance, m, y);
     debtors = debtors.filter(x => x.id !== id);
-    await syncData(); renderAll(); showNotify("PAID");
+    await syncData(); renderAll(); showNotify("Debt cleared");
 }
 
 async function addBusiness() {
@@ -456,8 +950,8 @@ async function addBusiness() {
         businessData.push({ id: Date.now(), name: n, unitSellPrice: s, currentStock: q, totalCapitalInvested: c, totalSalesRevenue: 0, month: m, year: y });
         stockHistory.push({ id: Date.now(), name: n, qty: q, cost: c, month: m, year: y });
         logToLedger(`Stock In: ${n}`, 'CAPITAL', c, m, y);
-        await syncData(); renderAll(); showNotify("ADDED");
-        ['bName', 'bBuy', 'bSell', 'bStock'].forEach(id => document.getElementById(id).value = '');
+        await syncData(); renderAll(); showNotify("Item added");
+        ['bName','bBuy','bSell','bStock'].forEach(id => document.getElementById(id).value = '');
     }
 }
 
@@ -466,7 +960,7 @@ async function addPersonal() {
     if(d && a) {
         personalLedger.push({ id: Date.now(), desc: d, amt: a, type: t, month: m, year: y });
         logToLedger(`[Pers] ${d}`, t === 'expense' ? 'PERSONAL' : 'INCOME', a, m, y);
-        await syncData(); renderAll(); showNotify("LOGGED");
+        await syncData(); renderAll(); showNotify("Logged");
         document.getElementById('pDesc').value = ''; document.getElementById('pAmt').value = '';
     }
 }
@@ -475,20 +969,18 @@ async function processWithdrawal() {
     const amt = parseFloat(document.getElementById('wAmt').value), m = parseInt(document.getElementById('globalMonth').value), y = parseInt(document.getElementById('globalYear').value), note = document.getElementById('wNote').value || 'Withdraw';
     personalLedger.push({ id: Date.now(), desc: `[WD] ${note}`, amt: amt, type: 'income', month: m, year: y });
     logToLedger(`Withdrawal: ${note}`, 'WITHDRAW', amt, m, y);
-    await syncData(); renderAll(); showNotify("TRANSFERRED");
+    await syncData(); renderAll(); showNotify("Transferred");
     document.getElementById('wAmt').value = ''; document.getElementById('wNote').value = '';
 }
 
-// ---------------------------------------------------------
-// SUPABASE & REALTIME LOGIC
-// ---------------------------------------------------------
+// ── SUPABASE ──
 async function syncData() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if(!user) return;
-    const { error } = await supabaseClient.from('user_budgets').upsert({ 
-        user_id: user.id, 
-        payload: { businessData, stockHistory, personalLedger, debtors, globalLedger }, 
-        updated_at: new Date().toISOString() 
+    await supabaseClient.from('user_budgets').upsert({
+        user_id: user.id,
+        payload: { businessData, stockHistory, personalLedger, debtors, globalLedger },
+        updated_at: new Date().toISOString()
     });
 }
 
@@ -499,37 +991,27 @@ async function loadData(userId) {
         businessData = p.businessData || []; stockHistory = p.stockHistory || [];
         personalLedger = p.personalLedger || []; debtors = p.debtors || []; globalLedger = p.globalLedger || [];
     }
-    initTimeline(); 
-    renderAll();
+    initTimeline(); renderAll();
     setupRealtime(userId);
 }
 
-// FIX: Added Realtime Subscription to listen for changes from other devices
 function setupRealtime(userId) {
-    supabaseClient
-        .channel('public:user_budgets')
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_budgets', filter: `user_id=eq.${userId}` }, 
+    supabaseClient.channel('public:user_budgets')
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'user_budgets', filter: `user_id=eq.${userId}` },
         (payload) => {
             if (payload.new && payload.new.payload) {
                 const p = payload.new.payload;
-                businessData = p.businessData || [];
-                stockHistory = p.stockHistory || [];
-                personalLedger = p.personalLedger || [];
-                debtors = p.debtors || [];
-                globalLedger = p.globalLedger || [];
+                businessData = p.businessData || []; stockHistory = p.stockHistory || [];
+                personalLedger = p.personalLedger || []; debtors = p.debtors || []; globalLedger = p.globalLedger || [];
                 renderAll();
-                console.log("Remote changes detected and synced.");
             }
-        })
-        .subscribe();
+        }).subscribe();
 }
 
 supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
-        // Make sure intro is gone if user was already logged in
         const splash = document.getElementById('introSplash');
         if (splash) splash.style.display = 'none';
-        
         document.getElementById('authOverlay').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
         document.getElementById('userDisplay').innerText = session.user.email;
@@ -537,22 +1019,26 @@ supabaseClient.auth.onAuthStateChange((event, session) => {
     }
 });
 
-// AUTH & UTILS
+// ── AUTH ──
 async function handleAuth(type) {
     if(type === 'reset') {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(document.getElementById('resetEmail').value);
-        if(error) showNotify(error.message, true); else showNotify("Check email!");
+        if(error) showNotify(error.message, true); else showNotify("Reset link sent — check your email.");
         return;
     }
     const email = type === 'login' ? document.getElementById('authEmail').value : document.getElementById('regEmail').value;
     const password = type === 'login' ? document.getElementById('authPass').value : document.getElementById('regPass').value;
-    const { error } = type === 'login' ? await supabaseClient.auth.signInWithPassword({ email, password }) : await supabaseClient.auth.signUp({ email, password });
+    const { error } = type === 'login'
+        ? await supabaseClient.auth.signInWithPassword({ email, password })
+        : await supabaseClient.auth.signUp({ email, password });
     if(error) showNotify(error.message, true);
 }
 
+// ── UTILS ──
 function showNotify(msg, isError = false) {
     const el = document.getElementById('customNotification');
-    el.innerHTML = `<div>${isError ? "⚠️" : "✔️"} ${msg}</div>`;
+    el.innerHTML = `${isError ? '⚠ ' : '✓ '}${msg}`;
+    el.style.borderColor = isError ? 'rgba(252,129,129,0.4)' : 'rgba(104,211,145,0.3)';
     el.style.display = 'block';
     setTimeout(() => { el.style.display = 'none'; }, 3000);
 }
@@ -562,7 +1048,8 @@ function openCustomModal(title, inputs) {
     document.getElementById('modalTitle').innerText = title;
     const container = document.getElementById('modalInputs'); container.innerHTML = '';
     inputs.forEach(inp => {
-        const el = document.createElement('input'); el.type = inp.type; el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder; 
+        const el = document.createElement('input'); el.type = inp.type;
+        el.id = `m_inp_${inp.id}`; el.placeholder = inp.placeholder;
         container.appendChild(el);
     });
     modal.style.display = 'flex';
@@ -573,31 +1060,46 @@ function openCustomModal(title, inputs) {
         };
     });
 }
-function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
-function toggleAuthMode(mode) { 
-    document.getElementById('loginBox').style.display = mode === 'login' ? 'block' : 'none'; 
-    document.getElementById('signupBox').style.display = mode === 'signup' ? 'block' : 'none'; 
-    document.getElementById('resetBox').style.display = mode === 'reset' ? 'block' : 'none'; 
-}
-function openTab(evt, t) { document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active")); document.getElementById(t).classList.add("active"); evt.currentTarget.classList.add("active"); }
-function logToLedger(desc, type, amt, m, y) { globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y }); }
-function setLedgerFilter(type, btn) { currentLedgerType = type; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
 
-async function delP(id) { 
-    personalLedger = personalLedger.filter(x => x.id !== id); 
-    globalLedger = globalLedger.filter(l => l.id !== id); 
-    await syncData(); renderAll(); 
+function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+
+function toggleAuthMode(mode) {
+    document.getElementById('loginBox').style.display = mode === 'login' ? 'block' : 'none';
+    document.getElementById('signupBox').style.display = mode === 'signup' ? 'block' : 'none';
+    document.getElementById('resetBox').style.display = mode === 'reset' ? 'block' : 'none';
+}
+
+function openTab(evt, t) {
+    document.querySelectorAll(".tab-content, .tab-btn").forEach(x => x.classList.remove("active"));
+    document.getElementById(t).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+
+function logToLedger(desc, type, amt, m, y) {
+    globalLedger.push({ id: Date.now(), date: new Date().toLocaleDateString(), desc, type, amt, month: m, year: y });
+}
+
+function setLedgerFilter(type, btn) {
+    currentLedgerType = type;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active'); renderAll();
+}
+
+async function delP(id) {
+    personalLedger = personalLedger.filter(x => x.id !== id);
+    globalLedger = globalLedger.filter(l => l.id !== id);
+    await syncData(); renderAll();
 }
 
 async function logoutUser() { await supabaseClient.auth.signOut(); location.reload(); }
 
 async function resetUserData() {
-    const res = await openCustomModal("CONFIRM RESET", [{id:'confirm', type:'text', placeholder:'Type DELETE to confirm'}]);
+    const res = await openCustomModal("Confirm Reset", [{id:'confirm', type:'text', placeholder:'Type DELETE to confirm'}]);
     if (res && res.confirm === 'DELETE') {
         const { data: { user } } = await supabaseClient.auth.getUser();
         if(user) {
             await supabaseClient.from('user_budgets').delete().eq('user_id', user.id);
-            showNotify("Wiped. Reloading...");
+            showNotify("Data wiped. Reloading...");
             setTimeout(() => location.reload(), 1500);
         }
     }
@@ -605,16 +1107,15 @@ async function resetUserData() {
 
 function sendWhatsAppReminder(id) {
     const d = debtors.find(x => x.id === id);
-    if(!d.phone || d.phone === 'N/A') return showNotify("No phone number!", true);
-    window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello ' + d.name + ', reminder for balance K' + d.balance + ' for ' + d.product + '.')}`, '_blank');
+    if(!d.phone || d.phone === 'N/A') return showNotify("No phone number on record.", true);
+    window.open(`https://wa.me/${d.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${d.name}, this is a friendly reminder about your outstanding balance of K${d.balance} for ${d.product}. Please let us know when you're able to settle.`)}`, '_blank');
 }
 
-// ====================== START APP ======================
+// ── START ──
 window.addEventListener('load', () => {
     initTimeline();
-    initIntroVideo();   // ← Intro video runs first
+    initIntroVideo();
 });
 </script>
 </body>
 </html>
-

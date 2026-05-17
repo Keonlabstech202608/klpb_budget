@@ -128,7 +128,9 @@ function createFinancialAlertUI() {
         </div>
     `;
 
-    document.body.appendChild(card);
+    document
+    .getElementById("financialAlertContainer")
+    .appendChild(card);
 }
 
 // ---------- SAVE SETTINGS ----------
@@ -352,9 +354,37 @@ setInterval(() => {
 
 // ---------- START SYSTEM ----------
 
-window.addEventListener("load", () => {
+function initializeFinancialAlertSystem() {
+
+    const existingCard =
+        document.querySelector(".financial-alert-card");
+
+    if(existingCard) return;
+
+    const container =
+        document.getElementById(
+            "financialAlertContainer"
+        );
+
+    if(!container){
+
+        console.log(
+            "financialAlertContainer not found"
+        );
+
+        return;
+    }
 
     createFinancialAlertUI();
 
     loadFinancialAlertSettings();
+}
+
+// WAIT FOR FULL PAGE
+
+setTimeout(() => {
+
+    initializeFinancialAlertSystem();
+
+}, 2000);
 });

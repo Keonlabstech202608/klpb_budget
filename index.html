@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="financial-alert.js"></script>
     <style>
         :root {
             --bg-base: #0a0010;
@@ -656,6 +657,7 @@
         <span class="timeline-label"><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Period</span>
         <select id="globalMonth" style="flex:1;margin:0;" onchange="renderAll()"></select>
         <select id="globalYear" style="width:110px;margin:0;" onchange="renderAll()"></select>
+        <div id="financialAlertContainer"></div>
     </div>
 
     <!-- METRICS -->
@@ -721,7 +723,7 @@
                     </table>
                 </div>
             </div>
-            <div id="financialAlertContainer"></div>
+            
         </section>
     </div>
 
@@ -1341,6 +1343,6 @@ function sendWhatsAppReminder(id) {
 window.addEventListener('load', () => { initTimeline(); initIntroVideo(); });
 
 </script>
-<script src="financial-alert.js"></script>
+
 </body>
 </html>

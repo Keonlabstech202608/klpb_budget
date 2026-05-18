@@ -1,173 +1,261 @@
 /**
- * KEONLABS - Database Service Layer
+ * KEONLABS - UI Engine
  * 
- * This module handles all database operations with Supabase.
- * It provides a clean API for data persistence and retrieval.
- * 
- * All database calls should go through this module to ensure:
- * - Consistent error handling
- * - Centralized data validation
- * - Easy testing and mocking
- * - Protection of database credentials
+ * This module handles all user interface rendering and interactions.
+ * It's completely separated from business logic and database operations.
  */
 
-class DatabaseService {
-    constructor(supabaseClient) {
-        this.client = supabaseClient;
+class UIEngine {
+    constructor() {
+        this.currentPage = 'dashboard';
+        this.init();
     }
 
     /**
-     * Sync user data to the database
-     * @param {string} userId - The user ID
-     * @param {object} payload - The data to sync (businessData, stockHistory, etc.)
-     * @returns {Promise<object>} - The sync result
+     * Initialize UI engine and set up event listeners
      */
-    async syncUserData(userId, payload) {
+    init() {
         try {
-            const result = await this.client
-                .from('user_budgets')
-                .upsert({
-                    user_id: userId,
-                    payload: payload,
-                    updated_at: new Date().toISOString()
-                });
-            
-            if (result.error) {
-                throw new Error(`Database sync failed: ${result.error.message}`);
+            this.setupNavigation();
+            this.setupModals();
+            this.setupIntroSplash();
+            console.log('UI Engine initialized');
+        } catch (error) {
+            console.error('Error initializing UI Engine:', error);
+        }
+    }
+
+    /**
+     * Setup navigation listeners
+     */
+    setupNavigation() {
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const pageName = e.target.dataset.page;
+                this.switchPage(pageName);
+            });
+        });
+
+        const profileBtn = document.getElementById('profileBtn');
+        if (profileBtn) {
+            profileBtn.addEventListener('click', () => this.openProfileModal());
+        }
+
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => this.logout());
+        }
+    }
+
+    /**
+     * Switch to a different page
+     * @param {string} pageName - Page name to switch to
+     */
+    switchPage(pageName) {
+        // Remove active class from all pages
+        const pages = document.querySelectorAll('.page');
+        pages.forEach(page => page.classList.remove('active'));
+
+        // Remove active class from all nav items
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => item.classList.remove('active'));
+
+        // Add active class to current page
+        const currentPage = document.getElementById(`page-${pageName}`);
+        if (currentPage) {
+            currentPage.classList.add('active');
+        }
+
+        // Add active class to current nav item
+        const currentNavItem = document.querySelector(`[data-page="${pageName}"]`);
+        if (currentNavItem) {
+            currentNavItem.classList.add('active');
+        }
+
+        this.currentPage = pageName;
+    }
+
+    /**
+     * Setup modal listeners
+     */
+    setupModals() {
+        const modalCancel = document.getElementById('modalCancel');
+        if (modalCancel) {
+            modalCancel.addEventListener('click', () => this.closeModal());
+        }
+
+        const closeProfileBtn = document.getElementById('closeProfileModal');
+        if (closeProfileBtn) {
+            closeProfileBtn.addEventListener('click', () => this.closeProfileModal());
+        }
+
+        const editProfileBtn = document.getElementById('editProfileBtn');
+        if (editProfileBtn) {
+            editProfileBtn.addEventListener('click', () => this.editProfile());
+        }
+    }
+
+    /**
+     * Setup intro splash screen
+     */
+    setupIntroSplash() {
+        const skipBtn = document.querySelector('#introSplash .skip-btn');
+        const introSplash = document.getElementById('introSplash');
+        const video = introSplash?.querySelector('video');
+
+        if (skipBtn) {
+            skipBtn.addEventListener('click', () => {
+                this.hideIntroSplash();
+            });
+        }
+
+        if (video) {
+            video.addEventListener('ended', () => {
+                this.hideIntroSplash();
+            });
+        }
+
+        // Auto-hide splash after 10 seconds
+        setTimeout(() => {
+            this.hideIntroSplash();
+        }, 10000);
+    }
+
+    /**
+     * Hide intro splash screen and show app
+     */
+    hideIntroSplash() {
+        const introSplash = document.getElementById('introSplash');
+        const appContainer = document.getElementById('app');
+
+        if (introSplash && !introSplash.classList.contains('hidden')) {
+            introSplash.classList.add('hidden');
+            if (appContainer) {
+                appContainer.style.display = 'flex';
             }
-            
-            return result;
-        } catch (error) {
-            console.error('DatabaseService.syncUserData error:', error);
-            throw error;
         }
     }
 
     /**
-     * Load user data from the database
-     * @param {string} userId - The user ID
-     * @returns {Promise<object>} - The user data
+     * Open custom modal
+     * @param {string} title - Modal title
+     * @param {string} content - Modal content HTML
+     * @param {function} onConfirm - Callback on confirm
      */
-    async loadUserData(userId) {
-        try {
-            const result = await this.client
-                .from('user_budgets')
-                .select('payload')
-                .eq('user_id', userId)
-                .maybeSingle();
-            
-            if (result.error) {
-                throw new Error(`Database load failed: ${result.error.message}`);
-            }
-            
-            return result.data?.payload || null;
-        } catch (error) {
-            console.error('DatabaseService.loadUserData error:', error);
-            throw error;
+    openModal(title, content, onConfirm) {
+        const modal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalContent = document.getElementById('modalContent');
+        const modalConfirm = document.getElementById('modalConfirm');
+
+        if (modalTitle) modalTitle.textContent = title;
+        if (modalContent) modalContent.innerHTML = content;
+
+        if (modalConfirm) {
+            modalConfirm.onclick = () => {
+                if (onConfirm) onConfirm();
+                this.closeModal();
+            };
+        }
+
+        if (modal) {
+            modal.classList.add('open');
         }
     }
 
     /**
-     * Delete all user data
-     * @param {string} userId - The user ID
-     * @returns {Promise<object>} - The delete result
+     * Close custom modal
      */
-    async deleteUserData(userId) {
-        try {
-            const result = await this.client
-                .from('user_budgets')
-                .delete()
-                .eq('user_id', userId);
-            
-            if (result.error) {
-                throw new Error(`Database delete failed: ${result.error.message}`);
-            }
-            
-            return result;
-        } catch (error) {
-            console.error('DatabaseService.deleteUserData error:', error);
-            throw error;
+    closeModal() {
+        const modal = document.getElementById('customModal');
+        if (modal) {
+            modal.classList.remove('open');
         }
     }
 
     /**
-     * Subscribe to real-time updates for user data
-     * @param {string} userId - The user ID
-     * @param {function} callback - Callback function when data changes
-     * @returns {object} - The subscription object
+     * Open profile modal
      */
-    subscribeToUserData(userId, callback) {
-        try {
-            return this.client
-                .channel(`public:user_budgets:${userId}`)
-                .on(
-                    'postgres_changes',
-                    {
-                        event: 'UPDATE',
-                        schema: 'public',
-                        table: 'user_budgets',
-                        filter: `user_id=eq.${userId}`
-                    },
-                    (payload) => {
-                        if (payload.new?.payload) {
-                            callback(payload.new.payload);
-                        }
-                    }
-                )
-                .subscribe();
-        } catch (error) {
-            console.error('DatabaseService.subscribeToUserData error:', error);
-            throw error;
+    openProfileModal() {
+        const profileModal = document.getElementById('profileModal');
+        if (profileModal) {
+            profileModal.classList.add('open');
         }
     }
 
     /**
-     * Upload a file to Supabase storage
-     * @param {string} bucket - The storage bucket name
-     * @param {string} path - The file path
-     * @param {File} file - The file to upload
-     * @returns {Promise<object>} - The upload result
+     * Close profile modal
      */
-    async uploadFile(bucket, path, file) {
-        try {
-            const result = await this.client
-                .storage
-                .from(bucket)
-                .upload(path, file, { upsert: true });
-            
-            if (result.error) {
-                throw new Error(`File upload failed: ${result.error.message}`);
-            }
-            
-            return result;
-        } catch (error) {
-            console.error('DatabaseService.uploadFile error:', error);
-            throw error;
+    closeProfileModal() {
+        const profileModal = document.getElementById('profileModal');
+        if (profileModal) {
+            profileModal.classList.remove('open');
         }
     }
 
     /**
-     * Get public URL for a file
-     * @param {string} bucket - The storage bucket name
-     * @param {string} path - The file path
-     * @returns {object} - The public URL data
+     * Edit user profile
      */
-    getPublicUrl(bucket, path) {
-        try {
-            return this.client
-                .storage
-                .from(bucket)
-                .getPublicUrl(path);
-        } catch (error) {
-            console.error('DatabaseService.getPublicUrl error:', error);
-            throw error;
+    editProfile() {
+        this.openModal('Edit Profile', '<p>Profile editing feature coming soon</p>', () => {
+            this.showNotification('Profile updated');
+        });
+    }
+
+    /**
+     * Show notification message
+     * @param {string} message - Message to show
+     * @param {number} duration - Duration in ms (default: 3000)
+     */
+    showNotification(message, duration = 3000) {
+        const notification = document.getElementById('customNotification');
+        if (notification) {
+            notification.textContent = message;
+            notification.style.display = 'block';
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, duration);
         }
+    }
+
+    /**
+     * Update profile display
+     * @param {object} userData - User data object
+     */
+    updateProfileDisplay(userData) {
+        const profileName = document.getElementById('profileName');
+        const profileEmail = document.getElementById('profileEmail');
+        const profileAvatar = document.getElementById('profileAvatar');
+
+        if (profileName && userData.name) {
+            profileName.textContent = userData.name;
+        }
+        if (profileEmail && userData.email) {
+            profileEmail.textContent = userData.email;
+        }
+        if (profileAvatar && userData.avatar) {
+            profileAvatar.src = userData.avatar;
+        }
+    }
+
+    /**
+     * Logout user
+     */
+    logout() {
+        localStorage.removeItem('userId');
+        this.showNotification('Logged out successfully');
+        // Reload page or redirect to login
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
     }
 }
 
-// Create and export the database service instance
-const dbService = new DatabaseService(supabaseClient);
+// Create and export UI engine instance
+const uiEngine = new UIEngine();
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { DatabaseService, dbService };
+    module.exports = { UIEngine, uiEngine };
 }

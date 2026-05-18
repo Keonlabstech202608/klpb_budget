@@ -1,0 +1,334 @@
+# KEONLABS Business Engine - Architecture Documentation
+
+## Overview
+
+The KEONLABS Business Engine is built on a **multi-layered modular architecture** that ensures complete separation of concerns. This design allows for:
+
+- **Stability**: Database and API logic are isolated and protected
+- **Extensibility**: Easy to add new features without affecting existing code
+- **Maintainability**: Clear separation makes debugging and updates straightforward
+- **UI Flexibility**: Change the UI without touching business logic or database code
+
+## Architecture Layers
+
+### 1. API Layer (`js/api/`)
+
+**Purpose**: Handles all external API communication and database operations.
+
+**Files**:
+- `supabase-client.js` - Supabase client configuration (credentials, initialization)
+- `db-service.js` - Database operations wrapper (sync, load, delete, subscribe, file upload)
+
+**Key Principle**: This layer is completely isolated. All database calls must go through `db-service.js`.
+
+**Why It Matters**: If you need to change database providers or credentials, you only modify files in this layer.
+
+```javascript
+// Example: Database operations are always through dbService
+await dbService.syncUserData(userId, payload);
+const userData = await dbService.loadUserData(userId);
+```
+
+### 2. Services Layer (`js/services/`)
+
+**Purpose**: Handles domain-specific operations like authentication.
+
+**Files**:
+- `auth-service.js` - User authentication (login, signup, logout, password reset)
+
+**Key Principle**: Services provide a clean API for operations. They use the API layer internally but expose a simplified interface.
+
+```javascript
+// Example: Authentication is simple and clean
+await authService.signIn(email, password);
+const user = authService.getCurrentUser();
+```
+
+### 3. Business Logic Layer (`js/logic/`)
+
+**Purpose**: Contains all business rules and calculations independent of UI or database.
+
+**Files**:
+- `business-logic.js` - Calculations (stock validation, debt calculations, ledger filtering, etc.)
+- `state-manager.js` - Application state management with observer pattern
+
+**Key Principle**: Business logic has NO dependencies on UI or database. It's pure computation.
+
+**Why It Matters**: You can test business logic without a UI or database. You can also use it in different contexts (CLI, API, etc.).
+
+```javascript
+// Example: Business logic is pure computation
+const isLow = businessLogic.isStockLow(currentStock);
+const stats = businessLogic.calculateMonthlyStats(...);
+const summary = businessLogic.calculateLedgerSummary(ledger);
+```
+
+### 4. UI Layer (`js/ui/`)
+
+**Purpose**: Handles all DOM manipulation and rendering.
+
+**Files**:
+- `ui-engine.js` - Renders tables, updates displays, shows notifications
+
+**Key Principle**: UI layer only reads state and renders. It never modifies state directly or calls database operations.
+
+**Why It Matters**: You can completely redesign the UI without touching any business logic or database code.
+
+```javascript
+// Example: UI rendering is simple and declarative
+uiEngine.renderStockTable(filteredData);
+uiEngine.showNotification('Success', false);
+```
+
+### 5. Controller Layer (`js/app-controller.js`)
+
+**Purpose**: Orchestrates all layers and manages the flow of data.
+
+**Key Principle**: The controller is the only place where layers interact. It:
+1. Listens to authentication changes
+2. Listens to state changes
+3. Calls business logic to process data
+4. Updates state
+5. Triggers UI updates
+6. Calls database operations
+
+```
+User Action → Controller → Business Logic → State Update → UI Render
+                ↓
+            Database Sync
+```
+
+## Data Flow
+
+### Typical User Action Flow
+
+```
+1. User clicks "Record Sale" button
+   ↓
+2. Controller.handleSale() is called
+   ↓
+3. Business Logic validates the transaction
+   ↓
+4. State Manager updates the state
+   ↓
+5. UI Engine renders the updated tables
+   ↓
+6. Database Service syncs to Supabase
+```
+
+### Real-Time Sync Flow
+
+```
+1. Database changes on another device
+   ↓
+2. Supabase sends update to subscriber
+   ↓
+3. Database Service receives update
+   ↓
+4. State Manager updates state
+   ↓
+5. UI Engine renders changes
+```
+
+## Module Dependencies
+
+```
+UI Layer (ui-engine.js)
+    ↓ reads
+State Manager (state-manager.js)
+    ↓ uses
+Business Logic (business-logic.js)
+    ↓ calls
+Services Layer (auth-service.js)
+    ↓ uses
+API Layer (db-service.js, supabase-client.js)
+```
+
+**Important**: Dependencies flow downward only. UI never calls database. Business logic never calls UI.
+
+## State Management
+
+The `StateManager` is the single source of truth for application data:
+
+```javascript
+// State structure
+{
+    currentUser: { id, email, displayName, businessName, phone, avatarUrl },
+    businessData: [],
+    stockHistory: [],
+    debtors: [],
+    globalLedger: [],
+    personalLedger: [],
+    currentLedgerType: 'ALL',
+    activeMonth: 0,
+    activeYear: 2024,
+    timeFilter: 'YEAR',
+    stockSearch: '',
+    ledgerSearch: '',
+    debtSearch: ''
+}
+```
+
+All state updates go through `StateManager` methods:
+
+```javascript
+stateManager.updateUserData({ displayName: 'John' });
+stateManager.addBusinessItem(item);
+stateManager.setActiveMonthYear(5, 2024);
+```
+
+When state changes, all listeners are notified:
+
+```javascript
+stateManager.subscribe((state, changedField) => {
+    // React to state changes
+    if (changedField === 'businessData') {
+        // Re-render stock table
+    }
+});
+```
+
+## Extending the Application
+
+### Adding a New Feature
+
+**Example: Add a new "Inventory Alerts" feature**
+
+1. **Add business logic** (`js/logic/business-logic.js`):
+   ```javascript
+   shouldAlert(item) {
+       return this.isStockLow(item.currentStock) && item.lastAlertTime < Date.now() - 86400000;
+   }
+   ```
+
+2. **Update state** (`js/logic/state-manager.js`):
+   ```javascript
+   addAlert(alert) {
+       this.state.alerts.push(alert);
+       this.notifyListeners('alerts');
+   }
+   ```
+
+3. **Add UI rendering** (`js/ui/ui-engine.js`):
+   ```javascript
+   renderAlerts(alerts) {
+       // Render alerts in the UI
+   }
+   ```
+
+4. **Wire it in controller** (`js/app-controller.js`):
+   ```javascript
+   if (['businessData'].includes(changedField)) {
+       const alerts = this.stateManager.state.businessData
+           .filter(item => this.businessLogic.shouldAlert(item));
+       this.uiEngine.renderAlerts(alerts);
+   }
+   ```
+
+### Changing the UI
+
+You can completely redesign the UI without touching any other code:
+
+1. Modify `js/ui/ui-engine.js` rendering methods
+2. Update `css/styles.css` for new styles
+3. Update `index.html` for new HTML structure
+
+The business logic and database operations remain untouched.
+
+### Changing the Database
+
+If you want to switch from Supabase to Firebase or another service:
+
+1. Create new `js/api/firebase-client.js`
+2. Create new `js/api/firebase-db-service.js` implementing the same interface as `db-service.js`
+3. Update `js/app-controller.js` to use the new service
+4. No changes needed to business logic or UI
+
+## Best Practices
+
+### ✅ DO
+
+- Keep business logic pure (no side effects)
+- Use StateManager for all state changes
+- Call dbService for all database operations
+- Use UIEngine for all DOM manipulation
+- Keep UI components simple and focused
+
+### ❌ DON'T
+
+- Call database operations from business logic
+- Directly manipulate DOM from business logic
+- Store state in global variables
+- Mix concerns in a single file
+- Bypass StateManager to update state
+
+## File Organization
+
+```
+keonlabs-v2/
+├── js/
+│   ├── api/
+│   │   ├── supabase-client.js      # Credentials & client init
+│   │   └── db-service.js           # Database operations
+│   ├── services/
+│   │   └── auth-service.js         # Authentication
+│   ├── logic/
+│   │   ├── business-logic.js       # Business rules & calculations
+│   │   └── state-manager.js        # Application state
+│   ├── ui/
+│   │   └── ui-engine.js            # DOM rendering
+│   ├── utils/
+│   │   └── helpers.js              # Utility functions
+│   └── app-controller.js           # Main orchestrator
+├── css/
+│   └── styles.css                  # All styling
+├── index.html                      # Main HTML
+├── ARCHITECTURE.md                 # This file
+└── README.md                       # User guide
+```
+
+## Testing
+
+Each layer can be tested independently:
+
+```javascript
+// Test business logic without UI or database
+const result = businessLogic.calculateMonthlyStats(data, history, ledger, 5, 2024);
+expect(result.profit).toBe(1000);
+
+// Test state manager
+stateManager.addBusinessItem(item);
+expect(stateManager.state.businessData).toContain(item);
+
+// Test UI rendering
+uiEngine.renderStockTable(data);
+expect(document.querySelector('#bTable tbody').innerHTML).toContain(item.name);
+```
+
+## Troubleshooting
+
+**Issue**: Database changes not appearing in UI
+- Check: Is `setupRealtimeSync()` called in `app-controller.js`?
+- Check: Is StateManager listener properly registered?
+
+**Issue**: UI not updating after state change
+- Check: Is the state change going through `StateManager`?
+- Check: Is the controller listening to state changes?
+
+**Issue**: Business logic seems slow
+- Check: Are you calling database operations in business logic? (You shouldn't)
+- Check: Are you doing heavy computations in the UI layer? (Move to business logic)
+
+## Performance Considerations
+
+1. **State Updates**: Only update state when data actually changes
+2. **UI Rendering**: Use efficient DOM queries and batch updates
+3. **Database Sync**: Debounce frequent sync operations
+4. **Real-time Subscriptions**: Unsubscribe when not needed
+
+## Security Notes
+
+1. **Credentials**: Never expose Supabase credentials in frontend code (they're public keys, so it's okay)
+2. **Authentication**: Always validate on the backend (Supabase does this automatically)
+3. **Data**: Sensitive data should be handled server-side
+4. **UI**: Never store passwords or tokens in localStorage (Supabase handles this)

@@ -1,0 +1,271 @@
+/**
+ * KEONLABS - UI Engine
+ * 
+ * This module handles all UI rendering and DOM manipulation.
+ * It is completely decoupled from business logic and database operations.
+ * 
+ * The UI engine listens to state changes and updates the DOM accordingly.
+ * All DOM operations should go through this module.
+ */
+
+class UIEngine {
+    constructor(stateManager) {
+        this.state = stateManager;
+        this.businessLogic = businessLogic;
+    }
+
+    /**
+     * Render stock table
+     * @param {array} filteredData - Filtered business data
+     */
+    renderStockTable(filteredData) {
+        const tbody = document.querySelector("#bTable tbody");
+        if (!tbody) return;
+
+        tbody.innerHTML = filteredData.length > 0
+            ? filteredData.map(item => this.createStockRow(item)).join('')
+            : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">No stock for this period.</td></tr>';
+    }
+
+    /**
+     * Create a stock row HTML
+     * @param {object} item - Stock item
+     * @returns {string} - HTML row
+     */
+    createStockRow(item) {
+        const isLow = this.businessLogic.isStockLow(item.currentStock);
+        return `<tr>
+            <td><div style="font-weight:600;">${item.name}</div><div style="font-size:0.7rem;color:var(--text-muted);">K${item.unitSellPrice} per unit</div></td>
+            <td style="color:var(--text-secondary);">K${item.totalCapitalInvested}</td>
+            <td><span class="badge ${isLow ? 'badge-low' : 'badge-ok'}">${item.currentStock}${isLow ? ' ⚠' : ''}</span></td>
+            <td><div class="action-cell">
+                <input type="number" id="q_${item.id}" value="1" class="qty-input">
+                <button class="action-btn green" onclick="handleSale(${item.id},false)" title="Record Sale"><i class="fas fa-check"></i></button>
+                <button class="action-btn gold" onclick="handleSale(${item.id},true)" title="Debtor Sale"><i class="fas fa-user-clock"></i></button>
+                <button class="action-btn purple" onclick="openRestock(${item.id})" title="Restock"><i class="fas fa-plus"></i></button>
+            </div></td>
+        </tr>`;
+    }
+
+    /**
+     * Render debtors table
+     * @param {array} filteredDebtors - Filtered debtors
+     */
+    renderDebtorsTable(filteredDebtors) {
+        const tbody = document.querySelector("#debtTable tbody");
+        if (!tbody) return;
+
+        const totalDebt = this.businessLogic.calculateTotalDebtorBalance(filteredDebtors);
+        
+        // Update debt summary
+        const summaryHeader = document.getElementById('debtSummaryHeader');
+        const summaryText = document.getElementById('debtSummaryText');
+        if (summaryHeader) {
+            summaryHeader.style.display = filteredDebtors.length ? 'block' : 'none';
+        }
+        if (summaryText) {
+            summaryText.innerText = `K${totalDebt.toFixed(2)} outstanding across ${filteredDebtors.length} debtor${filteredDebtors.length !== 1 ? 's' : ''}.`;
+        }
+
+        tbody.innerHTML = filteredDebtors.length > 0
+            ? filteredDebtors.map(debtor => this.createDebtorRow(debtor)).join('')
+            : '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">No debtors recorded.</td></tr>';
+    }
+
+    /**
+     * Create a debtor row HTML
+     * @param {object} debtor - Debtor object
+     * @returns {string} - HTML row
+     */
+    createDebtorRow(debtor) {
+        const isOverdue = this.businessLogic.isDebtOverdue(new Date(debtor.id));
+        return `<tr>
+            <td style="font-weight:500;">${debtor.name}</td>
+            <td style="color:var(--text-muted);font-size:0.78rem;">${debtor.phone}</td>
+            <td>${debtor.product}</td>
+            <td class="${isOverdue ? 'overdue-debt' : ''}">K${debtor.balance}</td>
+            <td><div class="action-cell">
+                <button class="action-btn wa" onclick="sendWhatsAppReminder(${debtor.id})" title="WhatsApp"><i class="fab fa-whatsapp"></i></button>
+                <button class="action-btn green" onclick="payDebt(${debtor.id})" title="Mark Paid"><i class="fas fa-check"></i></button>
+            </div></td>
+        </tr>`;
+    }
+
+    /**
+     * Render ledger table
+     * @param {array} filteredLedger - Filtered ledger entries
+     */
+    renderLedgerTable(filteredLedger) {
+        const tbody = document.querySelector("#ledgerTable tbody");
+        if (!tbody) return;
+
+        let ledgerHTML = "";
+        let lastMonthSeen = null;
+        let lastYearSeen = null;
+
+        filteredLedger.reverse().forEach(entry => {
+            if (entry.year !== lastYearSeen) {
+                ledgerHTML += `<tr class="year-separator"><td colspan="4">— ${entry.year} —</td></tr>`;
+                lastYearSeen = entry.year;
+                lastMonthSeen = null;
+            }
+            if (entry.month !== lastMonthSeen) {
+                ledgerHTML += `<tr class="month-separator"><td colspan="4">${this.businessLogic.getMonthName(entry.month)}</td></tr>`;
+                lastMonthSeen = entry.month;
+            }
+
+            const isPos = ['SALE', 'INCOME'].includes(entry.type);
+            const displayAmt = Math.abs(entry.amt);
+            ledgerHTML += `<tr>
+                <td style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap;">${entry.date}</td>
+                <td>${entry.desc}</td>
+                <td><span class="badge ${isPos ? 'badge-inc' : 'badge-exp'}">${entry.type}</span></td>
+                <td style="font-weight:600;color:${isPos ? 'var(--emerald)' : 'var(--crimson)'};">${isPos ? '+' : '-'}K${displayAmt.toFixed(2)}</td>
+            </tr>`;
+        });
+
+        tbody.innerHTML = ledgerHTML || '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">No records found.</td></tr>';
+
+        // Update ledger footer with summary
+        const summary = this.businessLogic.calculateLedgerSummary(filteredLedger);
+        const footer = document.getElementById('ledgerFooter');
+        if (footer) {
+            footer.innerHTML = `
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:8px;">
+                    <span style="color:var(--text-muted);">Total Income</span>
+                    <span style="color:var(--emerald);font-weight:600;">K ${summary.income.toFixed(2)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:10px;">
+                    <span style="color:var(--text-muted);">Total Expenses</span>
+                    <span style="color:var(--crimson);font-weight:600;">K ${summary.expense.toFixed(2)}</span>
+                </div>
+                <div style="border-top:1px solid var(--border);padding-top:10px;display:flex;justify-content:space-between;font-size:0.85rem;">
+                    <span style="color:var(--text-secondary);font-weight:500;">Net Balance</span>
+                    <span style="font-weight:700;color:var(--purple-light);font-family:var(--font-head);">K ${summary.net.toFixed(2)}</span>
+                </div>`;
+        }
+    }
+
+    /**
+     * Render personal budget table
+     * @param {array} personalLedger - Personal ledger entries
+     */
+    renderPersonalBudgetTable(personalLedger) {
+        const tbody = document.querySelector("#pTable tbody");
+        if (!tbody) return;
+
+        tbody.innerHTML = personalLedger.length > 0
+            ? personalLedger.map(entry => this.createPersonalLedgerRow(entry)).join('')
+            : '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:24px;">No entries for this period.</td></tr>';
+
+        // Update budget stats
+        const summary = this.businessLogic.calculateBudgetSummary(personalLedger, this.state.state.activeMonth, this.state.state.activeYear);
+        const statsContainer = document.getElementById('pStatsContainer');
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="budget-stat">Income<span style="color:var(--emerald);">K ${summary.income.toFixed(2)}</span></div>
+                <div class="budget-stat">Expenses<span style="color:var(--crimson);">K ${summary.expense.toFixed(2)}</span></div>
+                <div class="budget-stat">Net<span style="color:var(--purple-light);">K ${summary.net.toFixed(2)}</span></div>`;
+        }
+    }
+
+    /**
+     * Create personal ledger row HTML
+     * @param {object} entry - Personal ledger entry
+     * @returns {string} - HTML row
+     */
+    createPersonalLedgerRow(entry) {
+        return `<tr>
+            <td>${entry.desc}</td>
+            <td style="font-weight:600;">K${entry.amt.toFixed(2)}</td>
+            <td><span class="badge ${entry.type === 'income' ? 'badge-inc' : 'badge-exp'}">${entry.type}</span></td>
+            <td><button onclick="delP(${entry.id})" style="background:none;border:none;color:var(--crimson);cursor:pointer;font-size:1rem;opacity:0.6;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.6">×</button></td>
+        </tr>`;
+    }
+
+    /**
+     * Update statistics display
+     * @param {object} stats - Statistics object
+     */
+    updateStatistics(stats) {
+        const elements = {
+            'statCap': stats.capital,
+            'statRev': stats.revenue,
+            'statProfit': stats.profit,
+            'statDebt': stats.totalDebt,
+            'wdProfitStat': stats.profit
+        };
+
+        Object.entries(elements).forEach(([elementId, value]) => {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerText = `K ${value.toFixed(2)}`;
+            }
+        });
+    }
+
+    /**
+     * Show notification
+     * @param {string} message - Notification message
+     * @param {boolean} isError - Is error notification
+     */
+    showNotification(message, isError = false) {
+        const el = document.getElementById('customNotification');
+        if (!el) return;
+
+        el.innerHTML = isError 
+            ? `<i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>${message}` 
+            : `<i class="fas fa-check-circle" style="margin-right:6px;color:var(--emerald);"></i>${message}`;
+        
+        el.style.borderColor = isError ? 'rgba(248,113,113,0.4)' : 'rgba(168,85,247,0.4)';
+        el.style.display = 'block';
+        
+        setTimeout(() => { el.style.display = 'none'; }, 3200);
+    }
+
+    /**
+     * Update profile display
+     * @param {object} userProfile - User profile data
+     */
+    updateProfileDisplay(userProfile) {
+        const img = document.getElementById('topbarAvatarImg');
+        const logoFallback = document.getElementById('topbarInitials');
+        const userDisplay = document.getElementById('userDisplay');
+
+        if (userProfile.avatarUrl) {
+            if (img) { img.src = userProfile.avatarUrl; img.style.display = 'block'; }
+            if (logoFallback) { logoFallback.style.display = 'none'; }
+        } else {
+            if (img) { img.style.display = 'none'; }
+            if (logoFallback) { logoFallback.style.display = 'block'; }
+        }
+
+        if (userDisplay) {
+            if (userProfile.displayName) {
+                userDisplay.innerHTML = `<span>${userProfile.displayName}</span>${userProfile.businessName ? ` · ${userProfile.businessName}` : ''}`;
+            } else {
+                userDisplay.innerHTML = `<span style="color:var(--text-muted);">${this.state.state.currentUser.email}</span>`;
+            }
+        }
+    }
+
+    /**
+     * Clear all rendered data
+     */
+    clearAllTables() {
+        const tables = ['#bTable tbody', '#debtTable tbody', '#ledgerTable tbody', '#pTable tbody'];
+        tables.forEach(selector => {
+            const tbody = document.querySelector(selector);
+            if (tbody) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:24px;">Loading...</td></tr>';
+            }
+        });
+    }
+}
+
+// Create and export the UI engine instance
+const uiEngine = new UIEngine(stateManager);
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { UIEngine, uiEngine };
+}

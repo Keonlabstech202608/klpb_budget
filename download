@@ -1,0 +1,162 @@
+/**
+ * KEONLABS - Authentication Service
+ * 
+ * This module handles all authentication operations.
+ * It provides a clean API for login, signup, logout, and password reset.
+ */
+
+class AuthenticationService {
+    constructor(supabaseClient) {
+        this.client = supabaseClient;
+        this.currentUser = null;
+        this.authStateCallbacks = [];
+    }
+
+    /**
+     * Register authentication state change listener
+     * @param {function} callback - Function to call when auth state changes
+     */
+    onAuthStateChange(callback) {
+        this.authStateCallbacks.push(callback);
+        
+        // Set up Supabase listener
+        this.client.auth.onAuthStateChange((event, session) => {
+            this.currentUser = session?.user || null;
+            callback(event, session);
+        });
+    }
+
+    /**
+     * Sign up a new user
+     * @param {string} email - User email
+     * @param {string} password - User password
+     * @returns {Promise<object>} - Sign up result
+     */
+    async signUp(email, password) {
+        try {
+            const result = await this.client.auth.signUp({ email, password });
+            
+            if (result.error) {
+                throw new Error(`Sign up failed: ${result.error.message}`);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('AuthenticationService.signUp error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Sign in an existing user
+     * @param {string} email - User email
+     * @param {string} password - User password
+     * @returns {Promise<object>} - Sign in result
+     */
+    async signIn(email, password) {
+        try {
+            const result = await this.client.auth.signInWithPassword({ email, password });
+            
+            if (result.error) {
+                throw new Error(`Sign in failed: ${result.error.message}`);
+            }
+            
+            this.currentUser = result.data?.user || null;
+            return result;
+        } catch (error) {
+            console.error('AuthenticationService.signIn error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Sign out the current user
+     * @returns {Promise<object>} - Sign out result
+     */
+    async signOut() {
+        try {
+            const result = await this.client.auth.signOut();
+            
+            if (result.error) {
+                throw new Error(`Sign out failed: ${result.error.message}`);
+            }
+            
+            this.currentUser = null;
+            return result;
+        } catch (error) {
+            console.error('AuthenticationService.signOut error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Request password reset
+     * @param {string} email - User email
+     * @returns {Promise<object>} - Reset request result
+     */
+    async resetPassword(email) {
+        try {
+            const result = await this.client.auth.resetPasswordForEmail(email);
+            
+            if (result.error) {
+                throw new Error(`Password reset failed: ${result.error.message}`);
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('AuthenticationService.resetPassword error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get the current user
+     * @returns {Promise<object>} - Current user data
+     */
+    async getCurrentUser() {
+        try {
+            const result = await this.client.auth.getUser();
+            
+            if (result.error) {
+                throw new Error(`Get user failed: ${result.error.message}`);
+            }
+            
+            this.currentUser = result.data?.user || null;
+            return result.data?.user;
+        } catch (error) {
+            console.error('AuthenticationService.getCurrentUser error:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Check if user is authenticated
+     * @returns {boolean} - True if user is authenticated
+     */
+    isAuthenticated() {
+        return this.currentUser !== null;
+    }
+
+    /**
+     * Get current user ID
+     * @returns {string|null} - User ID or null
+     */
+    getCurrentUserId() {
+        return this.currentUser?.id || null;
+    }
+
+    /**
+     * Get current user email
+     * @returns {string|null} - User email or null
+     */
+    getCurrentUserEmail() {
+        return this.currentUser?.email || null;
+    }
+}
+
+// Create and export the authentication service instance
+const authService = new AuthenticationService(supabaseClient);
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AuthenticationService, authService };
+}

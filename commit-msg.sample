@@ -1,0 +1,366 @@
+/**
+ * KEONLABS - Application Controller
+ * 
+ * This is the main orchestrator that ties together all modules:
+ * - API Layer (supabase-client, db-service)
+ * - Authentication Service (auth-service)
+ * - Business Logic (business-logic, state-manager)
+ * - UI Layer (ui-engine)
+ * 
+ * The controller handles the flow of data and ensures proper separation of concerns.
+ */
+
+class AppController {
+    constructor() {
+        this.dbService = dbService;
+        this.authService = authService;
+        this.businessLogic = businessLogic;
+        this.stateManager = stateManager;
+        this.uiEngine = uiEngine;
+        
+        this.isInitialized = false;
+    }
+
+    /**
+     * Initialize the application
+     */
+    async initialize() {
+        if (this.isInitialized) return;
+
+        try {
+            // Set up authentication state listener
+            this.authService.onAuthStateChange((event, session) => {
+                this.handleAuthStateChange(event, session);
+            });
+
+            // Set up state change listener for UI updates
+            this.stateManager.subscribe((state, changedField) => {
+                this.handleStateChange(state, changedField);
+            });
+
+            // Initialize UI
+            this.initializeUI();
+            
+            this.isInitialized = true;
+            console.log('Application initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize application:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Handle authentication state changes
+     * @param {string} event - Auth event type
+     * @param {object} session - Session data
+     */
+    async handleAuthStateChange(event, session) {
+        const authOverlay = document.getElementById('authOverlay');
+        const mainApp = document.getElementById('mainApp');
+        const introSplash = document.getElementById('introSplash');
+
+        if (session) {
+            // User is logged in
+            if (introSplash) introSplash.style.display = 'none';
+            if (authOverlay) authOverlay.style.display = 'none';
+            if (mainApp) mainApp.style.display = 'block';
+
+            // Update state with user info
+            this.stateManager.updateUserData({
+                id: session.user.id,
+                email: session.user.email
+            });
+
+            // Load user data from database
+            await this.loadUserData(session.user.id);
+        } else {
+            // User is logged out
+            if (mainApp) mainApp.style.display = 'none';
+            if (authOverlay) authOverlay.style.display = 'flex';
+            
+            this.stateManager.clearAllUserData();
+        }
+    }
+
+    /**
+     * Handle state changes and update UI
+     * @param {object} state - Current state
+     * @param {string} changedField - Field that changed
+     */
+    handleStateChange(state, changedField) {
+        // Only update UI if main app is visible
+        const mainApp = document.getElementById('mainApp');
+        if (!mainApp || mainApp.style.display === 'none') return;
+
+        // Render appropriate UI based on what changed
+        this.renderUI(state, changedField);
+    }
+
+    /**
+     * Render UI based on state changes
+     * @param {object} state - Current state
+     * @param {string} changedField - Field that changed
+     */
+    renderUI(state, changedField) {
+        const month = state.activeMonth;
+        const year = state.activeYear;
+
+        // Render stock table
+        if (['businessData', 'activeMonthYear', 'stockSearch'].includes(changedField)) {
+            const filtered = state.businessData.filter(x => 
+                x.month === month && 
+                x.year === year && 
+                x.name.toLowerCase().includes(state.stockSearch.toLowerCase())
+            );
+            this.uiEngine.renderStockTable(filtered);
+        }
+
+        // Render debtors table
+        if (['debtors', 'debtSearch'].includes(changedField)) {
+            const filtered = state.debtors.filter(d =>
+                d.name.toLowerCase().includes(state.debtSearch.toLowerCase())
+            );
+            this.uiEngine.renderDebtorsTable(filtered);
+        }
+
+        // Render ledger table
+        if (['globalLedger', 'currentLedgerType', 'ledgerSearch', 'activeMonthYear'].includes(changedField)) {
+            const filtered = this.businessLogic.filterLedger(
+                state.globalLedger,
+                state.currentLedgerType,
+                state.ledgerSearch,
+                state.timeFilter,
+                month,
+                year
+            );
+            this.uiEngine.renderLedgerTable(filtered);
+        }
+
+        // Render personal budget
+        if (['personalLedger', 'activeMonthYear'].includes(changedField)) {
+            const filtered = state.personalLedger.filter(x =>
+                x.month === month && x.year === year
+            );
+            this.uiEngine.renderPersonalBudgetTable(filtered);
+        }
+
+        // Update statistics
+        if (['businessData', 'stockHistory', 'globalLedger', 'debtors', 'activeMonthYear'].includes(changedField)) {
+            const stats = this.businessLogic.calculateMonthlyStats(
+                state.businessData,
+                state.stockHistory,
+                state.globalLedger,
+                month,
+                year
+            );
+            const totalDebt = this.businessLogic.calculateTotalDebtorBalance(state.debtors);
+            this.uiEngine.updateStatistics({
+                ...stats,
+                totalDebt: totalDebt
+            });
+        }
+
+        // Update profile
+        if (['currentUser'].includes(changedField)) {
+            this.uiEngine.updateProfileDisplay(state.currentUser);
+        }
+    }
+
+    /**
+     * Load user data from database
+     * @param {string} userId - User ID
+     */
+    async loadUserData(userId) {
+        try {
+            const userData = await this.dbService.loadUserData(userId);
+            
+            if (userData) {
+                this.stateManager.loadAllUserData(userData);
+            }
+
+            // Set up real-time subscription
+            this.setupRealtimeSync(userId);
+        } catch (error) {
+            console.error('Failed to load user data:', error);
+            this.uiEngine.showNotification('Failed to load your data', true);
+        }
+    }
+
+    /**
+     * Set up real-time data synchronization
+     * @param {string} userId - User ID
+     */
+    setupRealtimeSync(userId) {
+        try {
+            this.dbService.subscribeToUserData(userId, (payload) => {
+                this.stateManager.loadAllUserData(payload);
+            });
+        } catch (error) {
+            console.error('Failed to set up real-time sync:', error);
+        }
+    }
+
+    /**
+     * Sync user data to database
+     */
+    async syncUserData() {
+        try {
+            const userId = this.authService.getCurrentUserId();
+            if (!userId) throw new Error('User not authenticated');
+
+            const payload = this.stateManager.getAllUserDataPayload();
+            await this.dbService.syncUserData(userId, payload);
+        } catch (error) {
+            console.error('Failed to sync user data:', error);
+            this.uiEngine.showNotification('Failed to save your data', true);
+            throw error;
+        }
+    }
+
+    /**
+     * Handle stock sale
+     * @param {number} itemId - Item ID
+     * @param {boolean} isDebt - Is debt sale
+     */
+    async handleSale(itemId, isDebt) {
+        try {
+            const qtyInput = document.getElementById(`q_${itemId}`);
+            const qty = parseInt(qtyInput?.value || 1);
+            
+            const item = this.stateManager.state.businessData.find(x => x.id === itemId);
+            if (!item) throw new Error('Item not found');
+
+            // Validate
+            const validation = this.businessLogic.validateSaleTransaction(item, qty);
+            if (!validation.isValid) {
+                this.uiEngine.showNotification(validation.error, true);
+                return;
+            }
+
+            const total = this.businessLogic.calculateSaleAmount(item.unitSellPrice, qty);
+            const month = this.stateManager.state.activeMonth;
+            const year = this.stateManager.state.activeYear;
+
+            if (isDebt) {
+                // Handle debtor sale
+                const debtorName = prompt('Debtor full name:');
+                const debtorPhone = prompt('Phone number:');
+                
+                if (!debtorName) return;
+
+                const debtor = {
+                    id: Date.now(),
+                    name: debtorName,
+                    phone: debtorPhone || 'N/A',
+                    product: item.name,
+                    balance: total,
+                    originalId: itemId
+                };
+
+                this.stateManager.addDebtor(debtor);
+                this.stateManager.addLedgerEntry({
+                    id: Date.now(),
+                    date: new Date().toLocaleDateString(),
+                    desc: `Debt: ${item.name} → ${debtorName}`,
+                    type: 'DEBT',
+                    amt: total,
+                    month: month,
+                    year: year
+                });
+            } else {
+                // Handle cash sale
+                this.stateManager.updateBusinessItem(itemId, {
+                    totalSalesRevenue: (item.totalSalesRevenue || 0) + total
+                });
+
+                this.stateManager.addLedgerEntry({
+                    id: Date.now(),
+                    date: new Date().toLocaleDateString(),
+                    desc: `Sale: ${item.name} ×${qty}`,
+                    type: 'SALE',
+                    amt: total,
+                    month: month,
+                    year: year
+                });
+            }
+
+            // Update stock
+            this.stateManager.updateBusinessItem(itemId, {
+                currentStock: item.currentStock - qty
+            });
+
+            // Sync to database
+            await this.syncUserData();
+            this.uiEngine.showNotification('Sale recorded successfully');
+        } catch (error) {
+            console.error('Failed to handle sale:', error);
+            this.uiEngine.showNotification(error.message, true);
+        }
+    }
+
+    /**
+     * Initialize UI components
+     */
+    initializeUI() {
+        // Initialize month/year selectors
+        const monthSelect = document.getElementById('globalMonth');
+        const yearSelect = document.getElementById('globalYear');
+
+        if (monthSelect) {
+            monthSelect.innerHTML = this.businessLogic.months
+                .map((m, i) => `<option value="${i}">${m}</option>`)
+                .join('');
+            monthSelect.value = new Date().getMonth();
+            monthSelect.addEventListener('change', (e) => {
+                this.stateManager.setActiveMonthYear(
+                    parseInt(e.target.value),
+                    this.stateManager.state.activeYear
+                );
+            });
+        }
+
+        if (yearSelect) {
+            const years = [];
+            for (let y = 2025; y <= 2100; y++) {
+                years.push(`<option value="${y}">${y}</option>`);
+            }
+            yearSelect.innerHTML = years.join('');
+            yearSelect.value = new Date().getFullYear();
+            yearSelect.addEventListener('change', (e) => {
+                this.stateManager.setActiveMonthYear(
+                    this.stateManager.state.activeMonth,
+                    parseInt(e.target.value)
+                );
+            });
+        }
+
+        // Initialize search inputs
+        const stockSearch = document.getElementById('stockSearch');
+        if (stockSearch) {
+            stockSearch.addEventListener('input', (e) => {
+                this.stateManager.updateUIState({ stockSearch: e.target.value });
+            });
+        }
+
+        const ledgerSearch = document.getElementById('ledgerSearch');
+        if (ledgerSearch) {
+            ledgerSearch.addEventListener('input', (e) => {
+                this.stateManager.updateUIState({ ledgerSearch: e.target.value });
+            });
+        }
+
+        const debtSearch = document.getElementById('debtSearch');
+        if (debtSearch) {
+            debtSearch.addEventListener('input', (e) => {
+                this.stateManager.updateUIState({ debtSearch: e.target.value });
+            });
+        }
+    }
+}
+
+// Create and export the app controller instance
+const appController = new AppController();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { AppController, appController };
+}

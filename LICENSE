@@ -1,0 +1,297 @@
+/**
+ * KEONLABS - State Manager
+ * 
+ * This module manages the application state.
+ * It keeps track of all data and provides methods to update it.
+ * 
+ * State is completely separated from UI rendering.
+ * UI components should listen to state changes and update accordingly.
+ */
+
+class StateManager {
+    constructor() {
+        this.state = {
+            // User data
+            currentUser: {
+                id: null,
+                email: '',
+                displayName: '',
+                businessName: '',
+                phone: '',
+                avatarUrl: ''
+            },
+
+            // Business data
+            businessData: [],
+            stockHistory: [],
+            debtors: [],
+            globalLedger: [],
+            personalLedger: [],
+
+            // UI state
+            currentLedgerType: 'ALL',
+            activeMonth: new Date().getMonth(),
+            activeYear: new Date().getFullYear(),
+            timeFilter: 'YEAR',
+
+            // Search filters
+            stockSearch: '',
+            ledgerSearch: '',
+            debtSearch: ''
+        };
+
+        this.listeners = [];
+    }
+
+    /**
+     * Subscribe to state changes
+     * @param {function} callback - Function to call when state changes
+     * @returns {function} - Unsubscribe function
+     */
+    subscribe(callback) {
+        this.listeners.push(callback);
+        
+        // Return unsubscribe function
+        return () => {
+            this.listeners = this.listeners.filter(listener => listener !== callback);
+        };
+    }
+
+    /**
+     * Notify all listeners of state change
+     * @param {string} changedField - Field that changed
+     */
+    notifyListeners(changedField) {
+        this.listeners.forEach(callback => {
+            callback(this.state, changedField);
+        });
+    }
+
+    /**
+     * Get current state
+     * @returns {object} - Current state
+     */
+    getState() {
+        return { ...this.state };
+    }
+
+    /**
+     * Update user data
+     * @param {object} userData - User data to update
+     */
+    updateUserData(userData) {
+        this.state.currentUser = { ...this.state.currentUser, ...userData };
+        this.notifyListeners('currentUser');
+    }
+
+    /**
+     * Update business data
+     * @param {array} businessData - Business data
+     */
+    setBusinessData(businessData) {
+        this.state.businessData = businessData;
+        this.notifyListeners('businessData');
+    }
+
+    /**
+     * Add business item
+     * @param {object} item - Business item to add
+     */
+    addBusinessItem(item) {
+        this.state.businessData.push(item);
+        this.notifyListeners('businessData');
+    }
+
+    /**
+     * Update business item
+     * @param {number} itemId - Item ID
+     * @param {object} updates - Updates to apply
+     */
+    updateBusinessItem(itemId, updates) {
+        const item = this.state.businessData.find(x => x.id === itemId);
+        if (item) {
+            Object.assign(item, updates);
+            this.notifyListeners('businessData');
+        }
+    }
+
+    /**
+     * Set stock history
+     * @param {array} stockHistory - Stock history
+     */
+    setStockHistory(stockHistory) {
+        this.state.stockHistory = stockHistory;
+        this.notifyListeners('stockHistory');
+    }
+
+    /**
+     * Add stock history entry
+     * @param {object} entry - Stock history entry
+     */
+    addStockHistoryEntry(entry) {
+        this.state.stockHistory.push(entry);
+        this.notifyListeners('stockHistory');
+    }
+
+    /**
+     * Set debtors
+     * @param {array} debtors - Debtors array
+     */
+    setDebtors(debtors) {
+        this.state.debtors = debtors;
+        this.notifyListeners('debtors');
+    }
+
+    /**
+     * Add debtor
+     * @param {object} debtor - Debtor to add
+     */
+    addDebtor(debtor) {
+        this.state.debtors.push(debtor);
+        this.notifyListeners('debtors');
+    }
+
+    /**
+     * Remove debtor
+     * @param {number} debtorId - Debtor ID
+     */
+    removeDebtor(debtorId) {
+        this.state.debtors = this.state.debtors.filter(x => x.id !== debtorId);
+        this.notifyListeners('debtors');
+    }
+
+    /**
+     * Set global ledger
+     * @param {array} ledger - Global ledger
+     */
+    setGlobalLedger(ledger) {
+        this.state.globalLedger = ledger;
+        this.notifyListeners('globalLedger');
+    }
+
+    /**
+     * Add ledger entry
+     * @param {object} entry - Ledger entry
+     */
+    addLedgerEntry(entry) {
+        this.state.globalLedger.push(entry);
+        this.notifyListeners('globalLedger');
+    }
+
+    /**
+     * Set personal ledger
+     * @param {array} ledger - Personal ledger
+     */
+    setPersonalLedger(ledger) {
+        this.state.personalLedger = ledger;
+        this.notifyListeners('personalLedger');
+    }
+
+    /**
+     * Add personal ledger entry
+     * @param {object} entry - Personal ledger entry
+     */
+    addPersonalLedgerEntry(entry) {
+        this.state.personalLedger.push(entry);
+        this.notifyListeners('personalLedger');
+    }
+
+    /**
+     * Remove personal ledger entry
+     * @param {number} entryId - Entry ID
+     */
+    removePersonalLedgerEntry(entryId) {
+        this.state.personalLedger = this.state.personalLedger.filter(x => x.id !== entryId);
+        this.notifyListeners('personalLedger');
+    }
+
+    /**
+     * Update UI state
+     * @param {object} uiState - UI state updates
+     */
+    updateUIState(uiState) {
+        this.state = { ...this.state, ...uiState };
+        this.notifyListeners('uiState');
+    }
+
+    /**
+     * Set active month and year
+     * @param {number} month - Month (0-11)
+     * @param {number} year - Year
+     */
+    setActiveMonthYear(month, year) {
+        this.state.activeMonth = month;
+        this.state.activeYear = year;
+        this.notifyListeners('activeMonthYear');
+    }
+
+    /**
+     * Set ledger filter type
+     * @param {string} type - Filter type
+     */
+    setLedgerFilterType(type) {
+        this.state.currentLedgerType = type;
+        this.notifyListeners('currentLedgerType');
+    }
+
+    /**
+     * Load all user data
+     * @param {object} payload - User data payload
+     */
+    loadAllUserData(payload) {
+        this.state.businessData = payload.businessData || [];
+        this.state.stockHistory = payload.stockHistory || [];
+        this.state.personalLedger = payload.personalLedger || [];
+        this.state.debtors = payload.debtors || [];
+        this.state.globalLedger = payload.globalLedger || [];
+        this.state.currentUser = { ...this.state.currentUser, ...payload.userProfile };
+        this.notifyListeners('allData');
+    }
+
+    /**
+     * Clear all user data
+     */
+    clearAllUserData() {
+        this.state.businessData = [];
+        this.state.stockHistory = [];
+        this.state.personalLedger = [];
+        this.state.debtors = [];
+        this.state.globalLedger = [];
+        this.state.currentUser = {
+            id: null,
+            email: '',
+            displayName: '',
+            businessName: '',
+            phone: '',
+            avatarUrl: ''
+        };
+        this.notifyListeners('allData');
+    }
+
+    /**
+     * Get all user data as payload
+     * @returns {object} - User data payload
+     */
+    getAllUserDataPayload() {
+        return {
+            businessData: this.state.businessData,
+            stockHistory: this.state.stockHistory,
+            personalLedger: this.state.personalLedger,
+            debtors: this.state.debtors,
+            globalLedger: this.state.globalLedger,
+            userProfile: {
+                displayName: this.state.currentUser.displayName,
+                businessName: this.state.currentUser.businessName,
+                phone: this.state.currentUser.phone,
+                avatarUrl: this.state.currentUser.avatarUrl
+            }
+        };
+    }
+}
+
+// Create and export the state manager instance
+const stateManager = new StateManager();
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { StateManager, stateManager };
+}

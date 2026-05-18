@@ -1,0 +1,84 @@
+# KEONLABS Business Engine (Modularized)
+
+This repository contains a deeply modularized version of the KEONLABS Business Engine, designed for enhanced stability, extensibility, and maintainability. The original monolithic `kbbl.html` has been refactored into a multi-layered architecture separating API, business logic, and UI concerns.
+
+## Project Structure
+
+The project follows a clear modular structure:
+
+- `index.html`: The main entry point, responsible for loading the application and wiring up the `AppController`.
+- `css/styles.css`: Contains all global styling for the application.
+- `js/`: Contains all JavaScript modules, organized into subdirectories:
+    - `js/api/`: Handles all external API communication (e.g., Supabase).
+        - `supabase-client.js`: Supabase client configuration.
+        - `db-service.js`: Abstraction layer for all database operations.
+    - `js/services/`: Provides specific services, like authentication.
+        - `auth-service.js`: Handles user authentication flows.
+    - `js/logic/`: Contains core business rules and application state management.
+        - `business-logic.js`: Pure functions for calculations, validations, and data transformations.
+        - `state-manager.js`: Manages the application's global state and notifies listeners of changes.
+    - `js/ui/`: Responsible for all UI rendering and DOM manipulation.
+        - `ui-engine.js`: Renders various UI components based on application state.
+    - `js/utils/`: (Placeholder) For general utility functions.
+    - `app-controller.js`: The central orchestrator, connecting all layers and managing application flow.
+- `assets/`: Directory for static assets like images and videos.
+- `ARCHITECTURE.md`: Detailed documentation of the modular architecture.
+
+## Features
+
+This application provides the following core functionalities:
+
+- **User Authentication**: Secure login, signup, and password reset powered by Supabase.
+- **Profile Management**: Users can view and edit their profile details, including display name, business name, phone number, and avatar.
+- **Stock Management**: Comprehensive tracking of business stock, unit prices, capital invested, and sales revenue. Supports recording cash sales, debtor sales, and restocking.
+- **Debtor Management**: Efficiently manage outstanding debts, including debtor details, product information, and balance. Features include sending WhatsApp reminders and marking debts as paid.
+- **Financial Ledger**: A detailed record of all financial transactions (sales, income, capital, personal expenses, withdrawals), with robust filtering options by type, search keywords, and timeframes (year, month, week).
+- **Personal Budgeting**: Tools for managing personal income and expenses, providing a clear net balance overview.
+- **Key Financial Statistics**: Displays monthly summaries of capital, revenue, profit, and total outstanding debt.
+- **Real-time Data Synchronization**: Leverages Supabase for seamless real-time updates across devices.
+
+## Setup and Installation
+
+1.  **Clone the repository**:
+    ```bash
+    git clone https://github.com/your-username/keonlabs-v2.git
+    cd keonlabs-v2
+    ```
+
+2.  **Supabase Configuration**: The application relies on Supabase for its backend services (authentication, database, storage). You will need to:
+    *   Create your own Supabase project.
+    *   Update the `SUPABASE_CONFIG.url` and `SUPABASE_CONFIG.key` variables in `js/api/supabase-client.js` with your project's credentials.
+
+    ```javascript
+    // js/api/supabase-client.js
+    const SUPABASE_CONFIG = {
+        url: 'YOUR_SUPABASE_URL',
+        key: 'YOUR_SUPABASE_ANON_KEY'
+    };
+    ```
+
+3.  **Run the application**: Open `index.html` in your web browser. For local development, it is highly recommended to use a local web server (e.g., VS Code's Live Server extension, or `python -m http.server` in the project root) to ensure all features, especially Supabase integration, function correctly.
+
+## Usage
+
+-   **Introductory Video**: An animated intro plays on application load, with an option to skip.
+-   **Authentication**: Sign up for a new account or log in with existing credentials to access the main application dashboard.
+-   **Navigation**: Utilize the tabbed interface to navigate between different sections: Stock, Debtors, Ledger, Personal Budget, and Statistics.
+-   **Data Management**: Interact with the forms and action buttons to add new business items, record sales, manage debtor accounts, and log personal financial transactions.
+-   **Profile Management**: Access and update your user profile via the icon in the top-right corner.
+
+## Extensibility
+
+The modular architecture is designed for easy feature extension and UI changes:
+
+-   **Feature Extension**: New features can be added by extending existing logic modules (`business-logic.js`, `state-manager.js`) and creating new UI components in `ui-engine.js` or dedicated UI modules, all orchestrated by the `app-controller.js`.
+-   **UI Customization**: The UI can be completely redesigned by modifying `index.html`, `css/styles.css`, and `ui-engine.js` without affecting the underlying business logic or database interactions.
+-   **Database Agnostic**: The `db-service.js` abstraction allows for potential future database changes with minimal impact on other layers.
+
+## Contributing
+
+Contributions are welcome! Please fork the repository, implement your changes, and submit a pull request. Ensure your contributions adhere to the established modular architecture and coding standards.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

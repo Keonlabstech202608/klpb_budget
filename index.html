@@ -1,250 +1,305 @@
-/**
- * KEONLABS - Business Logic Layer
- * 
- * This module contains all business logic independent of UI and database.
- * It handles calculations, validations, and data transformations.
- * 
- * Business logic is completely separated from:
- * - Database operations (use dbService)
- * - UI rendering (use ui-engine)
- * - Authentication (use authService)
- */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KLPB Budget - Business Budgeting App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="icon.png" type="image/png">
+</head>
+<body>
+    <!-- Static Background -->
+    <div id="static-bg"></div>
 
-class BusinessLogic {
-    constructor() {
-        this.months = ["January", "February", "March", "April", "May", "June", 
-                      "July", "August", "September", "October", "November", "December"];
-    }
+    <!-- Intro Splash Screen -->
+    <div id="introSplash">
+        <video autoplay muted playsinline>
+            <source src="intro-video[1].mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <button class="skip-btn">SKIP INTRO</button>
+    </div>
 
-    /**
-     * Validate stock item data
-     * @param {object} item - Stock item to validate
-     * @returns {object} - Validation result {isValid: boolean, errors: array}
-     */
-    validateStockItem(item) {
-        const errors = [];
-        
-        if (!item.name || item.name.trim() === '') {
-            errors.push('Item name is required');
-        }
-        
-        if (item.totalCapitalInvested === undefined || item.totalCapitalInvested < 0) {
-            errors.push('Capital invested must be a positive number');
-        }
-        
-        if (item.currentStock === undefined || item.currentStock < 0) {
-            errors.push('Stock quantity must be a positive number');
-        }
-        
-        return {
-            isValid: errors.length === 0,
-            errors: errors
-        };
-    }
+    <!-- Main App Container -->
+    <div id="app" style="display: none;">
+        <!-- Navigation/Header -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <img src="icon.png" alt="KLPB Logo" class="logo">
+                <span>KLPB Budget</span>
+            </div>
+            <div class="navbar-menu">
+                <button id="profileBtn" class="nav-btn">Profile</button>
+                <button id="logoutBtn" class="nav-btn">Logout</button>
+            </div>
+        </nav>
 
-    /**
-     * Calculate low stock warning
-     * @param {number} currentStock - Current stock quantity
-     * @param {number} threshold - Low stock threshold (default: 3)
-     * @returns {boolean} - True if stock is low
-     */
-    isStockLow(currentStock, threshold = 3) {
-        return currentStock <= threshold;
-    }
+        <!-- Main Content Area -->
+        <div class="container">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-page="dashboard">Dashboard</button>
+                    <button class="nav-item" data-page="stock">Stock Management</button>
+                    <button class="nav-item" data-page="sales">Sales</button>
+                    <button class="nav-item" data-page="ledger">Ledger</button>
+                    <button class="nav-item" data-page="debtors">Debtors</button>
+                    <button class="nav-item" data-page="budget">Personal Budget</button>
+                </nav>
+            </aside>
 
-    /**
-     * Calculate monthly statistics
-     * @param {array} businessData - All business data
-     * @param {array} stockHistory - Stock history
-     * @param {array} globalLedger - Global ledger
-     * @param {number} month - Month (0-11)
-     * @param {number} year - Year
-     * @returns {object} - Monthly stats
-     */
-    calculateMonthlyStats(businessData, stockHistory, globalLedger, month, year) {
-        const monthlyCapital = stockHistory
-            .filter(x => x.month === month && x.year === year)
-            .reduce((sum, x) => sum + (parseFloat(x.cost) || 0), 0);
+            <!-- Content Area -->
+            <main class="content">
+                <!-- Dashboard Page -->
+                <section id="page-dashboard" class="page active">
+                    <h1>Dashboard</h1>
+                    <p>Welcome to KLPB Budget - Your Business Budgeting Companion</p>
+                </section>
 
-        const monthlyRevenue = businessData
-            .filter(x => x.month === month && x.year === year)
-            .reduce((sum, x) => sum + (parseFloat(x.totalSalesRevenue) || 0), 0);
+                <!-- Stock Management Page -->
+                <section id="page-stock" class="page">
+                    <h1>Stock Management</h1>
+                    <p>Manage your business inventory</p>
+                </section>
 
-        const monthlyWithdrawals = globalLedger
-            .filter(x => x.month === month && x.year === year && x.type === 'WITHDRAW')
-            .reduce((sum, x) => sum + x.amt, 0);
+                <!-- Sales Page -->
+                <section id="page-sales" class="page">
+                    <h1>Sales</h1>
+                    <p>Record and track your sales</p>
+                </section>
 
-        const netProfit = monthlyRevenue - monthlyCapital - monthlyWithdrawals;
+                <!-- Ledger Page -->
+                <section id="page-ledger" class="page">
+                    <h1>Global Ledger</h1>
+                    <p>View all transactions</p>
+                </section>
 
-        return {
-            capital: monthlyCapital,
-            revenue: monthlyRevenue,
-            withdrawals: monthlyWithdrawals,
-            profit: netProfit
-        };
-    }
+                <!-- Debtors Page -->
+                <section id="page-debtors" class="page">
+                    <h1>Debtors Management</h1>
+                    <p>Track customer debts</p>
+                </section>
 
-    /**
-     * Calculate total debtor balance
-     * @param {array} debtors - Array of debtors
-     * @returns {number} - Total balance
-     */
-    calculateTotalDebtorBalance(debtors) {
-        return debtors.reduce((sum, debtor) => sum + debtor.balance, 0);
-    }
+                <!-- Budget Page -->
+                <section id="page-budget" class="page">
+                    <h1>Personal Budget</h1>
+                    <p>Manage personal finances</p>
+                </section>
+            </main>
+        </div>
+    </div>
 
-    /**
-     * Check if debt is overdue
-     * @param {string} debtDate - Debt creation date
-     * @param {number} daysThreshold - Days before considered overdue (default: 5)
-     * @returns {boolean} - True if overdue
-     */
-    isDebtOverdue(debtDate, daysThreshold = 5) {
-        const daysDifference = Math.floor(
-            Math.abs(new Date() - new Date(debtDate)) / (1000 * 60 * 60 * 24)
-        );
-        return daysDifference >= daysThreshold;
-    }
+    <!-- Custom Modal -->
+    <div id="customModal">
+        <div class="modal-card">
+            <h3 id="modalTitle">Modal Title</h3>
+            <div id="modalContent"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button id="modalConfirm" class="btn-main btn-success">Confirm</button>
+                <button id="modalCancel" class="btn-ghost">Cancel</button>
+            </div>
+        </div>
+    </div>
 
-    /**
-     * Check if date is within this week
-     * @param {string} dateString - Date string
-     * @returns {boolean} - True if within this week
-     */
-    isThisWeek(dateString) {
-        const daysDifference = Math.ceil(
-            Math.abs(new Date() - new Date(dateString)) / (1000 * 60 * 60 * 24)
-        );
-        return daysDifference <= 7;
-    }
+    <!-- Profile Modal -->
+    <div id="profileModal">
+        <div class="profile-modal-card">
+            <h3>User Profile</h3>
+            <div class="profile-view-avatar">
+                <img id="profileAvatar" src="" alt="Profile Picture">
+            </div>
+            <div class="profile-view-name" id="profileName">User Name</div>
+            <div class="profile-view-email" id="profileEmail">user@email.com</div>
+            <button id="editProfileBtn" class="btn-main btn-purple" style="width: 100%; margin-top: 16px;">Edit Profile</button>
+            <button id="closeProfileModal" class="btn-ghost" style="width: 100%; margin-top: 10px;">Close</button>
+        </div>
+    </div>
 
-    /**
-     * Filter ledger entries by criteria
-     * @param {array} ledger - Global ledger
-     * @param {string} type - Filter by type ('ALL', 'SALE', 'INCOME', etc.)
-     * @param {string} searchTerm - Search in description
-     * @param {string} timeFrame - Time frame ('YEAR', 'MONTH', 'WEEK')
-     * @param {number} month - Month (0-11)
-     * @param {number} year - Year
-     * @returns {array} - Filtered ledger
-     */
-    filterLedger(ledger, type, searchTerm, timeFrame, month, year) {
-        return ledger.filter(entry => {
-            const typeMatch = type === 'ALL' || entry.type === type;
-            const searchMatch = entry.desc.toLowerCase().includes(searchTerm.toLowerCase());
-            const timeMatch = (timeFrame === 'YEAR' && entry.year === year) ||
-                            (timeFrame === 'MONTH' && entry.year === year && entry.month === month) ||
-                            (timeFrame === 'WEEK' && this.isThisWeek(entry.date));
-            
-            return typeMatch && searchMatch && timeMatch;
-        });
-    }
+    <!-- Custom Notification -->
+    <div id="customNotification"></div>
 
-    /**
-     * Calculate ledger summary
-     * @param {array} ledger - Filtered ledger entries
-     * @returns {object} - Summary {income, expense, net}
-     */
-    calculateLedgerSummary(ledger) {
-        let totalIncome = 0;
-        let totalExpense = 0;
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        ledger.forEach(entry => {
-            const amount = Math.abs(entry.amt);
-            if (['SALE', 'INCOME'].includes(entry.type)) {
-                totalIncome += amount;
-            } else {
-                totalExpense += amount;
-            }
-        });
+    <!-- App Scripts -->
+    <script src="state-manager.js"></script>
+    <script src="db-service.js"></script>
+    <script src="index.js"></script>
+    <script src="ui-engine.js"></script>
+    <script src="financial-alert.js"></script>
+    <script src="manifest.js"></script>
+    <script src="sw.js"></script>
 
-        return {
-            income: totalIncome,
-            expense: totalExpense,
-            net: totalIncome - totalExpense
-        };
-    }
-
-    /**
-     * Calculate personal budget summary
-     * @param {array} personalLedger - Personal ledger entries
-     * @param {number} month - Month (0-11)
-     * @param {number} year - Year
-     * @returns {object} - Summary {income, expense, net}
-     */
-    calculateBudgetSummary(personalLedger, month, year) {
-        const monthlyEntries = personalLedger.filter(x => x.month === month && x.year === year);
-        
-        const income = monthlyEntries
-            .filter(x => x.type === 'income')
-            .reduce((sum, x) => sum + x.amt, 0);
-
-        const expense = monthlyEntries
-            .filter(x => x.type === 'expense')
-            .reduce((sum, x) => sum + x.amt, 0);
-
-        return {
-            income: income,
-            expense: expense,
-            net: income - expense
-        };
-    }
-
-    /**
-     * Validate sale transaction
-     * @param {object} item - Stock item
-     * @param {number} quantity - Quantity to sell
-     * @returns {object} - Validation result {isValid: boolean, error: string}
-     */
-    validateSaleTransaction(item, quantity) {
-        if (!item) {
-            return { isValid: false, error: 'Item not found' };
+    <style>
+        /* Temporary inline styles while CSS file loads */
+        :root {
+            --bg-base: #0a0010;
+            --bg-surface: #0f0818;
+            --bg-card: #130d20;
+            --bg-hover: #1c1530;
+            --border: rgba(255,255,255,0.07);
+            --border-subtle: rgba(255,255,255,0.04);
+            --border-accent: rgba(160,100,240,0.3);
+            --text-primary: #ede8f8;
+            --text-secondary: #9a8fba;
+            --text-muted: #4a3f65;
+            --purple: #a855f7;
+            --purple-light: #c084fc;
+            --purple-dim: rgba(168,85,247,0.15);
+            --purple-dark: #7c3aed;
+            --emerald: #4ecb8d;
+            --emerald-dim: rgba(78,203,141,0.12);
+            --crimson: #f87171;
+            --crimson-dim: rgba(248,113,113,0.12);
+            --amber: #fbbf24;
+            --amber-dim: rgba(251,191,36,0.12);
+            --steel: #818cf8;
+            --steel-dim: rgba(129,140,248,0.12);
+            --font-head: 'Playfair Display', serif;
+            --font-body: 'Inter', sans-serif;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 18px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.5);
+            --shadow-lg: 0 12px 48px rgba(0,0,0,0.7);
         }
 
-        if (quantity <= 0) {
-            return { isValid: false, error: 'Quantity must be greater than 0' };
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font-body);
+            color: var(--text-primary);
+            background: var(--bg-base);
+            -webkit-tap-highlight-color: transparent;
+            min-height: 100vh;
+            font-size: 14px;
         }
 
-        if (item.currentStock < quantity) {
-            return { isValid: false, error: `Insufficient stock. Available: ${item.currentStock}` };
+        #static-bg {
+            position: fixed; inset: 0; z-index: 0;
+            background:
+                radial-gradient(ellipse 70% 50% at 15% 0%, rgba(168,85,247,0.07) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 60% at 85% 100%, rgba(124,58,237,0.05) 0%, transparent 60%),
+                var(--bg-base);
         }
 
-        return { isValid: true };
-    }
+        #introSplash {
+            position: fixed; inset: 0; background: #000; z-index: 99999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.8s ease-out;
+        }
+        #introSplash.hidden { opacity: 0; pointer-events: none; }
+        #introSplash video { width: 100%; height: 100%; object-fit: cover; }
+        #introSplash .skip-btn {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            z-index: 10; padding: 10px 28px;
+            background: rgba(168,85,247,0.12); color: var(--purple-light);
+            border: 1px solid var(--border-accent); border-radius: 50px;
+            font-weight: 500; font-size: 0.78rem; cursor: pointer;
+            font-family: var(--font-body); letter-spacing: 1px; backdrop-filter: blur(10px);
+        }
 
-    /**
-     * Calculate sale amount
-     * @param {number} unitPrice - Unit sell price
-     * @param {number} quantity - Quantity sold
-     * @returns {number} - Total sale amount
-     */
-    calculateSaleAmount(unitPrice, quantity) {
-        return unitPrice * quantity;
-    }
+        .navbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 24px; background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            position: relative; z-index: 100;
+        }
 
-    /**
-     * Get month name
-     * @param {number} monthIndex - Month index (0-11)
-     * @returns {string} - Month name
-     */
-    getMonthName(monthIndex) {
-        return this.months[monthIndex] || '';
-    }
+        .navbar-brand {
+            display: flex; align-items: center; gap: 12px;
+            font-size: 1.1rem; font-weight: 600; color: var(--purple-light);
+        }
 
-    /**
-     * Format currency
-     * @param {number} amount - Amount to format
-     * @param {string} currency - Currency code (default: 'K')
-     * @returns {string} - Formatted currency
-     */
-    formatCurrency(amount, currency = 'K') {
-        return `${currency} ${amount.toFixed(2)}`;
-    }
-}
+        .logo { width: 32px; height: 32px; }
 
-// Create and export the business logic instance
-const businessLogic = new BusinessLogic();
+        .container {
+            display: flex; height: calc(100vh - 60px); position: relative; z-index: 1;
+        }
 
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { BusinessLogic, businessLogic };
-}
+        .sidebar {
+            width: 200px; background: var(--bg-surface);
+            border-right: 1px solid var(--border); padding: 16px;
+            overflow-y: auto;
+        }
+
+        .nav-menu { display: flex; flex-direction: column; gap: 8px; }
+
+        .nav-item {
+            padding: 12px 16px; background: transparent; border: none;
+            border-radius: var(--radius); color: var(--text-secondary);
+            cursor: pointer; text-align: left; transition: all 0.2s ease;
+            font-family: var(--font-body); font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background: var(--bg-hover); color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background: var(--purple-dim); color: var(--purple-light); font-weight: 600;
+        }
+
+        .content {
+            flex: 1; overflow-y: auto; padding: 32px;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        .btn-main {
+            padding: 10px 20px; border: none; border-radius: var(--radius);
+            font-family: var(--font-body); font-weight: 600; cursor: pointer;
+            transition: all 0.3s ease; font-size: 0.85rem;
+        }
+
+        .btn-main.btn-success {
+            background: var(--emerald); color: white;
+        }
+
+        .btn-main.btn-purple {
+            background: var(--purple); color: white;
+        }
+
+        .btn-ghost {
+            padding: 10px 20px; background: transparent; border: 1px solid var(--border);
+            border-radius: var(--radius); color: var(--text-primary); cursor: pointer;
+            font-family: var(--font-body); font-weight: 500; transition: all 0.3s ease;
+        }
+
+        #customNotification {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+            background: var(--bg-card); color: var(--text-primary);
+            padding: 12px 24px; border-radius: var(--radius);
+            border: 1px solid var(--border-accent);
+            z-index: 40000; display: none; text-align: center;
+            font-size: 0.82rem; font-weight: 500;
+            box-shadow: var(--shadow-lg); letter-spacing: 0.3px;
+        }
+
+        #customModal, #profileModal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.8); z-index: 20000;
+            backdrop-filter: blur(12px);
+            align-items: center; justify-content: center; padding: 20px;
+        }
+
+        #customModal.open, #profileModal.open { display: flex; }
+
+        .modal-card, .profile-modal-card {
+            background: var(--bg-card); border: 1px solid var(--border-accent);
+            border-radius: var(--radius-xl); padding: 32px 28px;
+            width: 100%; max-width: 360px; box-shadow: var(--shadow-lg);
+        }
+
+        .modal-card h3, .profile-modal-card h3 {
+            font-family: var(--font-head); font-size: 1.1rem;
+            color: var(--purple-light); margin-bottom: 20px; letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+</body>
+</html>
